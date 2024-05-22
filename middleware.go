@@ -132,17 +132,27 @@ func (m *Middleware) isValidCookie(c *fiber.Ctx) bool {
 }
 
 // setCookie sets the 2FA cookie with an expiration time.
+//
+// Note: This is suitable for use with encrypted cookies Fiber.
 func (m *Middleware) setCookie(c *fiber.Ctx, info *Info) error {
 	expirationTime := time.Now().Add(time.Duration(m.Config.CookieMaxAge) * time.Second)
 	cookieValue := m.GenerateCookieValue(expirationTime)
+
+	// Set the cookie domain dynamically based on the request's domain if HTTPS is used
+	cookieDomain := m.Config.CookieDomain
+	secure := m.Config.CookieSecure
+	if cookieDomain == "auto" && c.Secure() {
+		cookieDomain = c.BaseURL()
+		secure = true
+	}
 
 	c.Cookie(&fiber.Cookie{
 		Name:     m.Config.CookieName,
 		Value:    cookieValue,
 		Expires:  expirationTime,
 		Path:     m.Config.CookiePath,
-		Domain:   m.Config.CookieDomain,
-		Secure:   m.Config.CookieSecure,
+		Domain:   cookieDomain,
+		Secure:   secure,
 		HTTPOnly: true,
 	})
 
