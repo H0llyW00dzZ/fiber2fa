@@ -142,7 +142,7 @@ func (m *Middleware) setCookie(c *fiber.Ctx, info *Info) error {
 	cookieDomain := m.Config.CookieDomain
 	secure := m.Config.CookieSecure
 	if cookieDomain == "auto" && c.Secure() {
-		cookieDomain = c.BaseURL()
+		cookieDomain = c.Hostname()
 		secure = true
 	}
 
