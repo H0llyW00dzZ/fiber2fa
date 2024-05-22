@@ -60,6 +60,8 @@ type Config struct {
 
 	// CookieDomain is the domain scope of the 2FA cookie.
 	//
+	// If set to "auto", it will automatically set the cookie domain based on the request's domain if HTTPS is used.
+	//
 	// Optional. Default: ""
 	CookieDomain string
 
