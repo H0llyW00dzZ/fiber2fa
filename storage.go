@@ -84,3 +84,33 @@ func (m *Middleware) updateInfoInStorage(contextKey string, info *Info) error {
 
 	return nil
 }
+
+// deleteInfoFromStorage deletes the 2FA information for the user from the storage.
+func (m *Middleware) deleteInfoFromStorage(contextKey string) error {
+	err := m.Config.Storage.Delete(contextKey)
+	if err != nil {
+		return fmt.Errorf("failed to delete 2FA information: %w", err)
+	}
+
+	return nil
+}
+
+// resetStorage resets the storage and deletes all keys.
+func (m *Middleware) resetStorage() error {
+	err := m.Config.Storage.Reset()
+	if err != nil {
+		return fmt.Errorf("failed to reset storage: %w", err)
+	}
+
+	return nil
+}
+
+// closeStorage closes the storage and stops any running garbage collectors and open connections.
+func (m *Middleware) closeStorage() error {
+	err := m.Config.Storage.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close storage: %w", err)
+	}
+
+	return nil
+}
