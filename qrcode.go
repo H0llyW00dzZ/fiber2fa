@@ -40,19 +40,19 @@ func (m *Middleware) GenerateQRcodePath(c *fiber.Ctx) error {
 
 	// Generate the QR code content
 	secretKey := info.GetSecret()
-	qrCodeContent := fmt.Sprintf("otpauth://totp/%s:%s?secret=%s&issuer=%s", m.Config.Issuer, accountName, secretKey, m.Config.Issuer)
+	qrCodeContent := fmt.Sprintf(m.Config.QRCode.Content, m.Config.Issuer, accountName, secretKey, m.Config.Issuer)
 
-	// Check if a custom qrcode image is provided in the configuration
-	if m.Config.QRcodeImage != nil {
+	// Check if a custom QR code image is provided in the configuration
+	if m.Config.QRCode.Image != nil {
 		// Set the response headers
 		c.Set(fiber.HeaderContentType, "image/png")
 
-		// Write the custom qrcode image to the response
-		return png.Encode(c, m.Config.QRcodeImage)
+		// Write the custom QR code image to the response
+		return png.Encode(c, m.Config.QRCode.Image)
 	}
 
 	// Generate the default QR code image
-	qrCodeBytes, err := qrcode.Encode(qrCodeContent, qrcode.Medium, 256)
+	qrCodeBytes, err := qrcode.Encode(qrCodeContent, m.Config.Encode.Level, m.Config.Encode.Size)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}

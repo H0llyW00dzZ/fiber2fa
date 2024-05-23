@@ -22,6 +22,7 @@ import (
 	twofa "github.com/H0llyW00dzZ/fiber2fa"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/storage/memory/v2"
+	"github.com/skip2/go-qrcode"
 	"github.com/xlzd/gotp"
 )
 
@@ -488,7 +489,7 @@ func TestMiddleware_Handle_InfoNotFoundInStorage(t *testing.T) {
 	}
 }
 
-func TestMiddleware_GenerateBarcodePath(t *testing.T) {
+func TestMiddleware_GenerateQRcodePath(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	// Create a new Fiber app
 	app := fiber.New()
@@ -506,6 +507,10 @@ func TestMiddleware_GenerateBarcodePath(t *testing.T) {
 			Storage:       storage,
 			JSONMarshal:   json.Marshal,   // Set the JSONMarshal field
 			JSONUnmarshal: json.Unmarshal, // Set the JSONUnmarshal field
+			Encode: twofa.EncodeConfig{
+				Level: qrcode.Medium,
+				Size:  256,
+			},
 		},
 	}
 
@@ -560,7 +565,7 @@ func TestMiddleware_GenerateBarcodePath(t *testing.T) {
 	}
 }
 
-func TestMiddleware_GenerateBarcodePath_CustomImage(t *testing.T) {
+func TestMiddleware_GenerateQRcodePath_CustomImage(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	// Create a new Fiber app
 	app := fiber.New()
@@ -568,7 +573,7 @@ func TestMiddleware_GenerateBarcodePath_CustomImage(t *testing.T) {
 	// Create an in-memory storage
 	storage := memory.New()
 
-	// Create a custom barcode image
+	// Create a custom QR code image
 	customImage := image.NewRGBA(image.Rect(0, 0, 100, 100))
 	// Fill the custom image with some color (e.g., red)
 	for i := 0; i < 100; i++ {
@@ -577,7 +582,7 @@ func TestMiddleware_GenerateBarcodePath_CustomImage(t *testing.T) {
 		}
 	}
 
-	// Create a new Middleware instance with a custom ContextKey, Issuer, JSONMarshal, JSONUnmarshal, and GenerateQRcodePath
+	// Create a new Middleware instance with a custom ContextKey, Issuer, JSONMarshal, JSONUnmarshal, and QRcodeImage
 	middleware := &twofa.Middleware{
 		Config: &twofa.Config{
 			ContextKey:    "accountName",
@@ -586,7 +591,9 @@ func TestMiddleware_GenerateBarcodePath_CustomImage(t *testing.T) {
 			Storage:       storage,
 			JSONMarshal:   json.Marshal,   // Set the JSONMarshal field
 			JSONUnmarshal: json.Unmarshal, // Set the JSONUnmarshal field
-			QRcodeImage:   customImage,    // Set the custom qrcode image
+			QRCode: twofa.QRCodeConfig{
+				Image: customImage, // Set the custom QR code image
+			},
 		},
 	}
 
@@ -602,7 +609,7 @@ func TestMiddleware_GenerateBarcodePath_CustomImage(t *testing.T) {
 	}
 	storage.Set("gopher@example.com", rawInfo, 0)
 
-	// Define a test handler that sets the account name in c.Locals and calls GenerateBarcodePath
+	// Define a test handler that sets the account name in c.Locals and calls GenerateQRcodePath
 	app.Get("/test", func(c *fiber.Ctx) error {
 		c.Locals("accountName", "gopher@example.com")
 		return middleware.GenerateQRcodePath(c)
@@ -638,8 +645,8 @@ func TestMiddleware_GenerateBarcodePath_CustomImage(t *testing.T) {
 		t.Errorf("Error decoding response body as PNG: %v", err)
 	}
 
-	// Check if the decoded image matches the custom qrcode image
+	// Check if the decoded image matches the custom QR code image
 	if !reflect.DeepEqual(img, customImage) {
-		t.Error("Decoded image does not match the custom qrcode image")
+		t.Error("Decoded image does not match the custom QR code image")
 	}
 }
