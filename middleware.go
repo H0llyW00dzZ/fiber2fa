@@ -5,7 +5,6 @@
 package twofa
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -110,12 +109,12 @@ func (m *Middleware) isPathSkipped(path string) bool {
 // getContextKey retrieves the context key from c.Locals using the provided ContextKey.
 func (m *Middleware) getContextKey(c *fiber.Ctx) (string, error) {
 	if m.Config.ContextKey == "" {
-		return "", fmt.Errorf("ContextKey is not set")
+		return "", ErrorContextKeyNotSet
 	}
 
 	contextKeyValue, ok := c.Locals(m.Config.ContextKey).(string)
 	if !ok {
-		return "", fmt.Errorf("failed to retrieve context key")
+		return "", ErrorFailedToRetrieveContextKey
 	}
 
 	return contextKeyValue, nil

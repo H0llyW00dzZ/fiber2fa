@@ -55,7 +55,7 @@ func (i *Info) SetExpirationTime(expiration time.Time) {
 func (m *Middleware) getInfoFromStorage(contextKey string) (*Info, error) {
 	rawInfo, err := m.Config.Storage.Get(contextKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve 2FA information")
+		return nil, ErrorFailedToRetrieveInfo
 	}
 
 	if rawInfo == nil {
@@ -64,7 +64,7 @@ func (m *Middleware) getInfoFromStorage(contextKey string) (*Info, error) {
 
 	var info Info
 	if err := m.Config.JSONUnmarshal(rawInfo, &info); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal 2FA information")
+		return nil, ErrorFailedToUnmarshalInfo
 	}
 
 	return &info, nil
@@ -74,12 +74,12 @@ func (m *Middleware) getInfoFromStorage(contextKey string) (*Info, error) {
 func (m *Middleware) updateInfoInStorage(contextKey string, info *Info) error {
 	updatedRawInfo, err := m.Config.JSONMarshal(info)
 	if err != nil {
-		return fmt.Errorf("failed to marshal updated 2FA information")
+		return ErrorFailedToMarshalInfo
 	}
 
 	err = m.Config.Storage.Set(contextKey, updatedRawInfo, time.Duration(m.Config.CookieMaxAge)*time.Second)
 	if err != nil {
-		return fmt.Errorf("failed to store updated 2FA information")
+		return ErrorFailedToStoreInfo
 	}
 
 	return nil
@@ -89,7 +89,7 @@ func (m *Middleware) updateInfoInStorage(contextKey string, info *Info) error {
 func (m *Middleware) deleteInfoFromStorage(contextKey string) error {
 	err := m.Config.Storage.Delete(contextKey)
 	if err != nil {
-		return fmt.Errorf("failed to delete 2FA information: %w", err)
+		return fmt.Errorf("%w: %v", ErrorFailedToDeleteInfo, err)
 	}
 
 	return nil
@@ -99,7 +99,7 @@ func (m *Middleware) deleteInfoFromStorage(contextKey string) error {
 func (m *Middleware) resetStorage() error {
 	err := m.Config.Storage.Reset()
 	if err != nil {
-		return fmt.Errorf("failed to reset storage: %w", err)
+		return fmt.Errorf("%w: %v", ErrorFailedToResetStorage, err)
 	}
 
 	return nil
@@ -109,7 +109,7 @@ func (m *Middleware) resetStorage() error {
 func (m *Middleware) closeStorage() error {
 	err := m.Config.Storage.Close()
 	if err != nil {
-		return fmt.Errorf("failed to close storage: %w", err)
+		return ErrorFailedToCloseStorage
 	}
 
 	return nil
