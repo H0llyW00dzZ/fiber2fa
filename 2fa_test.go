@@ -511,6 +511,9 @@ func TestMiddleware_GenerateQRcodePath(t *testing.T) {
 				Level: qrcode.Medium,
 				Size:  256,
 			},
+			QRCode: twofa.QRCodeConfig{
+				Content: "otpauth://totp/%s:%s?secret=%s&issuer=%s",
+			},
 		},
 	}
 
@@ -592,7 +595,8 @@ func TestMiddleware_GenerateQRcodePath_CustomImage(t *testing.T) {
 			JSONMarshal:   json.Marshal,   // Set the JSONMarshal field
 			JSONUnmarshal: json.Unmarshal, // Set the JSONUnmarshal field
 			QRCode: twofa.QRCodeConfig{
-				Image: customImage, // Set the custom QR code image
+				Image:   customImage, // Set the custom QR code image
+				Content: "otpauth://totp/%s:%s?secret=%s&issuer=%s",
 			},
 		},
 	}
