@@ -55,7 +55,7 @@
 //   - AccountName: The name of the account to be displayed in the authenticator app. Default is an empty string.
 //   - DigitsCount: The number of digits in the generated TOTP token. Default is 6.
 //   - Period: The time step size in seconds for generating TOTP tokens. Default is 30 seconds.
-//   - SkipCookies: A list of paths that should skip the 2FA middleware. Default is an empty slice.
+//   - SkipCookies: A list of paths that should skip the 2FA middleware. Default is nil.
 //   - CookieName: The name of the cookie used to store the 2FA validation status. Default is "twofa_cookie".
 //   - CookieMaxAge: The maximum age of the 2FA cookie in seconds. Default is 86400 (24 hours).
 //   - CookiePath: The path scope of the 2FA cookie. Default is "/".
@@ -76,6 +76,14 @@
 //   - [fiber.MIMEApplicationJSONCharsetUTF8]
 //   - [fiber.MIMEApplicationXML]
 //   - [fiber.MIMEApplicationXMLCharsetUTF8]
+//   - [fiber.MIMETextPlain]
+//   - [fiber.MIMETextHTML] (custom handler required)
+//   - [fiber.MIMETextHTMLCharsetUTF8] (custom handler required)
+//   - [fiber.MIMETextJavaScript] (custom handler required)
+//   - [fiber.MIMETextJavaScriptCharsetUTF8] (custom handler required)
+//   - [fiber.MIMEApplicationForm] (custom handler required)
+//   - [fiber.MIMEMultipartForm] (custom handler required)
+//   - [fiber.MIMEOctetStream] (custom handler required)
 //   - UnauthorizedHandler: A custom handler for unauthorized responses. Default is nil.
 //   - InternalErrorHandler: A custom handler for internal server error responses. Default is nil.
 //

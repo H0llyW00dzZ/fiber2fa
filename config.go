@@ -41,7 +41,7 @@ type Config struct {
 
 	// SkipCookies is a list of paths that should skip the 2FA middleware.
 	//
-	// Optional. Default: []string{}
+	// Optional. Default: nil
 	SkipCookies []string
 
 	// CookieName is the name of the cookie used to store the 2FA validation status.
@@ -132,6 +132,10 @@ type Config struct {
 
 	// ResponseMIME is the MIME type for the response format.
 	//
+	// This field is used to set the default response format for the middleware.
+	// When custom error handlers (UnauthorizedHandler and InternalErrorHandler) are not provided,
+	// the middleware will use the ResponseMIME value to determine the response format.
+	//
 	// Optional. Default: fiber.MIMETextPlainCharsetUTF8
 	//
 	// Possible values:
@@ -140,6 +144,30 @@ type Config struct {
 	//  - fiber.MIMEApplicationJSONCharsetUTF8
 	//  - fiber.MIMEApplicationXML
 	//  - fiber.MIMEApplicationXMLCharsetUTF8
+	//  - fiber.MIMETextPlain
+	//  - fiber.MIMETextHTML (custom handler required)
+	//  - fiber.MIMETextHTMLCharsetUTF8 (custom handler required)
+	//  - fiber.MIMETextJavaScript (custom handler required)
+	//  - fiber.MIMETextJavaScriptCharsetUTF8 (custom handler required)
+	//  - fiber.MIMEApplicationForm (custom handler required)
+	//  - fiber.MIMEMultipartForm (custom handler required)
+	//  - fiber.MIMEOctetStream (custom handler required)
+	//
+	// When using custom error handlers, you can set the response format within the handler functions
+	// using the appropriate methods provided by the Fiber context (c.JSON(), c.XML(), c.SendString(), etc.).
+	// The custom error handlers allow you to use any valid MIME type supported by Fiber for the response format.
+	//
+	// Examples of possible response formats for custom error handlers:
+	//  - Plain text: c.SendString() with content type fiber.MIMETextPlain or fiber.MIMETextPlainCharsetUTF8
+	//  - HTML: c.SendString() with content type fiber.MIMETextHTML or fiber.MIMETextHTMLCharsetUTF8
+	//  - XML: c.XML() with content type fiber.MIMEApplicationXML or fiber.MIMEApplicationXMLCharsetUTF8
+	//  - JSON: c.JSON() with content type fiber.MIMEApplicationJSON or fiber.MIMEApplicationJSONCharsetUTF8
+	//  - JavaScript: c.SendString() with content type fiber.MIMETextJavaScript or fiber.MIMETextJavaScriptCharsetUTF8
+	//  - Form data: c.SendString() with content type fiber.MIMEApplicationForm
+	//  - Custom MIME type: c.Send() with the desired MIME type
+	//
+	// Note: When custom error handlers are provided, the ResponseMIME value is not used for the response format.
+	// The response format is determined by the methods used within the custom error handlers.
 	ResponseMIME string
 
 	// UnauthorizedHandler is a custom handler for unauthorized responses.
@@ -160,7 +188,7 @@ var DefaultConfig = Config{
 	AccountName:          "",
 	DigitsCount:          6,
 	Period:               30,
-	SkipCookies:          []string{},
+	SkipCookies:          nil,
 	CookieName:           "twofa_cookie",
 	CookieMaxAge:         86400,
 	CookiePath:           "/",
