@@ -591,7 +591,7 @@ func TestMiddleware_GenerateBarcodePath_CustomImage(t *testing.T) {
 	}
 
 	// Store the 2FA information in the storage for the test account
-	// Note: This info manager is useful for writing tests during open-source development because Go has a rich ecosystem.
+	// Note: This info manager is useful for writing tests during open-source development because Go has a rich ecosystem and tooling unlike other language mostly is poor.
 	// It eliminates the need to spend money on renting a database solely for testing purposes.
 	info := &twofa.Info{
 		Secret: secret,
