@@ -116,35 +116,35 @@ type Config struct {
 	// BarcodePathTemplate is the template for the barcode path.
 	//
 	// Optional. Default: "/2fa/register?account=%s"
-	BarcodePathTemplate string
+	QRcodePathTemplate string
 
-	// BarcodeImage is the custom barcode image to be used instead of the default QR code.
+	// QRcodeImage is the custom barcode image to be used instead of the default QR code.
 	//
 	// Optional. Default: nil
-	BarcodeImage image.Image
+	QRcodeImage image.Image
 }
 
 // defaultConfig holds the default configuration values.
 var defaultConfig = Config{
-	Secret:              "",
-	Issuer:              "MyApp",
-	AccountName:         "",
-	DigitsCount:         6,
-	Period:              30,
-	SkipCookies:         []string{},
-	CookieName:          "twofa_cookie",
-	CookieMaxAge:        86400,
-	CookiePath:          "/",
-	CookieDomain:        "",
-	CookieSecure:        false,
-	RedirectURL:         "/2fa",
-	Storage:             nil,
-	TokenLookup:         "query:token",
-	ContextKey:          "",
-	JSONMarshal:         json.Marshal,
-	JSONUnmarshal:       json.Unmarshal,
-	Next:                nil,
-	BarcodePathTemplate: "/2fa/register?account=%s",
+	Secret:             "",
+	Issuer:             "MyApp",
+	AccountName:        "",
+	DigitsCount:        6,
+	Period:             30,
+	SkipCookies:        []string{},
+	CookieName:         "twofa_cookie",
+	CookieMaxAge:       86400,
+	CookiePath:         "/",
+	CookieDomain:       "",
+	CookieSecure:       false,
+	RedirectURL:        "/2fa",
+	Storage:            nil,
+	TokenLookup:        "query:token",
+	ContextKey:         "",
+	JSONMarshal:        json.Marshal,
+	JSONUnmarshal:      json.Unmarshal,
+	Next:               nil,
+	QRcodePathTemplate: "/2fa/register?account=%s",
 }
 
 // JSONMarshal defines the function signature for a JSON marshal.

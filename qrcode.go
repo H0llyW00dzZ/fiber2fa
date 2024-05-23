@@ -14,8 +14,8 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-// GenerateBarcodePath generates the QR code image for the 2FA secret key.
-func (m *Middleware) GenerateBarcodePath(c *fiber.Ctx) error {
+// GenerateQRcodePath generates the QR code image for the 2FA secret key.
+func (m *Middleware) GenerateQRcodePath(c *fiber.Ctx) error {
 	// Get the account name from c.Locals using the specified context key
 	accountName, ok := c.Locals(m.Config.AccountName).(string)
 	if !ok || accountName == "" {
@@ -42,13 +42,13 @@ func (m *Middleware) GenerateBarcodePath(c *fiber.Ctx) error {
 	secretKey := info.GetSecret()
 	qrCodeContent := fmt.Sprintf("otpauth://totp/%s:%s?secret=%s&issuer=%s", m.Config.Issuer, accountName, secretKey, m.Config.Issuer)
 
-	// Check if a custom barcode image is provided in the configuration
-	if m.Config.BarcodeImage != nil {
+	// Check if a custom qrcode image is provided in the configuration
+	if m.Config.QRcodeImage != nil {
 		// Set the response headers
 		c.Set(fiber.HeaderContentType, "image/png")
 
-		// Write the custom barcode image to the response
-		return png.Encode(c, m.Config.BarcodeImage)
+		// Write the custom qrcode image to the response
+		return png.Encode(c, m.Config.QRcodeImage)
 	}
 
 	// Generate the default QR code image
