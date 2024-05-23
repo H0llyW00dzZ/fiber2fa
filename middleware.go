@@ -5,6 +5,7 @@
 package twofa
 
 import (
+	"encoding/xml"
 	"strings"
 	"time"
 
@@ -54,7 +55,7 @@ func (m *Middleware) Handle(c *fiber.Ctx) error {
 
 	contextKey, err := m.getContextKey(c)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).SendString(err.Error())
+		return m.SendInternalErrorResponse(c, err)
 	}
 
 	// Check if the user has a valid 2FA cookie
@@ -64,12 +65,12 @@ func (m *Middleware) Handle(c *fiber.Ctx) error {
 
 	info, err := m.getInfoFromStorage(contextKey)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		return m.SendInternalErrorResponse(c, ErrorFailedToRetrieveInfo)
 	}
 	// Check if info was found in the storage
 	if info == nil {
 		// No info found, user probably not registered for 2FA
-		return c.Status(fiber.StatusUnauthorized).SendString("2FA information not found")
+		return m.SendUnauthorizedResponse(c, fiber.NewError(fiber.StatusUnauthorized, "2FA information not found"))
 	}
 
 	// Extract the token from the specified token lookup sources
@@ -81,16 +82,16 @@ func (m *Middleware) Handle(c *fiber.Ctx) error {
 	// Verify the provided token
 	if !m.verifyToken(info, token) {
 		// Token is invalid, sending unauthorized response.
-		return c.Status(fiber.StatusUnauthorized).SendString("Invalid 2FA token")
+		return m.SendUnauthorizedResponse(c, fiber.NewError(fiber.StatusUnauthorized, "Invalid 2FA token"))
 	}
 
 	if err := m.setCookie(c, info); err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		return m.SendInternalErrorResponse(c, ErrorFailedToStoreInfo)
 	}
 
 	// Store the updated Info struct in the storage
 	if err := m.updateInfoInStorage(contextKey, info); err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		return m.SendInternalErrorResponse(c, ErrorFailedToStoreInfo)
 	}
 
 	return c.Next()
@@ -112,12 +113,17 @@ func (m *Middleware) getContextKey(c *fiber.Ctx) (string, error) {
 		return "", ErrorContextKeyNotSet
 	}
 
-	contextKeyValue, ok := c.Locals(m.Config.ContextKey).(string)
+	contextKeyValue := c.Locals(m.Config.ContextKey)
+	if contextKeyValue == nil {
+		return "", ErrorContextKeyNotSet
+	}
+
+	contextKey, ok := contextKeyValue.(string)
 	if !ok {
 		return "", ErrorFailedToRetrieveContextKey
 	}
 
-	return contextKeyValue, nil
+	return contextKey, nil
 }
 
 // isValidCookie checks if the user has a valid 2FA cookie.
@@ -211,4 +217,50 @@ func (m *Middleware) extractToken(c *fiber.Ctx) string {
 func (m *Middleware) verifyToken(info *Info, token string) bool {
 	totp := gotp.NewDefaultTOTP(info.GetSecret())
 	return totp.Verify(token, time.Now().Unix())
+}
+
+// SendUnauthorizedResponse sends an unauthorized response based on the configured MIME type.
+func (m *Middleware) SendUnauthorizedResponse(c *fiber.Ctx, err error) error {
+	c.Status(fiber.StatusUnauthorized)
+
+	if m.Config.UnauthorizedHandler != nil {
+		return m.Config.UnauthorizedHandler(c, err)
+	}
+
+	switch m.Config.ResponseMIME {
+	case fiber.MIMEApplicationJSON, fiber.MIMEApplicationJSONCharsetUTF8:
+		return c.JSON(fiber.Map{"error": err.Error()})
+	case fiber.MIMEApplicationXML, fiber.MIMEApplicationXMLCharsetUTF8:
+		return c.XML(struct {
+			XMLName xml.Name `xml:"error"`
+			Message string   `xml:"message"`
+		}{
+			Message: err.Error(),
+		})
+	default:
+		return c.SendString(err.Error())
+	}
+}
+
+// SendInternalErrorResponse sends an internal server error response based on the configured MIME type.
+func (m *Middleware) SendInternalErrorResponse(c *fiber.Ctx, err error) error {
+	c.Status(fiber.StatusInternalServerError)
+
+	if m.Config.InternalErrorHandler != nil {
+		return m.Config.InternalErrorHandler(c, err)
+	}
+
+	switch m.Config.ResponseMIME {
+	case fiber.MIMEApplicationJSON, fiber.MIMEApplicationJSONCharsetUTF8:
+		return c.JSON(fiber.Map{"error": err.Error()})
+	case fiber.MIMEApplicationXML, fiber.MIMEApplicationXMLCharsetUTF8:
+		return c.XML(struct {
+			XMLName xml.Name `xml:"error"`
+			Message string   `xml:"message"`
+		}{
+			Message: err.Error(),
+		})
+	default:
+		return c.SendString(err.Error())
+	}
 }
