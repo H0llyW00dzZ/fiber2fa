@@ -228,9 +228,11 @@ func (m *Middleware) SendUnauthorizedResponse(c *fiber.Ctx, err error) error {
 	}
 
 	switch m.Config.ResponseMIME {
-	case fiber.MIMEApplicationJSON, fiber.MIMEApplicationJSONCharsetUTF8:
+	case fiber.MIMEApplicationJSON,
+		fiber.MIMEApplicationJSONCharsetUTF8:
 		return c.JSON(fiber.Map{"error": err.Error()})
-	case fiber.MIMEApplicationXML, fiber.MIMEApplicationXMLCharsetUTF8:
+	case fiber.MIMEApplicationXML,
+		fiber.MIMEApplicationXMLCharsetUTF8:
 		return c.XML(struct {
 			XMLName xml.Name `xml:"error"`
 			Message string   `xml:"message"`
@@ -251,9 +253,11 @@ func (m *Middleware) SendInternalErrorResponse(c *fiber.Ctx, err error) error {
 	}
 
 	switch m.Config.ResponseMIME {
-	case fiber.MIMEApplicationJSON, fiber.MIMEApplicationJSONCharsetUTF8:
+	case fiber.MIMEApplicationJSON,
+		fiber.MIMEApplicationJSONCharsetUTF8:
 		return c.JSON(fiber.Map{"error": err.Error()})
-	case fiber.MIMEApplicationXML, fiber.MIMEApplicationXMLCharsetUTF8:
+	case fiber.MIMEApplicationXML,
+		fiber.MIMEApplicationXMLCharsetUTF8:
 		return c.XML(struct {
 			XMLName xml.Name `xml:"error"`
 			Message string   `xml:"message"`
