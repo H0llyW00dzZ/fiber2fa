@@ -17,9 +17,9 @@ import (
 // GenerateBarcodePath generates the QR code image for the 2FA secret key.
 func (m *Middleware) GenerateBarcodePath(c *fiber.Ctx) error {
 	// Get the account name from c.Locals using the specified context key
-	accountName, ok := c.Locals(m.Config.ContextKey).(string)
-	if !ok {
-		// If account name is not found, use a default value or return an error
+	accountName, ok := c.Locals(m.Config.AccountName).(string)
+	if !ok || accountName == "" {
+		// If account name is not found or is an empty string, use a default value
 		accountName = "gopher"
 	}
 
