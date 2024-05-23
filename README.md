@@ -36,8 +36,13 @@ The middleware provides the following features:
 
 ### QR Code Generation
 - Automatic generation of QR code images for 2FA secret keys
-- Customizable barcode path template
-- Support for custom barcode images
+- Customizable QR code path template
+- Support for custom QR code images
+- Customizable QR code content template
+
+### QR Code Encoding
+- Configurable QR code recovery level
+- Customizable QR code image size
 
 ### Customizable Token Lookup
 - Flexible token lookup from various sources (header, query, form, param, cookie)
