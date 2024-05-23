@@ -8,10 +8,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"image"
+	"image/color"
 	"image/png"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -497,9 +500,11 @@ func TestMiddleware_GenerateBarcodePath(t *testing.T) {
 	middleware := &twofa.Middleware{
 		Config: &twofa.Config{
 			ContextKey:    "accountName",
+			AccountName:   "gopherAccount",
 			Issuer:        "MyApp",
 			Secret:        secret,
 			Storage:       storage,
+			JSONMarshal:   json.Marshal,   // Set the JSONMarshal field
 			JSONUnmarshal: json.Unmarshal, // Set the JSONUnmarshal field
 		},
 	}
@@ -508,7 +513,7 @@ func TestMiddleware_GenerateBarcodePath(t *testing.T) {
 	info := &twofa.Info{
 		Secret: secret,
 	}
-	rawInfo, _ := json.Marshal(info)
+	rawInfo, _ := middleware.Config.JSONMarshal(info)
 	storage.Set("gopher@example.com", rawInfo, 0)
 
 	// Define a test handler that sets the account name in c.Locals and calls GenerateBarcodePath
@@ -552,5 +557,89 @@ func TestMiddleware_GenerateBarcodePath(t *testing.T) {
 	expectedHeight := 256
 	if img.Bounds().Dx() != expectedWidth || img.Bounds().Dy() != expectedHeight {
 		t.Errorf("Expected image dimensions %dx%d, got %dx%d", expectedWidth, expectedHeight, img.Bounds().Dx(), img.Bounds().Dy())
+	}
+}
+
+func TestMiddleware_GenerateBarcodePath_CustomImage(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+	// Create a new Fiber app
+	app := fiber.New()
+
+	// Create an in-memory storage
+	storage := memory.New()
+
+	// Create a custom barcode image
+	customImage := image.NewRGBA(image.Rect(0, 0, 100, 100))
+	// Fill the custom image with some color (e.g., red)
+	for i := 0; i < 100; i++ {
+		for j := 0; j < 100; j++ {
+			customImage.Set(i, j, color.RGBA{255, 0, 0, 255})
+		}
+	}
+
+	// Create a new Middleware instance with a custom ContextKey, Issuer, JSONMarshal, JSONUnmarshal, and BarcodeImage/QRCode
+	middleware := &twofa.Middleware{
+		Config: &twofa.Config{
+			ContextKey:    "accountName",
+			Issuer:        "MyApp",
+			Secret:        secret,
+			Storage:       storage,
+			JSONMarshal:   json.Marshal,   // Set the JSONMarshal field
+			JSONUnmarshal: json.Unmarshal, // Set the JSONUnmarshal field
+			BarcodeImage:  customImage,    // Set the custom barcode/qrcode image
+		},
+	}
+
+	// Store the 2FA information in the storage for the test account
+	// Note: This info manager is useful for writing tests during open-source development because Go has a rich ecosystem.
+	// It eliminates the need to spend money on renting a database solely for testing purposes.
+	info := &twofa.Info{
+		Secret: secret,
+	}
+	rawInfo, err := middleware.Config.JSONMarshal(info)
+	if err != nil {
+		t.Fatalf("Error marshaling 2FA information: %v", err)
+	}
+	storage.Set("gopher@example.com", rawInfo, 0)
+
+	// Define a test handler that sets the account name in c.Locals and calls GenerateBarcodePath
+	app.Get("/test", func(c *fiber.Ctx) error {
+		c.Locals("accountName", "gopher@example.com")
+		return middleware.GenerateBarcodePath(c)
+	})
+
+	// Send a test request to the "/test" route
+	req := httptest.NewRequest("GET", "/test", nil)
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("Error when sending request to the app: %v", err)
+	}
+
+	// Check if the response status code is 200 OK
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	// Check if the response content type is "image/png"
+	contentType := resp.Header.Get("Content-Type")
+	if contentType != "image/png" {
+		t.Errorf("Expected content type 'image/png', got '%s'", contentType)
+	}
+
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("Error reading response body: %v", err)
+	}
+
+	// Decode the response body as a PNG image
+	img, err := png.Decode(bytes.NewReader(body))
+	if err != nil {
+		t.Errorf("Error decoding response body as PNG: %v", err)
+	}
+
+	// Check if the decoded image matches the custom barcode image
+	if !reflect.DeepEqual(img, customImage) {
+		t.Error("Decoded image does not match the custom barcode image")
 	}
 }
