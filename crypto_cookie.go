@@ -16,6 +16,11 @@ import (
 )
 
 // GenerateCookieValue generates a signed cookie value using HMAC.
+//
+// TODO: Implement an extra layer of cookie value (in addition to the current timestamp)
+// and enhance security by using custom cryptography for encryption and decryption value.
+// Use a user secret derived from 2FA for encryption/decryption and bind it to a UUID for identification purposes.
+// This will replace the current implementation that uses HMAC.
 func (m *Middleware) GenerateCookieValue(expirationTime time.Time) string {
 	data := fmt.Sprintf("%d", expirationTime.Unix())
 	hash := hmac.New(sha256.New, []byte(m.Config.Secret))
