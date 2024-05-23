@@ -99,6 +99,7 @@ func (m *Middleware) Handle(c *fiber.Ctx) error {
 
 // isPathSkipped checks if the given path is in the skip list.
 func (m *Middleware) isPathSkipped(path string) bool {
+	// Note: No need to explicitly check for nil, you poggers.
 	for _, skippedPath := range m.Config.SkipCookies {
 		if path == skippedPath {
 			return true
