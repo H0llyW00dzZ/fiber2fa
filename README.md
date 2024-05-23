@@ -1,5 +1,5 @@
 # Fiber 2FA Middleware
-[![Go Version](https://img.shields.io/badge/1.22.3-gray?style=flat&logo=go&logoWidth=15)](https://github.com/H0llyW00dzZ/fiber2fa/blob/master/go.mod#L3blob/master/go.mod#L3)
+[![Go Version](https://img.shields.io/badge/1.22.3-gray?style=flat&logo=go&logoWidth=15)](https://github.com/H0llyW00dzZ/fiber2fa/blob/master/go.mod#L3blob/master/go.mod#L3) [![Go Reference](https://pkg.go.dev/badge/github.com/H0llyW00dzZ/fiber2fa.svg)](https://pkg.go.dev/github.com/H0llyW00dzZ/fiber2fa) [![Go Report Card](https://goreportcard.com/badge/github.com/H0llyW00dzZ/fiber2fa)](https://goreportcard.com/report/github.com/H0llyW00dzZ/fiber2fa)
 
 This is a custom 2FA (Two-Factor Authentication) middleware for the Fiber web framework. It provides a secure and easy-to-use solution for implementing 2FA in Fiber applications. The middleware supports TOTP (Time-based One-Time Password) authentication and offers customizable configuration options.
 
