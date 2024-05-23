@@ -64,12 +64,20 @@
 //   - RedirectURL: The URL to redirect the user to when 2FA is required. Default is "/2fa".
 //   - Storage: The storage provider for storing 2FA information. Default is nil (in-memory storage).
 //   - TokenLookup: A string in the form of "<source>:<name>" that is used to extract the token from the request. Default is "query:token".
-//   - ContextKey: The key used to store the 2FA information in the context. Default is an empty string.
+//   - ContextKey: The key used to store the 2FA information in the context. This field is required.
 //   - JSONMarshal: A custom JSON marshaling function. Default is [json.Marshal].
 //   - JSONUnmarshal: A custom JSON unmarshaling function. Default is [json.Unmarshal].
 //   - Next: An optional function that determines whether to skip the 2FA middleware for a given request. If the function returns true, the middleware will be skipped. Default is nil.
 //   - QRCode: The configuration for the QR code generation. It allows customizing the QR code path template, image, and content. Default is [twofa.DefaultQRCodeConfig].
 //   - Encode: The configuration for the QR code encoding. It allows customizing the QR code recovery level and size. Default is [twofa.DefaultEncodeConfig].
+//   - ResponseMIME: The MIME type for the response format. Default is [fiber.MIMETextPlainCharsetUTF8]. Possible values are:
+//   - [fiber.MIMETextPlainCharsetUTF8] (default)
+//   - [fiber.MIMEApplicationJSON]
+//   - [fiber.MIMEApplicationJSONCharsetUTF8]
+//   - [fiber.MIMEApplicationXML]
+//   - [fiber.MIMEApplicationXMLCharsetUTF8]
+//   - UnauthorizedHandler: A custom handler for unauthorized responses. Default is nil.
+//   - InternalErrorHandler: A custom handler for internal server error responses. Default is nil.
 //
 // # Storage Providers
 //
@@ -100,7 +108,9 @@
 //
 // If an error occurs during the 2FA process, the middleware will return a response with a status code of 401 (Unauthorized) or 500 (Internal Server Error), depending on the nature of the error.
 //
-// The error messages are sent as plain text in the response body.
+// The error messages are sent in the specified response format (MIME type) configured in the ResponseMIME field of the [twofa.Config] struct. The default response format is plain text ([fiber.MIMETextPlainCharsetUTF8]).
+//
+// You can customize the error handling by providing custom handlers for unauthorized and internal server errors using the UnauthorizedHandler and InternalErrorHandler fields in the [twofa.Config] struct.
 //
 // # Skipping 2FA
 //

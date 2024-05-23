@@ -96,7 +96,7 @@ type Config struct {
 
 	// ContextKey is the key used to store the 2FA information in the context.
 	//
-	// Optional. Default: ""
+	// Required.
 	ContextKey string
 
 	// JSONMarshal is a custom JSON marshaling function.
@@ -129,30 +129,55 @@ type Config struct {
 	//
 	// Optional. Default: see DefaultEncodeConfig
 	Encode EncodeConfig
+
+	// ResponseMIME is the MIME type for the response format.
+	//
+	// Optional. Default: fiber.MIMETextPlainCharsetUTF8
+	//
+	// Possible values:
+	//  - fiber.MIMETextPlainCharsetUTF8 (default)
+	//  - fiber.MIMEApplicationJSON
+	//  - fiber.MIMEApplicationJSONCharsetUTF8
+	//  - fiber.MIMEApplicationXML
+	//  - fiber.MIMEApplicationXMLCharsetUTF8
+	ResponseMIME string
+
+	// UnauthorizedHandler is a custom handler for unauthorized responses.
+	//
+	// Optional. Default: nil
+	UnauthorizedHandler fiber.ErrorHandler
+
+	// InternalErrorHandler is a custom handler for internal server error responses.
+	//
+	// Optional. Default: nil
+	InternalErrorHandler fiber.ErrorHandler
 }
 
 // DefaultConfig  holds the default configuration values.
 var DefaultConfig = Config{
-	Secret:        "",
-	Issuer:        "MyApp",
-	AccountName:   "",
-	DigitsCount:   6,
-	Period:        30,
-	SkipCookies:   []string{},
-	CookieName:    "twofa_cookie",
-	CookieMaxAge:  86400,
-	CookiePath:    "/",
-	CookieDomain:  "",
-	CookieSecure:  false,
-	RedirectURL:   "/2fa",
-	Storage:       nil,
-	TokenLookup:   "query:token",
-	ContextKey:    "",
-	JSONMarshal:   json.Marshal,
-	JSONUnmarshal: json.Unmarshal,
-	Next:          nil,
-	QRCode:        DefaultQRCodeConfig,
-	Encode:        DefaultEncodeConfig,
+	Secret:               "",
+	Issuer:               "MyApp",
+	AccountName:          "",
+	DigitsCount:          6,
+	Period:               30,
+	SkipCookies:          []string{},
+	CookieName:           "twofa_cookie",
+	CookieMaxAge:         86400,
+	CookiePath:           "/",
+	CookieDomain:         "",
+	CookieSecure:         false,
+	RedirectURL:          "/2fa",
+	Storage:              nil,
+	TokenLookup:          "query:token",
+	ContextKey:           "",
+	JSONMarshal:          json.Marshal,
+	JSONUnmarshal:        json.Unmarshal,
+	Next:                 nil,
+	QRCode:               DefaultQRCodeConfig,
+	Encode:               DefaultEncodeConfig,
+	ResponseMIME:         fiber.MIMETextPlainCharsetUTF8,
+	UnauthorizedHandler:  nil,
+	InternalErrorHandler: nil,
 }
 
 // JSONMarshal defines the function signature for a JSON marshal.

@@ -387,70 +387,6 @@ func (s *failingStorage) Get(key string) ([]byte, error) {
 	return nil, fmt.Errorf("storage get error")
 }
 
-func TestMiddleware_Handle_NoContextKey(t *testing.T) {
-	// Set up the storage with an in-memory store for simplicity
-	store := memory.New()
-
-	// Create a default Info struct and store it for simulate state
-	info := twofa.Info{
-		ContextKey:     "user123",
-		Secret:         "secret",
-		CookieValue:    "",
-		ExpirationTime: time.Time{},
-	}
-	infoJSON, _ := json.Marshal(info)
-	_ = store.Set("user123", infoJSON, 0) // Ignoring error for brevity
-
-	// Create a new Middleware instance with the in-memory storage and without setting the ContextKey
-	middleware := twofa.New(twofa.Config{
-		Storage:       store,
-		ContextKey:    "", // Not setting the ContextKey
-		RedirectURL:   "/2fa",
-		CookieMaxAge:  86400,
-		CookieName:    "twofa_cookie",
-		TokenLookup:   "header:Authorization",
-		JSONMarshal:   json.Marshal,
-		JSONUnmarshal: json.Unmarshal,
-	})
-
-	// Create a new Fiber app and use the middleware
-	app := fiber.New()
-
-	// Use a custom middleware to simulate setting a context key, but do not actually set it
-	app.Use(func(c *fiber.Ctx) error {
-		// Intentionally do not set the context key
-		return c.Next()
-	})
-
-	// Then use the actual middleware
-	app.Use(middleware)
-
-	// Define a simple handler that will be called after the middleware
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Should not get here")
-	})
-
-	// Simulate a request to the "/" route using the Fiber app's Test method
-	req := httptest.NewRequest("GET", "https://hack/", nil)
-	resp, err := app.Test(req)
-	if err != nil {
-		t.Fatalf("Error when sending request to the app: %v", err)
-	}
-
-	// Verify that the status code is as expected for missing context key
-	if resp.StatusCode != fiber.StatusUnauthorized {
-		t.Errorf("Expected status code %d for missing context key, but got %d", fiber.StatusUnauthorized, resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("Error reading response body: %v", err)
-	}
-	if string(body) != "ContextKey is not set" {
-		t.Errorf("Expected error message 'ContextKey is not set', got '%s'", string(body))
-	}
-}
-
 func TestMiddleware_Handle_InfoNotFoundInStorage(t *testing.T) {
 	store := memory.New()
 	middleware := twofa.New(twofa.Config{
@@ -652,5 +588,291 @@ func TestMiddleware_GenerateQRcodePath_CustomImage(t *testing.T) {
 	// Check if the decoded image matches the custom QR code image
 	if !reflect.DeepEqual(img, customImage) {
 		t.Error("Decoded image does not match the custom QR code image")
+	}
+}
+
+func TestMiddleware_SendInternalErrorResponse(t *testing.T) {
+	testCases := []struct {
+		name         string
+		responseMIME string
+		expectedBody string
+	}{
+		{
+			name:         "Plain text response",
+			responseMIME: fiber.MIMETextPlainCharsetUTF8,
+			expectedBody: "ContextKey is not set",
+		},
+		{
+			name:         "JSON response",
+			responseMIME: fiber.MIMEApplicationJSON,
+			expectedBody: "{\"error\":\"ContextKey is not set\"}",
+		},
+		{
+			name:         "XML response",
+			responseMIME: fiber.MIMEApplicationXML,
+			expectedBody: "<error><message>ContextKey is not set</message></error>",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := twofa.Config{
+				ResponseMIME: tc.responseMIME,
+			}
+			middleware := twofa.New(config)
+
+			app := fiber.New()
+			app.Use(middleware)
+			app.Get("/", func(c *fiber.Ctx) error {
+				return c.Status(fiber.StatusInternalServerError).SendString("ContextKey is not set")
+			})
+
+			req := httptest.NewRequest("GET", "/", nil)
+			resp, err := app.Test(req)
+			if err != nil {
+				t.Fatalf("Error when sending request to the app: %v", err)
+			}
+
+			if resp.StatusCode != fiber.StatusInternalServerError {
+				t.Errorf("Expected status code %d, got %d", fiber.StatusInternalServerError, resp.StatusCode)
+			}
+
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("Error reading response body: %v", err)
+			}
+
+			if strings.TrimSpace(string(body)) != tc.expectedBody {
+				t.Errorf("Expected response body '%s', got '%s'", tc.expectedBody, string(body))
+			}
+		})
+	}
+}
+
+func TestMiddleware_SendUnauthorizedResponse(t *testing.T) {
+	testCases := []struct {
+		name         string
+		responseMIME string
+		expectedBody string
+	}{
+		{
+			name:         "Plain text response",
+			responseMIME: fiber.MIMETextPlainCharsetUTF8,
+			expectedBody: "2FA information not found",
+		},
+		{
+			name:         "JSON response",
+			responseMIME: fiber.MIMEApplicationJSON,
+			expectedBody: "{\"error\":\"2FA information not found\"}",
+		},
+		{
+			name:         "XML response",
+			responseMIME: fiber.MIMEApplicationXML,
+			expectedBody: "<error><message>2FA information not found</message></error>",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			store := memory.New()
+			secret := gotp.RandomSecret(16)
+			config := twofa.Config{
+				ResponseMIME: tc.responseMIME,
+				Secret:       secret,
+				ContextKey:   "gopher_testing",
+				Storage:      store,
+			}
+			middleware := twofa.New(config)
+
+			app := fiber.New()
+			app.Use(func(c *fiber.Ctx) error {
+				c.Locals(config.ContextKey, "test_context_key")
+				return c.Next()
+			})
+			app.Use(middleware)
+			app.Get("/", func(c *fiber.Ctx) error {
+				return c.SendString("OK")
+			})
+
+			req := httptest.NewRequest("GET", "/", nil)
+			resp, err := app.Test(req)
+			if err != nil {
+				t.Fatalf("Error when sending request to the app: %v", err)
+			}
+
+			if resp.StatusCode != fiber.StatusUnauthorized {
+				t.Errorf("Expected status code %d, got %d", fiber.StatusUnauthorized, resp.StatusCode)
+			}
+
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("Error reading response body: %v", err)
+			}
+
+			if strings.TrimSpace(string(body)) != tc.expectedBody {
+				t.Errorf("Expected response body '%s', got '%s'", tc.expectedBody, string(body))
+			}
+		})
+	}
+}
+
+func TestMiddleware_CustomUnauthorizedHandler(t *testing.T) {
+	store := memory.New()
+	secret := gotp.RandomSecret(16)
+	config := twofa.Config{
+		Secret:     secret,
+		ContextKey: "gopher_testing",
+		Storage:    store,
+		UnauthorizedHandler: func(c *fiber.Ctx, err error) error {
+			return c.Status(fiber.StatusUnauthorized).SendString("Custom unauthorized handler")
+		},
+	}
+	middleware := twofa.New(config)
+
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		c.Locals(config.ContextKey, "test_context_key")
+		return c.Next()
+	})
+	app.Use(middleware)
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("OK")
+	})
+
+	req := httptest.NewRequest("GET", "/", nil)
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("Error when sending request to the app: %v", err)
+	}
+
+	if resp.StatusCode != fiber.StatusUnauthorized {
+		t.Errorf("Expected status code %d, got %d", fiber.StatusUnauthorized, resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("Error reading response body: %v", err)
+	}
+
+	expectedBody := "Custom unauthorized handler"
+	if string(body) != expectedBody {
+		t.Errorf("Expected response body '%s', got '%s'", expectedBody, string(body))
+	}
+}
+
+func TestMiddleware_CustomInternalErrorHandler(t *testing.T) {
+	store := memory.New()
+	secret := gotp.RandomSecret(16)
+	config := twofa.Config{
+		Secret:     secret,
+		ContextKey: "gopher_testing",
+		Storage:    store,
+		InternalErrorHandler: func(c *fiber.Ctx, err error) error {
+			return c.Status(fiber.StatusInternalServerError).SendString("Custom internal error handler")
+		},
+	}
+	middleware := twofa.New(config)
+
+	app := fiber.New()
+	app.Use(middleware)
+	app.Get("/", func(c *fiber.Ctx) error {
+		return fiber.NewError(fiber.StatusInternalServerError, "Internal server error")
+	})
+
+	req := httptest.NewRequest("GET", "/", nil)
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("Error when sending request to the app: %v", err)
+	}
+
+	if resp.StatusCode != fiber.StatusInternalServerError {
+		t.Errorf("Expected status code %d, got %d", fiber.StatusInternalServerError, resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("Error reading response body: %v", err)
+	}
+
+	expectedBody := "Custom internal error handler"
+	if string(body) != expectedBody {
+		t.Errorf("Expected response body '%s', got '%s'", expectedBody, string(body))
+	}
+}
+
+func TestMiddleware_GetContextKey(t *testing.T) {
+	testCases := []struct {
+		name          string
+		contextKey    string
+		contextValue  interface{}
+		expectedKey   string
+		expectedError string
+	}{
+		{
+			name:          "Valid context key",
+			contextKey:    "user_id",
+			contextValue:  "123",
+			expectedKey:   "123",
+			expectedError: "",
+		},
+		{
+			name:          "Empty context key",
+			contextKey:    "",
+			contextValue:  nil,
+			expectedKey:   "",
+			expectedError: "ContextKey is not set",
+		},
+		{
+			name:          "Context key not set",
+			contextKey:    "user_id",
+			contextValue:  nil,
+			expectedKey:   "",
+			expectedError: "ContextKey is not set",
+		},
+		{
+			name:          "Invalid context value type",
+			contextKey:    "user_id",
+			contextValue:  123,
+			expectedKey:   "",
+			expectedError: "failed to retrieve context key",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := twofa.Config{
+				ContextKey: tc.contextKey,
+			}
+			middleware := twofa.New(config)
+
+			app := fiber.New()
+			app.Use(func(c *fiber.Ctx) error {
+				if tc.contextValue != nil {
+					c.Locals(tc.contextKey, tc.contextValue)
+				}
+				return c.Next()
+			})
+			app.Use(middleware)
+			app.Get("/", func(c *fiber.Ctx) error {
+				return c.SendString("OK")
+			})
+
+			req := httptest.NewRequest("GET", "/", nil)
+			resp, err := app.Test(req)
+			if err != nil {
+				t.Fatalf("Error when sending request to the app: %v", err)
+			}
+
+			if resp.StatusCode != fiber.StatusOK {
+				body, _ := io.ReadAll(resp.Body)
+				if tc.expectedError != "" && !strings.Contains(string(body), tc.expectedError) {
+					t.Errorf("Expected error '%s', got '%s'", tc.expectedError, string(body))
+				}
+			} else {
+				if tc.expectedError != "" {
+					t.Errorf("Expected error '%s', but got no error", tc.expectedError)
+				}
+			}
+		})
 	}
 }
