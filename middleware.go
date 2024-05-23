@@ -22,7 +22,7 @@ type Middleware struct {
 
 // New creates a new instance of the 2FA middleware with the provided configuration.
 func New(config ...Config) fiber.Handler {
-	cfg := defaultConfig
+	cfg := DefaultConfig
 
 	if len(config) > 0 {
 		cfg = config[0]

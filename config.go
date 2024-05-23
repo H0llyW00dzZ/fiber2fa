@@ -9,6 +9,7 @@ import (
 	"image"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/skip2/go-qrcode"
 )
 
 // Config defines the configuration options for the 2FA middleware.
@@ -113,19 +114,25 @@ type Config struct {
 	// Optional. Default: nil
 	Next func(c *fiber.Ctx) bool
 
-	// BarcodePathTemplate is the template for the barcode path.
-	//
-	// Optional. Default: "/2fa/register?account=%s"
-	QRcodePathTemplate string
-
 	// QRcodeImage is the custom barcode image to be used instead of the default QR code.
 	//
-	// Optional. Default: nil
+	// Deprecated: replaced by "QRCode"
 	QRcodeImage image.Image
+
+	// QRCode is the configuration for the QR code generation.
+	// It allows customizing the QR code path template, image, and content.
+	//
+	// Optional. Default: see DefaultQRCodeConfig
+	QRCode QRCodeConfig
+
+	// Encode is the configuration for the QR code encoding.
+	//
+	// Optional. Default: see DefaultEncodeConfig
+	Encode EncodeConfig
 }
 
-// defaultConfig holds the default configuration values.
-var defaultConfig = Config{
+// DefaultConfig  holds the default configuration values.
+var DefaultConfig = Config{
 	Secret:        "",
 	Issuer:        "MyApp",
 	AccountName:   "",
@@ -144,9 +151,8 @@ var defaultConfig = Config{
 	JSONMarshal:   json.Marshal,
 	JSONUnmarshal: json.Unmarshal,
 	Next:          nil,
-	// TODO: Implement a page for generating a QR code that can be scanned by mobile apps to register and store the one-time password.
-	// Implementation will be done later as I currently don't have a clear idea during a break.
-	QRcodePathTemplate: "/2fa/register?account=%s",
+	QRCode:        DefaultQRCodeConfig,
+	Encode:        DefaultEncodeConfig,
 }
 
 // JSONMarshal defines the function signature for a JSON marshal.
@@ -154,3 +160,49 @@ type JSONMarshal func(v interface{}) ([]byte, error)
 
 // JSONUnmarshal defines the function signature for a JSON unmarshal.
 type JSONUnmarshal func(data []byte, v interface{}) error
+
+// QRCodeConfig defines the configuration options for the QR code generation.
+type QRCodeConfig struct {
+	// PathTemplate is the template for the QR code path.
+	//
+	// Optional. Default: "/2fa/register?account=%s"
+	PathTemplate string
+
+	// Image is the custom QR code image to be used instead of the default QR code.
+	//
+	// Optional. Default: nil
+	Image image.Image
+
+	// Content is the template for the QR code content.
+	//
+	// Optional. Default: "otpauth://totp/%s:%s?secret=%s&issuer=%s"
+	Content string
+}
+
+// DefaultQRCodeConfig holds the default configuration values for the QR code generation.
+var DefaultQRCodeConfig = QRCodeConfig{
+	Image:   nil,
+	Content: "otpauth://totp/%s:%s?secret=%s&issuer=%s",
+	// TODO: Implement a page for generating a QR code that can be scanned by mobile apps to register and store the one-time password.
+	// Implementation will be done later as I currently don't have a clear idea during a break.
+	PathTemplate: "/2fa/register?account=%s",
+}
+
+// EncodeConfig defines the configuration options for the QR code encoding.
+type EncodeConfig struct {
+	// Level is the QR code recovery level.
+	//
+	// Optional. Default: qrcode.Medium
+	Level qrcode.RecoveryLevel
+
+	// Size is the size of the QR code image.
+	//
+	// Optional. Default: 256
+	Size int
+}
+
+// DefaultEncodeConfig holds the default configuration values for the QR code encoding.
+var DefaultEncodeConfig = EncodeConfig{
+	Level: qrcode.Medium,
+	Size:  256,
+}
