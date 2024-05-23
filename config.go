@@ -156,10 +156,10 @@ var DefaultConfig = Config{
 }
 
 // JSONMarshal defines the function signature for a JSON marshal.
-type JSONMarshal func(v interface{}) ([]byte, error)
+type JSONMarshal func(v any) ([]byte, error)
 
 // JSONUnmarshal defines the function signature for a JSON unmarshal.
-type JSONUnmarshal func(data []byte, v interface{}) error
+type JSONUnmarshal func(data []byte, v any) error
 
 // QRCodeConfig defines the configuration options for the QR code generation.
 type QRCodeConfig struct {
