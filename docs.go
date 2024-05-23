@@ -65,8 +65,8 @@
 //   - Storage: The storage provider for storing 2FA information. Default is nil (in-memory storage).
 //   - TokenLookup: A string in the form of "<source>:<name>" that is used to extract the token from the request. Default is "query:token".
 //   - ContextKey: The key used to store the 2FA information in the context. Default is an empty string.
-//   - JSONMarshal: A custom JSON marshaling function. Default is json.Marshal.
-//   - JSONUnmarshal: A custom JSON unmarshaling function. Default is json.Unmarshal.
+//   - JSONMarshal: A custom JSON marshaling function. Default is [json.Marshal].
+//   - JSONUnmarshal: A custom JSON unmarshaling function. Default is [json.Unmarshal].
 //   - Next: An optional function that determines whether to skip the 2FA middleware for a given request. If the function returns true, the middleware will be skipped. Default is nil.
 //   - QRCode: The configuration for the QR code generation. It allows customizing the QR code path template, image, and content. Default is [twofa.DefaultQRCodeConfig].
 //   - Encode: The configuration for the QR code encoding. It allows customizing the QR code recovery level and size. Default is [twofa.DefaultEncodeConfig].
