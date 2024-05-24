@@ -105,7 +105,6 @@ func BenchmarkJSONSonicWithValid2FA(b *testing.B) {
 	}
 
 	req := httptest.NewRequest(fiber.MethodGet, "/?token="+token, nil)
-	req.Header.Set(fiber.HeaderCookie, "twofa_cookie="+cookieValue)
 
 	b.ResetTimer()
 
@@ -288,7 +287,6 @@ func BenchmarkJSONStdLibraryMiddlewareWithValid2FA(b *testing.B) {
 	}
 
 	req := httptest.NewRequest(fiber.MethodGet, "/?token="+token, nil)
-	req.Header.Set(fiber.HeaderCookie, "twofa_cookie="+cookieValue)
 
 	b.ResetTimer()
 

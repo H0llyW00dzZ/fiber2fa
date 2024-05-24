@@ -6,6 +6,7 @@ package twofa
 
 import (
 	"encoding/xml"
+	"fmt"
 	"strings"
 	"time"
 
@@ -53,11 +54,6 @@ func (m *Middleware) Handle(c *fiber.Ctx) error {
 		return m.SendInternalErrorResponse(c, err)
 	}
 
-	// Check if the user has a valid 2FA cookie
-	if m.isValidCookie(c) {
-		return c.Next()
-	}
-
 	info, err := m.getInfoFromStorage(contextKey)
 	if err != nil {
 		return m.SendInternalErrorResponse(c, ErrorFailedToRetrieveInfo)
@@ -67,6 +63,11 @@ func (m *Middleware) Handle(c *fiber.Ctx) error {
 	if info == nil {
 		// No 2FA information found, handle missing information.
 		return m.handleMissingInfo(c)
+	}
+
+	// Check if the user has a valid 2FA cookie
+	if m.isValidCookie(c, info) {
+		return c.Next()
 	}
 
 	// Handle token verification and further processing
@@ -103,19 +104,21 @@ func (m *Middleware) handleTokenVerification(c *fiber.Ctx, info *Info, contextKe
 		// No token provided, redirecting to 2FA page.
 		return c.Redirect(m.Config.RedirectURL, fiber.StatusFound)
 	}
-	// Verify the provided token
-	if !m.verifyToken(info, token) {
+
+	// Verify the provided token and get the updated Info struct
+	updatedInfo, valid := m.verifyToken(info, token)
+	if !valid {
 		// Token is invalid, sending unauthorized response.
 		return m.SendUnauthorizedResponse(c, fiber.NewError(fiber.StatusUnauthorized, "Invalid 2FA token"))
 	}
 
 	// Set the 2FA cookie.
-	if err := m.setCookie(c, info); err != nil {
+	if err := m.setCookie(c, updatedInfo); err != nil {
 		return m.SendInternalErrorResponse(c, ErrorFailedToStoreInfo)
 	}
 
 	// Store the updated Info struct in the storage
-	if err := m.updateInfoInStorage(contextKey, info); err != nil {
+	if err := m.updateInfoInStorage(contextKey, updatedInfo); err != nil {
 		return m.SendInternalErrorResponse(c, ErrorFailedToStoreInfo)
 	}
 
@@ -153,21 +156,35 @@ func (m *Middleware) getContextKey(c *fiber.Ctx) (string, error) {
 }
 
 // isValidCookie checks if the user has a valid 2FA cookie.
-func (m *Middleware) isValidCookie(c *fiber.Ctx) bool {
+func (m *Middleware) isValidCookie(c *fiber.Ctx, info *Info) bool {
 	cookie := utils.CopyString(c.Cookies(m.Config.CookieName))
 	if cookie == "" {
 		return false
 	}
 
-	return m.validateCookie(cookie)
+	if !m.validateCookie(cookie) {
+		// Cookie is no longer valid, delete the Info struct from the storage using the ContextKey from the Info struct
+		contextKeyValue := info.GetCookieValue()
+		if err := m.deleteInfoFromStorage(contextKeyValue); err != nil {
+			// Handle the error if needed
+			fmt.Println("Failed to delete Info struct from storage:", err)
+		}
+
+		// Redirect to the 2FA URL from the default config
+		c.Redirect(m.Config.RedirectURL, fiber.StatusFound)
+		return false
+	}
+
+	return true
 }
 
 // setCookie sets the 2FA cookie with an expiration time.
 //
 // Note: This is suitable for use with encrypted cookies Fiber.
 func (m *Middleware) setCookie(c *fiber.Ctx, info *Info) error {
-	expirationTime := time.Now().Add(time.Duration(m.Config.CookieMaxAge) * time.Second)
-	cookieValue := m.GenerateCookieValue(expirationTime)
+
+	cookieValue := info.GetCookieValue()
+	expiresValue := info.GetExpirationTime()
 
 	// Set the cookie domain dynamically based on the request's domain if HTTPS is used
 	cookieDomain := m.Config.CookieDomain
@@ -180,15 +197,12 @@ func (m *Middleware) setCookie(c *fiber.Ctx, info *Info) error {
 	c.Cookie(&fiber.Cookie{
 		Name:     m.Config.CookieName,
 		Value:    cookieValue,
-		Expires:  expirationTime,
+		Expires:  expiresValue,
 		Path:     m.Config.CookiePath,
 		Domain:   cookieDomain,
 		Secure:   secure,
 		HTTPOnly: true,
 	})
-
-	info.SetCookieValue(cookieValue)
-	info.SetExpirationTime(expirationTime)
 
 	return nil
 }
@@ -239,10 +253,20 @@ func (m *Middleware) extractToken(c *fiber.Ctx) string {
 	return ""
 }
 
-// verifyToken verifies the provided token against the user's secret.
-func (m *Middleware) verifyToken(info *Info, token string) bool {
+// verifyToken verifies the provided token against the user's secret and returns the updated Info struct.
+func (m *Middleware) verifyToken(info *Info, token string) (*Info, bool) {
 	totp := gotp.NewDefaultTOTP(info.GetSecret())
-	return totp.Verify(token, time.Now().Unix())
+	if !totp.Verify(token, time.Now().Unix()) {
+		return info, false
+	}
+
+	expirationTime := time.Now().Add(time.Duration(m.Config.CookieMaxAge) * time.Second)
+	cookieValue := m.GenerateCookieValue(expirationTime)
+
+	info.SetCookieValue(cookieValue)
+	info.SetExpirationTime(expirationTime)
+
+	return info, true
 }
 
 // SendUnauthorizedResponse sends an unauthorized response based on the configured MIME type.
