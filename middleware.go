@@ -6,6 +6,7 @@ package twofa
 
 import (
 	"encoding/xml"
+	"fmt"
 	"strings"
 	"time"
 
@@ -53,11 +54,6 @@ func (m *Middleware) Handle(c *fiber.Ctx) error {
 		return m.SendInternalErrorResponse(c, err)
 	}
 
-	// Check if the user has a valid 2FA cookie
-	if m.isValidCookie(c) {
-		return c.Next()
-	}
-
 	info, err := m.getInfoFromStorage(contextKey)
 	if err != nil {
 		return m.SendInternalErrorResponse(c, ErrorFailedToRetrieveInfo)
@@ -67,6 +63,11 @@ func (m *Middleware) Handle(c *fiber.Ctx) error {
 	if info == nil {
 		// No 2FA information found, handle missing information.
 		return m.handleMissingInfo(c)
+	}
+
+	// Check if the user has a valid 2FA cookie
+	if m.isValidCookie(c, info) {
+		return c.Next()
 	}
 
 	// Handle token verification and further processing
@@ -155,13 +156,26 @@ func (m *Middleware) getContextKey(c *fiber.Ctx) (string, error) {
 }
 
 // isValidCookie checks if the user has a valid 2FA cookie.
-func (m *Middleware) isValidCookie(c *fiber.Ctx) bool {
+func (m *Middleware) isValidCookie(c *fiber.Ctx, info *Info) bool {
 	cookie := utils.CopyString(c.Cookies(m.Config.CookieName))
 	if cookie == "" {
 		return false
 	}
 
-	return m.validateCookie(cookie)
+	if !m.validateCookie(cookie) {
+		// Cookie is no longer valid, delete the Info struct from the storage using the ContextKey from the Info struct
+		contextKeyValue := info.GetCookieValue()
+		if err := m.deleteInfoFromStorage(contextKeyValue); err != nil {
+			// Handle the error if needed
+			fmt.Println("Failed to delete Info struct from storage:", err)
+		}
+
+		// Redirect to the 2FA URL from the default config
+		c.Redirect(m.Config.RedirectURL, fiber.StatusFound)
+		return false
+	}
+
+	return true
 }
 
 // setCookie sets the 2FA cookie with an expiration time.
