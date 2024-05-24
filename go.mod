@@ -6,6 +6,7 @@ require (
 	github.com/bytedance/sonic v1.11.7
 	github.com/gofiber/fiber/v2 v2.52.4
 	github.com/gofiber/storage/memory/v2 v2.0.1
+	github.com/google/uuid v1.6.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/xlzd/gotp v0.1.0
 )
@@ -15,7 +16,6 @@ require (
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

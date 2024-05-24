@@ -22,6 +22,7 @@ import (
 	twofa "github.com/H0llyW00dzZ/fiber2fa"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/storage/memory/v2"
+	"github.com/google/uuid"
 	"github.com/skip2/go-qrcode"
 	"github.com/xlzd/gotp"
 )
@@ -931,5 +932,205 @@ func TestMiddleware_GenerateQRcodePath_Error(t *testing.T) {
 	expectedErrorMessage := "2FA information not found"
 	if !strings.Contains(string(body), expectedErrorMessage) {
 		t.Errorf("Expected error message '%s', got '%s'", expectedErrorMessage, string(body))
+	}
+}
+
+func TestMiddlewareUUIDContextKey_Handle(t *testing.T) {
+	// Set up the storage with an in-memory store for simplicity
+	store := memory.New()
+	secret := gotp.RandomSecret(16)
+
+	// Generate a UUID for the context key
+	contextKey := uuid.New().String()
+
+	// Create a default Info struct and store it for Simulate State
+	info := twofa.Info{
+		ContextKey:     contextKey,
+		Secret:         secret,
+		CookieValue:    "",
+		ExpirationTime: time.Time{},
+	}
+	infoJSON, _ := json.Marshal(info)
+	_ = store.Set("gopher@example.com", infoJSON, 0) // Ignoring error for brevity
+
+	// Define a middleware instance with default configuration
+	middleware := twofa.New(twofa.Config{
+		Secret:       secret,
+		Storage:      store,
+		ContextKey:   contextKey,
+		RedirectURL:  "/2fa",
+		CookieMaxAge: 86400,
+		CookieName:   "twofa_cookie",
+		TokenLookup:  "header:Authorization,query:token,form:token,param:token,cookie:token",
+	})
+
+	// Create a new Fiber app and register the middleware
+	app := fiber.New()
+	app.Use(func(c *fiber.Ctx) error {
+		c.Locals(contextKey, "gopher@example.com")
+		return c.Next()
+	})
+	app.Use(middleware)
+
+	// Define routes that will be used for testing
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendStatus(fiber.StatusOK)
+	})
+	app.Post("/", func(c *fiber.Ctx) error {
+		return c.SendStatus(fiber.StatusOK)
+	})
+
+	// Generate a valid 2FA token
+	totp := gotp.NewDefaultTOTP(secret)
+	validToken := totp.Now()
+
+	// Create a separate instance of the Middleware struct for testing
+	testMiddleware := &twofa.Middleware{
+		Config: &twofa.Config{
+			Secret: secret,
+		},
+	}
+
+	// Define test cases
+	testCases := []struct {
+		name             string
+		requestURL       string
+		requestMethod    string
+		requestBody      io.Reader
+		requestHeaders   map[string]string
+		requestCookies   []*http.Cookie
+		expectedStatus   int
+		expectedLocation string
+		expectedBody     string
+		setupFunc        func()
+	}{
+		{
+			name:             "GET request without token",
+			requestURL:       "https://hack/",
+			requestMethod:    "GET",
+			requestBody:      nil,
+			requestHeaders:   nil,
+			requestCookies:   nil,
+			expectedStatus:   fiber.StatusFound,
+			expectedLocation: "/2fa",
+		},
+		{
+			name:           "GET request with valid token in query parameter",
+			requestURL:     fmt.Sprintf("https://hack/?token=%s", validToken),
+			requestMethod:  "GET",
+			requestBody:    nil,
+			requestHeaders: nil,
+			requestCookies: nil,
+			expectedStatus: fiber.StatusOK,
+		},
+		{
+			name:          "GET request with valid token in header",
+			requestURL:    "https://hack/",
+			requestMethod: "GET",
+			requestBody:   nil,
+			requestHeaders: map[string]string{
+				"Authorization": fmt.Sprintf("Bearer %s", validToken),
+			},
+			requestCookies: nil,
+			expectedStatus: fiber.StatusOK,
+		},
+		{
+			name:           "POST request with valid token in form data",
+			requestURL:     "https://hack/",
+			requestMethod:  "POST",
+			requestBody:    strings.NewReader(fmt.Sprintf("token=%s", validToken)),
+			requestHeaders: map[string]string{"Content-Type": "application/x-www-form-urlencoded"},
+			requestCookies: nil,
+			expectedStatus: fiber.StatusOK,
+		},
+		{
+			name:           "GET request with valid token in cookie",
+			requestURL:     "https://hack/",
+			requestMethod:  "GET",
+			requestBody:    nil,
+			requestHeaders: nil,
+			requestCookies: []*http.Cookie{{Name: "token", Value: validToken}},
+			expectedStatus: fiber.StatusOK,
+		},
+		{
+			name:           "GET request with valid cookie",
+			requestURL:     "https://hack/",
+			requestMethod:  "GET",
+			requestBody:    nil,
+			requestHeaders: nil,
+			requestCookies: []*http.Cookie{
+				{
+					Name:  "twofa_cookie",
+					Value: testMiddleware.GenerateCookieValue(time.Now().Add(time.Hour)),
+				},
+			},
+			expectedStatus: fiber.StatusOK,
+		},
+		{
+			name:           "GET request with invalid cookie",
+			requestURL:     "https://hack/",
+			requestMethod:  "GET",
+			requestBody:    nil,
+			requestHeaders: nil,
+			requestCookies: []*http.Cookie{
+				{
+					Name:  "twofa_cookie",
+					Value: "invalid_cookie_value",
+				},
+			},
+			expectedStatus:   fiber.StatusFound,
+			expectedLocation: "/2fa",
+		},
+		{
+			name:           "Invalid 2FA token",
+			requestURL:     "https://hack/?token=invalid_token",
+			requestMethod:  "GET",
+			requestBody:    nil,
+			requestHeaders: nil,
+			requestCookies: nil,
+			expectedStatus: fiber.StatusUnauthorized,
+			expectedBody:   "Invalid 2FA token",
+		},
+
+		// Add more test cases as needed
+	}
+
+	// Run subtests in parallel
+	for _, tc := range testCases {
+		tc := tc // Capture range variable
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Create a new HTTP request
+			req := httptest.NewRequest(tc.requestMethod, tc.requestURL, tc.requestBody)
+			for key, value := range tc.requestHeaders {
+				req.Header.Set(key, value)
+			}
+			for _, cookie := range tc.requestCookies {
+				req.AddCookie(cookie)
+			}
+
+			// Perform the request
+			resp, err := app.Test(req)
+			if err != nil {
+				t.Fatalf("Failed to perform request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			// Check the response status code
+			if resp.StatusCode != tc.expectedStatus {
+				t.Logf("Request: %s %s", req.Method, req.URL)
+				t.Logf("Response: %d", resp.StatusCode)
+				t.Errorf("Expected status code %d, but got %d", tc.expectedStatus, resp.StatusCode)
+			}
+
+			// Check the response location header if expectedLocation is set
+			if tc.expectedLocation != "" {
+				location := resp.Header.Get("Location")
+				if location != tc.expectedLocation {
+					t.Errorf("Expected location header %q, but got %q", tc.expectedLocation, location)
+				}
+			}
+		})
 	}
 }
