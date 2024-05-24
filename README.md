@@ -54,6 +54,38 @@ The middleware provides the following features:
 
 More features and validation capabilities will be added in the future to enhance the middleware's functionality and cater to a wider range of validation scenarios.
 
+## Benchmark
+
+- #### v0.3.0
+
+```
+goos: windows
+goarch: amd64
+pkg: github.com/H0llyW00dzZ/fiber2fa
+cpu: AMD Ryzen 9 3900X 12-Core Processor            
+BenchmarkJSONSonicMiddlewareWithInvalidCookie-24         	  113605	      9290 ns/op	    6065 B/op	      29 allocs/op
+BenchmarkJSONSonicWithValid2FA-24                        	   55086	     21073 ns/op	    9598 B/op	      66 allocs/op
+BenchmarkJSONSonicWithValidCookie-24                     	   96120	     12311 ns/op	    7399 B/op	      41 allocs/op
+BenchmarkJSONStdLibraryMiddlewareWithInvalidCookie-24    	  128434	      9386 ns/op	    6003 B/op	      29 allocs/op
+BenchmarkJSONStdLibraryMiddlewareWithValid2FA-24         	   49399	     24714 ns/op	    8200 B/op	      68 allocs/op
+BenchmarkJSONStdLibraryWithValidCookie-24                	   60553	     20039 ns/op	    7108 B/op	      46 allocs/op
+```
+
+> [!NOTE]
+> The benchmark results are based on the latest version of the middleware (v0.3.0) and were performed on a Windows machine with an AMD Ryzen 9 3900X 12-Core Processor. The results may vary depending on the system configuration and environment.
+>
+> The benchmark tests cover different scenarios, including:
+> - Middleware performance with an invalid cookie using the Sonic JSON library
+> - Middleware performance with a valid 2FA token using the Sonic JSON library
+> - Middleware performance with a valid cookie using the Sonic JSON library
+> - Middleware performance with an invalid cookie using the standard library JSON package
+> - Middleware performance with a valid 2FA token using the standard library JSON package
+> - Middleware performance with a valid cookie using the standard library JSON package
+>
+> The benchmark results provide insights into the performance characteristics of the middleware under different conditions and JSON libraries. It's important to consider these results when evaluating the middleware's suitability for specific use cases and performance requirements.
+>
+> Also note that benchmark results may be updated in the future as the middleware evolves and new versions are released.
+
 ## Contributing
 
 Contributions are welcome! If you encounter any issues or have suggestions for improvements, please open an issue or submit a pull request.
