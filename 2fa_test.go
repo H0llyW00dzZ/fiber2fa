@@ -77,15 +77,13 @@ func TestMiddleware_Handle(t *testing.T) {
 
 	// Define a middleware instance with default configuration
 	middleware := twofa.New(twofa.Config{
-		Secret:        secret,
-		Storage:       store,
-		ContextKey:    "user123",
-		RedirectURL:   "/2fa",
-		CookieMaxAge:  86400,
-		CookieName:    "twofa_cookie",
-		TokenLookup:   "header:Authorization,query:token,form:token,param:token,cookie:token",
-		JSONMarshal:   json.Marshal,
-		JSONUnmarshal: json.Unmarshal,
+		Secret:       secret,
+		Storage:      store,
+		ContextKey:   "user123",
+		RedirectURL:  "/2fa",
+		CookieMaxAge: 86400,
+		CookieName:   "twofa_cookie",
+		TokenLookup:  "header:Authorization,query:token,form:token,param:token,cookie:token",
 	})
 
 	// Create a new Fiber app and register the middleware
@@ -275,9 +273,7 @@ func customLogger(t *testing.T) fiber.Handler {
 }
 
 func TestMiddleware_SkipNext(t *testing.T) {
-	store := memory.New()
 	middleware := twofa.New(twofa.Config{
-		Storage: store,
 		Next: func(c *fiber.Ctx) bool {
 			return true // Always skip the middleware
 		},
@@ -309,9 +305,7 @@ func TestMiddleware_SkipNext(t *testing.T) {
 }
 
 func TestMiddleware_SkipCookies(t *testing.T) {
-	store := memory.New()
 	middleware := twofa.New(twofa.Config{
-		Storage:     store,
 		SkipCookies: []string{"/skip"},
 	})
 
@@ -341,12 +335,16 @@ func TestMiddleware_SkipCookies(t *testing.T) {
 }
 
 func TestMiddleware_Handle_StorageGetFail(t *testing.T) {
+	secret := gotp.RandomSecret(16)
 	// Use a custom storage that fails on Get operation
-	store := &failingStorage{}
+	store := &failingStorage{
+		Storage: memory.New(),
+	}
 
 	middleware := twofa.New(twofa.Config{
 		Storage:    store,
 		ContextKey: "user123x",
+		Secret:     secret,
 	})
 
 	app := fiber.New()
@@ -380,7 +378,7 @@ func TestMiddleware_Handle_StorageGetFail(t *testing.T) {
 
 // failingStorage is a custom storage that fails on Get operation
 type failingStorage struct {
-	memory.Storage
+	*memory.Storage
 }
 
 func (s *failingStorage) Get(key string) ([]byte, error) {
