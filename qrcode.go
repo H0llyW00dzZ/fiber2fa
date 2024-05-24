@@ -26,16 +26,16 @@ func (m *Middleware) GenerateQRcodePath(c *fiber.Ctx) error {
 	// Get the context key from the account name
 	contextKey, err := m.getContextKey(c)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).SendString(err.Error())
+		return m.SendUnauthorizedResponse(c, err)
 	}
 
 	// Retrieve the 2FA information from the storage
 	info, err := m.getInfoFromStorage(contextKey)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		return m.SendInternalErrorResponse(c, err)
 	}
 	if info == nil {
-		return c.Status(fiber.StatusUnauthorized).SendString("2FA information not found")
+		return m.SendUnauthorizedResponse(c, fiber.NewError(fiber.StatusUnauthorized, "2FA information not found"))
 	}
 
 	// Generate the QR code content
@@ -54,13 +54,13 @@ func (m *Middleware) GenerateQRcodePath(c *fiber.Ctx) error {
 	// Generate the default QR code image
 	qrCodeBytes, err := qrcode.Encode(qrCodeContent, m.Config.Encode.Level, m.Config.Encode.Size)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		return m.SendInternalErrorResponse(c, err)
 	}
 
 	// Decode the QR code bytes into an image.Image
 	qrCodeImage, _, err := image.Decode(bytes.NewReader(qrCodeBytes))
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		return m.SendInternalErrorResponse(c, err)
 	}
 
 	// Set the response headers
