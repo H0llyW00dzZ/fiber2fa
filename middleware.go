@@ -154,7 +154,7 @@ func (m *Middleware) getContextKey(c *fiber.Ctx) (string, error) {
 
 // isValidCookie checks if the user has a valid 2FA cookie.
 func (m *Middleware) isValidCookie(c *fiber.Ctx) bool {
-	cookie := c.Cookies(m.Config.CookieName)
+	cookie := utils.CopyString(c.Cookies(m.Config.CookieName))
 	if cookie == "" {
 		return false
 	}
