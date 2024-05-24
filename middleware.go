@@ -44,12 +44,7 @@ func New(config ...Config) fiber.Handler {
 // Handle is the method on Middleware that handles the 2FA authentication process.
 func (m *Middleware) Handle(c *fiber.Ctx) error {
 	// Check if the middleware should be skipped
-	if m.Config.Next != nil && m.Config.Next(c) {
-		return c.Next()
-	}
-
-	// Check if the requested path is in the skip list
-	if m.isPathSkipped(c.Path()) {
+	if m.shouldSkipMiddleware(c) {
 		return c.Next()
 	}
 
@@ -67,12 +62,41 @@ func (m *Middleware) Handle(c *fiber.Ctx) error {
 	if err != nil {
 		return m.SendInternalErrorResponse(c, ErrorFailedToRetrieveInfo)
 	}
-	// Check if info was found in the storage
+
+	// Check if 2FA information was found in the storage
 	if info == nil {
-		// No info found, user probably not registered for 2FA
-		return m.SendUnauthorizedResponse(c, fiber.NewError(fiber.StatusUnauthorized, "2FA information not found"))
+		// No 2FA information found, handle missing information.
+		return m.handleMissingInfo(c)
 	}
 
+	// Handle token verification and further processing
+	return m.handleTokenVerification(c, info, contextKey)
+}
+
+// shouldSkipMiddleware checks if the middleware should be skipped based on the configuration.
+func (m *Middleware) shouldSkipMiddleware(c *fiber.Ctx) bool {
+	// Check if the middleware should be skipped using the Next function
+	if m.Config.Next != nil && m.Config.Next(c) {
+		return true
+	}
+
+	// Check if the requested path is in the skip list
+	if m.isPathSkipped(c.Path()) {
+		return true
+	}
+
+	return false
+}
+
+// handleMissingInfo handles the case when 2FA information is missing.
+func (m *Middleware) handleMissingInfo(c *fiber.Ctx) error {
+	// TODO: Handle missing 2FA mechanism.
+	// This should be the place where "/2fa/register?account=%s" is in the wild (handled) instead of returning Unauthorized.
+	return m.SendUnauthorizedResponse(c, fiber.NewError(fiber.StatusUnauthorized, "2FA information not found"))
+}
+
+// handleTokenVerification handles the token verification process and further processing.
+func (m *Middleware) handleTokenVerification(c *fiber.Ctx, info *Info, contextKey string) error {
 	// Extract the token from the specified token lookup sources
 	token := m.extractToken(c)
 	if token == "" {
@@ -85,6 +109,7 @@ func (m *Middleware) Handle(c *fiber.Ctx) error {
 		return m.SendUnauthorizedResponse(c, fiber.NewError(fiber.StatusUnauthorized, "Invalid 2FA token"))
 	}
 
+	// Set the 2FA cookie.
 	if err := m.setCookie(c, info); err != nil {
 		return m.SendInternalErrorResponse(c, ErrorFailedToStoreInfo)
 	}
