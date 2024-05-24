@@ -6,6 +6,7 @@ package twofa_test
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"image"
@@ -214,7 +215,6 @@ func TestMiddleware_Handle(t *testing.T) {
 			expectedStatus: fiber.StatusUnauthorized,
 			expectedBody:   "Invalid 2FA token",
 		},
-
 		// Add more test cases as needed
 	}
 
@@ -991,6 +991,27 @@ func TestMiddlewareUUIDContextKey_Handle(t *testing.T) {
 		},
 	}
 
+	// Generate cryptographically secure random data
+	randomData := make([]byte, 16)
+	_, err := rand.Read(randomData)
+	if err != nil {
+		t.Fatalf("Failed to generate random data: %v", err)
+	}
+
+	// Create a UUID using the random data
+	randomUUID, err := uuid.FromBytes(randomData)
+	if err != nil {
+		t.Fatalf("Failed to create UUID from random data: %v", err)
+	}
+
+	// Create a separate instance of the Middleware struct for testing
+	testMiddlewareRandomUUID := &twofa.Middleware{
+		Config: &twofa.Config{
+			Secret:     secret,
+			ContextKey: fmt.Sprintf("test-uuid-%s", randomUUID.String()),
+		},
+	}
+
 	// Define test cases
 	testCases := []struct {
 		name             string
@@ -1092,6 +1113,112 @@ func TestMiddlewareUUIDContextKey_Handle(t *testing.T) {
 			expectedBody:   "Invalid 2FA token",
 		},
 
+		{
+			name:           "GET request with Random UUID value",
+			requestURL:     fmt.Sprintf("https://rand.uuid.hack/?token=%s", validToken),
+			requestMethod:  "GET",
+			requestBody:    nil,
+			requestHeaders: nil,
+			requestCookies: nil,
+			expectedStatus: fiber.StatusOK,
+			setupFunc: func() {
+				// Update the middleware configuration with the UUID value
+				testMiddlewareRandomUUID.Config.ContextKey = randomUUID.String()
+			},
+		},
+		{
+			name:          "GET request with valid token in header and Random UUID value",
+			requestURL:    "https://rand.uuid.hack/",
+			requestMethod: "GET",
+			requestBody:   nil,
+			requestHeaders: map[string]string{
+				"Authorization": fmt.Sprintf("Bearer %s", validToken),
+			},
+			requestCookies: nil,
+			expectedStatus: fiber.StatusOK,
+			setupFunc: func() {
+				// Update the middleware configuration with the UUID value
+				testMiddlewareRandomUUID.Config.ContextKey = randomUUID.String()
+			},
+		},
+		{
+			name:           "POST request with valid token in form data and Random UUID value",
+			requestURL:     "https://rand.uuid.hack/",
+			requestMethod:  "POST",
+			requestBody:    strings.NewReader(fmt.Sprintf("token=%s", validToken)),
+			requestHeaders: map[string]string{"Content-Type": "application/x-www-form-urlencoded"},
+			requestCookies: nil,
+			expectedStatus: fiber.StatusOK,
+			setupFunc: func() {
+				// Update the middleware configuration with the UUID value
+				testMiddlewareRandomUUID.Config.ContextKey = randomUUID.String()
+			},
+		},
+		{
+			name:           "GET request with valid token in cookie and Random UUID value",
+			requestURL:     "https://rand.uuid.hack/",
+			requestMethod:  "GET",
+			requestBody:    nil,
+			requestHeaders: nil,
+			requestCookies: []*http.Cookie{{Name: "token", Value: validToken}},
+			expectedStatus: fiber.StatusOK,
+			setupFunc: func() {
+				// Update the middleware configuration with the UUID value
+				testMiddlewareRandomUUID.Config.ContextKey = randomUUID.String()
+			},
+		},
+		{
+			name:           "GET request with valid cookie and Random UUID value",
+			requestURL:     "https://rand.uuid.hack/",
+			requestMethod:  "GET",
+			requestBody:    nil,
+			requestHeaders: nil,
+			requestCookies: []*http.Cookie{
+				{
+					Name:  "twofa_cookie",
+					Value: testMiddleware.GenerateCookieValue(time.Now().Add(time.Hour)),
+				},
+			},
+			expectedStatus: fiber.StatusOK,
+			setupFunc: func() {
+				// Update the middleware configuration with the UUID value
+				testMiddlewareRandomUUID.Config.ContextKey = randomUUID.String()
+			},
+		},
+		{
+			name:           "GET request with invalid cookie and Random UUID value",
+			requestURL:     "https://rand.uuid.hack/",
+			requestMethod:  "GET",
+			requestBody:    nil,
+			requestHeaders: nil,
+			requestCookies: []*http.Cookie{
+				{
+					Name:  "twofa_cookie",
+					Value: "invalid_cookie_value",
+				},
+			},
+			expectedStatus:   fiber.StatusFound,
+			expectedLocation: "/2fa",
+			setupFunc: func() {
+				// Update the middleware configuration with the UUID value
+				testMiddlewareRandomUUID.Config.ContextKey = randomUUID.String()
+			},
+		},
+		{
+			name:           "Invalid 2FA token with Random UUID value",
+			requestURL:     "https://rand.uuid.hack/?token=invalid_token",
+			requestMethod:  "GET",
+			requestBody:    nil,
+			requestHeaders: nil,
+			requestCookies: nil,
+			expectedStatus: fiber.StatusUnauthorized,
+			expectedBody:   "Invalid 2FA token",
+			setupFunc: func() {
+				// Update the middleware configuration with the UUID value
+				testMiddlewareRandomUUID.Config.ContextKey = randomUUID.String()
+			},
+		},
+
 		// Add more test cases as needed
 	}
 
@@ -1100,6 +1227,11 @@ func TestMiddlewareUUIDContextKey_Handle(t *testing.T) {
 		tc := tc // Capture range variable
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
+
+			// Run the setup function if provided
+			if tc.setupFunc != nil {
+				tc.setupFunc()
+			}
 
 			// Create a new HTTP request
 			req := httptest.NewRequest(tc.requestMethod, tc.requestURL, tc.requestBody)
