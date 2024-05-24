@@ -13,8 +13,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/gofiber/fiber/v2/utils"
 )
 
 // GenerateCookieValue generates a signed cookie value using HMAC.
@@ -25,10 +23,10 @@ import (
 // This will replace the current implementation that uses HMAC.
 func (m *Middleware) GenerateCookieValue(expirationTime time.Time) string {
 	data := fmt.Sprintf("%d", expirationTime.Unix())
-	hash := hmac.New(sha256.New, utils.CopyBytes([]byte(m.Config.Secret)))
-	hash.Write(utils.CopyBytes([]byte(data)))
-	signature := base64.RawURLEncoding.EncodeToString(utils.CopyBytes(hash.Sum(nil)))
-	return fmt.Sprintf("%s.%s", utils.CopyString(data), signature)
+	hash := hmac.New(sha256.New, []byte(m.Config.Secret))
+	hash.Write([]byte(data))
+	signature := base64.RawURLEncoding.EncodeToString(hash.Sum(nil))
+	return fmt.Sprintf("%s.%s", data, signature)
 }
 
 // validateCookie validates the cookie value using HMAC.
@@ -41,11 +39,11 @@ func (m *Middleware) validateCookie(cookie string) bool {
 	data := parts[0]
 	signature := parts[1]
 
-	hash := hmac.New(sha256.New, utils.CopyBytes([]byte(m.Config.Secret)))
-	hash.Write(utils.CopyBytes([]byte(data)))
+	hash := hmac.New(sha256.New, []byte(m.Config.Secret))
+	hash.Write([]byte(data))
 	expectedSignature := base64.RawURLEncoding.EncodeToString(hash.Sum(nil))
 
-	if subtle.ConstantTimeCompare(utils.CopyBytes([]byte(signature)), utils.CopyBytes([]byte(expectedSignature))) != 1 {
+	if subtle.ConstantTimeCompare([]byte(signature), []byte(expectedSignature)) != 1 {
 		return false
 	}
 
