@@ -804,7 +804,7 @@ func TestMiddleware_GetContextKey(t *testing.T) {
 	testCases := []struct {
 		name          string
 		contextKey    string
-		contextValue  interface{}
+		contextValue  any
 		expectedKey   string
 		expectedError string
 	}{
@@ -874,5 +874,64 @@ func TestMiddleware_GetContextKey(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestMiddleware_GenerateQRcodePath_Error(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+	// Create a new Fiber app
+	app := fiber.New()
+
+	// Create an in-memory storage
+	storage := memory.New()
+
+	// Create a new Middleware instance with a custom ContextKey, Issuer, and JSONUnmarshal
+	middleware := &twofa.Middleware{
+		Config: &twofa.Config{
+			ContextKey:    "accountName",
+			AccountName:   "gopherAccount",
+			Issuer:        "MyApp",
+			Secret:        secret,
+			Storage:       storage,
+			JSONMarshal:   json.Marshal,   // Set the JSONMarshal field
+			JSONUnmarshal: json.Unmarshal, // Set the JSONUnmarshal field
+			Encode: twofa.EncodeConfig{
+				Level: qrcode.Medium,
+				Size:  256,
+			},
+			QRCode: twofa.QRCodeConfig{
+				Content: "otpauth://totp/%s:%s?secret=%s&issuer=%s",
+			},
+		},
+	}
+
+	// Define a test handler that sets an invalid account name in c.Locals and calls GenerateQRcodePath
+	app.Get("/test", func(c *fiber.Ctx) error {
+		c.Locals("accountName", "invalid@example.com")
+		return middleware.GenerateQRcodePath(c)
+	})
+
+	// Send a test request to the "/test" route
+	req := httptest.NewRequest("GET", "/test", nil)
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("Error when sending request to the app: %v", err)
+	}
+
+	// Check if the response status code is 401 Unauthorized
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Errorf("Expected status code %d, got %d", http.StatusUnauthorized, resp.StatusCode)
+	}
+
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("Error reading response body: %v", err)
+	}
+
+	// Check if the response body contains the expected error message
+	expectedErrorMessage := "2FA information not found"
+	if !strings.Contains(string(body), expectedErrorMessage) {
+		t.Errorf("Expected error message '%s', got '%s'", expectedErrorMessage, string(body))
 	}
 }
