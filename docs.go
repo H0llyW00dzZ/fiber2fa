@@ -52,7 +52,7 @@
 //
 //   - Secret: The shared secret used for generating and verifying TOTP tokens. This field is required.
 //   - Issuer: The name of the issuer to be displayed in the authenticator app. Default is "MyApp".
-//   - AccountName: The name of the account to be displayed in the authenticator app. Default is an empty string.
+//   - AccountName: The name of the account to be displayed in the authenticator app. Deprecated: Use "ContextKey" Instead.
 //   - DigitsCount: The number of digits in the generated TOTP token. Default is 6.
 //   - Period: The time step size in seconds for generating TOTP tokens. Default is 30 seconds.
 //   - SkipCookies: A list of paths that should skip the 2FA middleware. Default is nil.
