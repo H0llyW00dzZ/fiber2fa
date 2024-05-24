@@ -16,14 +16,7 @@ import (
 
 // GenerateQRcodePath generates the QR code image for the 2FA secret key.
 func (m *Middleware) GenerateQRcodePath(c *fiber.Ctx) error {
-	// Get the account name from c.Locals using the specified context key
-	accountName, ok := c.Locals(m.Config.AccountName).(string)
-	if !ok || accountName == "" {
-		// If account name is not found or is an empty string, use a default value
-		accountName = "gopher"
-	}
-
-	// Get the context key from the account name
+	// Get the context key from c.Locals
 	contextKey, err := m.getContextKey(c)
 	if err != nil {
 		return m.SendUnauthorizedResponse(c, err)
@@ -38,9 +31,12 @@ func (m *Middleware) GenerateQRcodePath(c *fiber.Ctx) error {
 		return m.SendUnauthorizedResponse(c, fiber.NewError(fiber.StatusUnauthorized, "2FA information not found"))
 	}
 
+	// Get the value of the context key
+	contextValue := c.Locals(m.Config.ContextKey).(string)
+
 	// Generate the QR code content
 	secretKey := info.GetSecret()
-	qrCodeContent := fmt.Sprintf(m.Config.QRCode.Content, m.Config.Issuer, accountName, secretKey, m.Config.Issuer)
+	qrCodeContent := fmt.Sprintf(m.Config.QRCode.Content, m.Config.Issuer, contextValue, secretKey, m.Config.Issuer)
 
 	// Check if a custom QR code image is provided in the configuration
 	if m.Config.QRCode.Image != nil {
