@@ -26,7 +26,7 @@ type Config struct {
 
 	// AccountName is the name of the account to be displayed in the authenticator app.
 	//
-	// Optional. Default: ""
+	// Deprecated: Use "ContextKey" Instead.
 	AccountName string
 
 	// DigitsCount is the number of digits in the generated TOTP token.
@@ -185,7 +185,6 @@ type Config struct {
 var DefaultConfig = Config{
 	Secret:               "",
 	Issuer:               "MyApp",
-	AccountName:          "",
 	DigitsCount:          6,
 	Period:               30,
 	SkipCookies:          nil,

@@ -436,7 +436,6 @@ func TestMiddleware_GenerateQRcodePath(t *testing.T) {
 	middleware := &twofa.Middleware{
 		Config: &twofa.Config{
 			ContextKey:    "accountName",
-			AccountName:   "gopherAccount",
 			Issuer:        "MyApp",
 			Secret:        secret,
 			Storage:       storage,
@@ -888,7 +887,6 @@ func TestMiddleware_GenerateQRcodePath_Error(t *testing.T) {
 	middleware := &twofa.Middleware{
 		Config: &twofa.Config{
 			ContextKey:    "accountName",
-			AccountName:   "gopherAccount",
 			Issuer:        "MyApp",
 			Secret:        secret,
 			Storage:       storage,
