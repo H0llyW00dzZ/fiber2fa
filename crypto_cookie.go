@@ -27,7 +27,7 @@ func (m *Middleware) GenerateCookieValue(expirationTime time.Time) string {
 	data := fmt.Sprintf("%d", expirationTime.Unix())
 	hash := hmac.New(sha256.New, utils.CopyBytes([]byte(m.Config.Secret)))
 	hash.Write(utils.CopyBytes([]byte(data)))
-	signature := base64.URLEncoding.EncodeToString(utils.CopyBytes(hash.Sum(nil)))
+	signature := base64.RawURLEncoding.EncodeToString(utils.CopyBytes(hash.Sum(nil)))
 	return fmt.Sprintf("%s.%s", utils.CopyString(data), signature)
 }
 
@@ -43,7 +43,7 @@ func (m *Middleware) validateCookie(cookie string) bool {
 
 	hash := hmac.New(sha256.New, utils.CopyBytes([]byte(m.Config.Secret)))
 	hash.Write(utils.CopyBytes([]byte(data)))
-	expectedSignature := base64.URLEncoding.EncodeToString(hash.Sum(nil))
+	expectedSignature := base64.RawURLEncoding.EncodeToString(hash.Sum(nil))
 
 	if subtle.ConstantTimeCompare(utils.CopyBytes([]byte(signature)), utils.CopyBytes([]byte(expectedSignature))) != 1 {
 		return false
