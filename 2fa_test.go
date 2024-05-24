@@ -1008,7 +1008,7 @@ func TestMiddlewareUUIDContextKey_Handle(t *testing.T) {
 	testMiddlewareRandomUUID := &twofa.Middleware{
 		Config: &twofa.Config{
 			Secret:     secret,
-			ContextKey: fmt.Sprintf("test-uuid-%s", randomUUID.String()),
+			ContextKey: randomUUID.String(),
 		},
 	}
 
