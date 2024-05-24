@@ -100,6 +100,8 @@
 //   - redis: A Redis storage provider.
 //   - sqlite3: An SQLite3 storage provider.
 //
+// The 2FA information is stored in the storage using the ContextKey as the unique identifier. The ContextKey is bound to the raw value (2FA information) in the storage.
+//
 // # QR Code Generation
 //
 // The 2FA middleware provides a route for generating QR codes that can be scanned by authenticator apps to set up 2FA for a user.

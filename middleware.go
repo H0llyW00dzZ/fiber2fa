@@ -5,6 +5,7 @@
 package twofa
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"strings"
@@ -19,6 +20,7 @@ import (
 // Middleware represents the 2FA middleware.
 type Middleware struct {
 	Config *Config
+	Info   InfoManager
 }
 
 // New creates a new instance of the 2FA middleware with the provided configuration.
@@ -29,13 +31,24 @@ func New(config ...Config) fiber.Handler {
 		cfg = config[0]
 	}
 
+	// Set default values for JSONMarshal and JSONUnmarshal if not provided
+	if cfg.JSONMarshal == nil {
+		cfg.JSONMarshal = json.Marshal
+	}
+	if cfg.JSONUnmarshal == nil {
+		cfg.JSONUnmarshal = json.Unmarshal
+	}
+
 	// Directly create the storage inside the middleware if not provided.
 	if cfg.Storage == nil {
 		cfg.Storage = memory.New()
 	}
 
+	info := NewInfo(&cfg)
+
 	m := &Middleware{
 		Config: &cfg, // Store a pointer to the config
+		Info:   info,
 	}
 
 	// Return the handle method bound to the Middleware instance.
@@ -65,13 +78,16 @@ func (m *Middleware) Handle(c *fiber.Ctx) error {
 		return m.handleMissingInfo(c)
 	}
 
+	// Set the Info field of the Middleware struct
+	m.Info = info
+
 	// Check if the user has a valid 2FA cookie
-	if m.isValidCookie(c, info) {
+	if m.isValidCookie(c) {
 		return c.Next()
 	}
 
 	// Handle token verification and further processing
-	return m.handleTokenVerification(c, info, contextKey)
+	return m.handleTokenVerification(c, contextKey)
 }
 
 // shouldSkipMiddleware checks if the middleware should be skipped based on the configuration.
@@ -97,7 +113,7 @@ func (m *Middleware) handleMissingInfo(c *fiber.Ctx) error {
 }
 
 // handleTokenVerification handles the token verification process and further processing.
-func (m *Middleware) handleTokenVerification(c *fiber.Ctx, info *Info, contextKey string) error {
+func (m *Middleware) handleTokenVerification(c *fiber.Ctx, contextKey string) error {
 	// Extract the token from the specified token lookup sources
 	token := m.extractToken(c)
 	if token == "" {
@@ -106,19 +122,19 @@ func (m *Middleware) handleTokenVerification(c *fiber.Ctx, info *Info, contextKe
 	}
 
 	// Verify the provided token and get the updated Info struct
-	updatedInfo, valid := m.verifyToken(info, token)
+	valid := m.verifyToken(token)
 	if !valid {
 		// Token is invalid, sending unauthorized response.
 		return m.SendUnauthorizedResponse(c, fiber.NewError(fiber.StatusUnauthorized, "Invalid 2FA token"))
 	}
 
 	// Set the 2FA cookie.
-	if err := m.setCookie(c, updatedInfo); err != nil {
+	if err := m.setCookie(c); err != nil {
 		return m.SendInternalErrorResponse(c, ErrorFailedToStoreInfo)
 	}
 
 	// Store the updated Info struct in the storage
-	if err := m.updateInfoInStorage(contextKey, updatedInfo); err != nil {
+	if err := m.updateInfoInStorage(contextKey); err != nil {
 		return m.SendInternalErrorResponse(c, ErrorFailedToStoreInfo)
 	}
 
@@ -156,7 +172,7 @@ func (m *Middleware) getContextKey(c *fiber.Ctx) (string, error) {
 }
 
 // isValidCookie checks if the user has a valid 2FA cookie.
-func (m *Middleware) isValidCookie(c *fiber.Ctx, info *Info) bool {
+func (m *Middleware) isValidCookie(c *fiber.Ctx) bool {
 	cookie := c.Cookies(m.Config.CookieName)
 	if cookie == "" {
 		return false
@@ -164,7 +180,7 @@ func (m *Middleware) isValidCookie(c *fiber.Ctx, info *Info) bool {
 
 	if !m.validateCookie(cookie) {
 		// Cookie is no longer valid, delete the Info struct from the storage using the ContextKey from the Info struct
-		contextKeyValue := info.GetCookieValue()
+		contextKeyValue := m.Info.GetCookieValue()
 		if err := m.deleteInfoFromStorage(contextKeyValue); err != nil {
 			// Handle the error if needed
 			fmt.Println("Failed to delete Info struct from storage:", err)
@@ -181,10 +197,9 @@ func (m *Middleware) isValidCookie(c *fiber.Ctx, info *Info) bool {
 // setCookie sets the 2FA cookie with an expiration time.
 //
 // Note: This is suitable for use with encrypted cookies Fiber.
-func (m *Middleware) setCookie(c *fiber.Ctx, info *Info) error {
-
-	cookieValue := info.GetCookieValue()
-	expiresValue := info.GetExpirationTime()
+func (m *Middleware) setCookie(c *fiber.Ctx) error {
+	cookieValue := m.Info.GetCookieValue()
+	expiresValue := m.Info.GetExpirationTime()
 
 	// Set the cookie domain dynamically based on the request's domain if HTTPS is used
 	cookieDomain := m.Config.CookieDomain
@@ -254,19 +269,19 @@ func (m *Middleware) extractToken(c *fiber.Ctx) string {
 }
 
 // verifyToken verifies the provided token against the user's secret and returns the updated Info struct.
-func (m *Middleware) verifyToken(info *Info, token string) (*Info, bool) {
-	totp := gotp.NewDefaultTOTP(info.GetSecret())
+func (m *Middleware) verifyToken(token string) bool {
+	totp := gotp.NewDefaultTOTP(m.Info.GetSecret())
 	if !totp.Verify(token, time.Now().Unix()) {
-		return info, false
+		return false
 	}
 
 	expirationTime := time.Now().Add(time.Duration(m.Config.CookieMaxAge) * time.Second)
 	cookieValue := m.GenerateCookieValue(expirationTime)
 
-	info.SetCookieValue(cookieValue)
-	info.SetExpirationTime(expirationTime)
+	m.Info.SetCookieValue(cookieValue)
+	m.Info.SetExpirationTime(expirationTime)
 
-	return info, true
+	return true
 }
 
 // SendUnauthorizedResponse sends an unauthorized response based on the configured MIME type.

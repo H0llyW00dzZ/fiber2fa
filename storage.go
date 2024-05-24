@@ -14,8 +14,10 @@ type InfoManager interface {
 	GetSecret() string
 	GetCookieValue() string
 	GetExpirationTime() time.Time
+	SetSecret(secret string)
 	SetCookieValue(value string)
 	SetExpirationTime(expiration time.Time)
+	SetContextKey(contextKey string)
 }
 
 // Info represents the 2FA information stored for a user.
@@ -24,6 +26,16 @@ type Info struct {
 	Secret         string    `json:"secret"`
 	CookieValue    string    `json:"cookie_value"`
 	ExpirationTime time.Time `json:"expiration_time"`
+}
+
+// NewInfo creates a new empty Info struct based on the provided Config.
+func NewInfo(cfg *Config) *Info {
+	return &Info{
+		ContextKey:     cfg.ContextKey,
+		Secret:         cfg.Secret,
+		CookieValue:    "",
+		ExpirationTime: time.Time{},
+	}
 }
 
 // GetSecret returns the secret for 2FA.
@@ -41,6 +53,11 @@ func (i *Info) GetExpirationTime() time.Time {
 	return i.ExpirationTime
 }
 
+// SetSecret sets the secret for 2FA.
+func (i *Info) SetSecret(secret string) {
+	i.Secret = secret
+}
+
 // SetCookieValue sets the cookie value.
 func (i *Info) SetCookieValue(value string) {
 	i.CookieValue = value
@@ -49,6 +66,11 @@ func (i *Info) SetCookieValue(value string) {
 // SetExpirationTime sets the cookie expiration time.
 func (i *Info) SetExpirationTime(expiration time.Time) {
 	i.ExpirationTime = expiration
+}
+
+// SetContextKey sets the context key in the Info struct.
+func (i *Info) SetContextKey(contextKey string) {
+	i.ContextKey = contextKey
 }
 
 // getInfoFromStorage retrieves the 2FA information for the user from the storage.
@@ -71,8 +93,8 @@ func (m *Middleware) getInfoFromStorage(contextKey string) (*Info, error) {
 }
 
 // updateInfoInStorage updates the Info struct in the storage.
-func (m *Middleware) updateInfoInStorage(contextKey string, info *Info) error {
-	updatedRawInfo, err := m.Config.JSONMarshal(info)
+func (m *Middleware) updateInfoInStorage(contextKey string) error {
+	updatedRawInfo, err := m.Config.JSONMarshal(m.Info)
 	if err != nil {
 		return ErrorFailedToMarshalInfo
 	}
