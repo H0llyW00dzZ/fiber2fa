@@ -13,9 +13,10 @@ The middleware provides the following features:
 ### TOTP Authentication
 - Generation and verification of TOTP tokens
 - Customizable token length and time step size
+- Automatic generation of random secrets if not provided
 
 ### Flexible Storage
-- Support for various storage providers (e.g., in-memory, database)
+- Support for various storage providers (e.g., in-memory, MongoDB, MySQL, PostgreSQL, Redis, SQLite3)
 - Customizable storage configuration
 
 ### Cookie-based Authentication
@@ -51,6 +52,10 @@ The middleware provides the following features:
 ### Context Key Management
 - Customizable context key for storing 2FA information in the request context
 - Ability to retrieve and manage context keys based on account names
+
+### Error Handling
+- Customizable error handling for unauthorized and internal server errors
+- Support for various response formats (plain text, JSON, XML)
 
 More features and validation capabilities will be added in the future to enhance the middleware's functionality and cater to a wider range of validation scenarios.
 
