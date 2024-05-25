@@ -16,12 +16,14 @@ type InfoManager interface {
 	GetExpirationTime() time.Time
 	IsRegistered() bool
 	GetIdentifier() string
+	GetQRCodeData() []byte
 	SetSecret(secret string)
 	SetCookieValue(value string)
 	SetExpirationTime(expiration time.Time)
 	SetContextKey(contextKey string)
 	SetRegistered(registered bool)
 	SetIdentifier(identifier string)
+	SetQRCodeData(data []byte)
 }
 
 // Info represents the 2FA information stored for a user.
@@ -32,6 +34,7 @@ type Info struct {
 	ExpirationTime time.Time `json:"expiration_time"`
 	Registered     bool      `json:"registered"`
 	Identifier     string    `json:"identifier"`
+	QRCodeData     []byte    `json:"qr_code_data"`
 }
 
 // NewInfo creates a new empty Info struct based on the provided Config.
@@ -43,6 +46,7 @@ func NewInfo(cfg *Config) *Info {
 		ExpirationTime: time.Time{},
 		Registered:     false,
 		Identifier:     "",
+		QRCodeData:     nil,
 	}
 }
 
@@ -69,6 +73,11 @@ func (i *Info) IsRegistered() bool {
 // GetIdentifier returns the identifier.
 func (i *Info) GetIdentifier() string {
 	return i.Identifier
+}
+
+// GetQRCodeData returns the QRCode data.
+func (i *Info) GetQRCodeData() []byte {
+	return i.QRCodeData
 }
 
 // SetSecret sets the secret for 2FA.
@@ -99,6 +108,11 @@ func (i *Info) SetRegistered(registered bool) {
 // SetIdentifier sets the identifier.
 func (i *Info) SetIdentifier(identifier string) {
 	i.Identifier = identifier
+}
+
+// SetQRCodeData sets the QRCode data.
+func (i *Info) SetQRCodeData(data []byte) {
+	i.QRCodeData = data
 }
 
 // getInfoFromStorage retrieves the 2FA information for the user from the storage.
