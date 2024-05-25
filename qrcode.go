@@ -31,6 +31,12 @@ func (m *Middleware) GenerateQRcodePath(c *fiber.Ctx) error {
 		return m.SendUnauthorizedResponse(c, fiber.NewError(fiber.StatusUnauthorized, "2FA information not found"))
 	}
 
+	// Check if the user is already registered
+	if info.IsRegistered() {
+		// User is already registered, skip generating the QR code
+		return c.Next()
+	}
+
 	// Generate the QR code image and data
 	qrCodeImage, qrCodeData, err := m.generateQRCode(c, info)
 	if err != nil {
