@@ -128,14 +128,17 @@ func (m *Middleware) handleTokenVerification(c *fiber.Ctx, contextKey string) er
 		return m.SendUnauthorizedResponse(c, fiber.NewError(fiber.StatusUnauthorized, "Invalid 2FA token"))
 	}
 
-	// Set the 2FA cookie.
-	if err := m.setCookie(c); err != nil {
-		return m.SendInternalErrorResponse(c, ErrorFailedToStoreInfo)
-	}
+	// Check if the requested path is in the skip list
+	if !m.isPathSkipped(c.Path()) {
+		// Set the 2FA cookie.
+		if err := m.setCookie(c); err != nil {
+			return m.SendInternalErrorResponse(c, ErrorFailedToStoreInfo)
+		}
 
-	// Store the updated Info struct in the storage
-	if err := m.updateInfoInStorage(contextKey); err != nil {
-		return m.SendInternalErrorResponse(c, ErrorFailedToStoreInfo)
+		// Store the updated Info struct in the storage
+		if err := m.updateInfoInStorage(contextKey); err != nil {
+			return m.SendInternalErrorResponse(c, ErrorFailedToStoreInfo)
+		}
 	}
 
 	return c.Next()
@@ -173,6 +176,10 @@ func (m *Middleware) getContextKey(c *fiber.Ctx) (string, error) {
 
 // isValidCookie checks if the user has a valid 2FA cookie.
 func (m *Middleware) isValidCookie(c *fiber.Ctx) bool {
+	// Check if the middleware should be skipped
+	// Note: No need to explicitly check for boolean by adding if-else statement, you poggers.
+	m.shouldSkipMiddleware(c)
+
 	cookie := c.Cookies(m.Config.CookieName)
 	if cookie == "" {
 		return false
