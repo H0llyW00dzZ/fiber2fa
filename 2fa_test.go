@@ -167,6 +167,61 @@ func TestInfo_GetIdentifier_InitialValue(t *testing.T) {
 	}
 }
 
+// TestInfo_SetGetQRCodeData tests setting and getting the QRCode data image.
+func TestInfo_SetGetQRCodeData(t *testing.T) {
+	info := twofa.Info{}
+
+	// Create a sample QRCode image
+	qrCodeImage := createSampleQRCodeImage()
+
+	// Encode the QRCode image to PNG format
+	var buf bytes.Buffer
+	err := png.Encode(&buf, qrCodeImage)
+	if err != nil {
+		t.Fatalf("Failed to encode QRCode image: %v", err)
+	}
+	qrCodeData := buf.Bytes()
+
+	// Set the QRCode data
+	info.SetQRCodeData(qrCodeData)
+
+	// Get the QRCode data
+	retrievedQRCodeData := info.GetQRCodeData()
+
+	// Compare the retrieved QRCode data with the original data
+	if !bytes.Equal(retrievedQRCodeData, qrCodeData) {
+		t.Error("Retrieved QRCode data does not match the original data")
+	}
+
+	// Decode the retrieved QRCode data back to an image
+	retrievedQRCodeImage, _, err := image.Decode(bytes.NewReader(retrievedQRCodeData))
+	if err != nil {
+		t.Fatalf("Failed to decode retrieved QRCode data: %v", err)
+	}
+
+	// Compare the dimensions of the retrieved QRCode image with the original image
+	if retrievedQRCodeImage.Bounds() != qrCodeImage.Bounds() {
+		t.Error("Retrieved QRCode image dimensions do not match the original image")
+	}
+}
+
+// createSampleQRCodeImage creates a sample QRCode image for testing purposes.
+func createSampleQRCodeImage() image.Image {
+	// Create a sample QRCode image
+	width := 200
+	height := 200
+	qrCodeImage := image.NewRGBA(image.Rect(0, 0, width, height))
+
+	// Fill the image with sample data
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			qrCodeImage.Set(x, y, image.Black)
+		}
+	}
+
+	return qrCodeImage
+}
+
 func TestMiddleware_Handle(t *testing.T) {
 	// Set up the storage with an in-memory store for simplicity
 	store := memory.New()
