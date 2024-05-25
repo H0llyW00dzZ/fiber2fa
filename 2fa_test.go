@@ -108,6 +108,65 @@ func TestInfo_SetSecret(t *testing.T) {
 	}
 }
 
+// TestInfo_SetIdentifier_ValidIdentifier tests setting a valid identifier value.
+func TestInfo_SetIdentifier_ValidIdentifier(t *testing.T) {
+	info := twofa.Info{}
+	validIdentifier := "123e4567-e89b-12d3-a456-426655440000"
+
+	info.SetIdentifier(validIdentifier)
+
+	if info.GetIdentifier() != validIdentifier {
+		t.Errorf("Info.GetIdentifier() = %v, want %v", info.GetIdentifier(), validIdentifier)
+	}
+}
+
+// TestInfo_SetIdentifier_GoogleUUID tests setting an identifier generated from the google/uuid package.
+func TestInfo_SetIdentifier_GoogleUUID(t *testing.T) {
+	info := twofa.Info{}
+	googleUUID := uuid.New().String()
+
+	info.SetIdentifier(googleUUID)
+
+	if info.GetIdentifier() != googleUUID {
+		t.Errorf("Info.GetIdentifier() = %v, want %v", info.GetIdentifier(), googleUUID)
+	}
+}
+
+// TestInfo_SetIdentifier_EmptyIdentifier tests setting an empty identifier value.
+func TestInfo_SetIdentifier_EmptyIdentifier(t *testing.T) {
+	info := twofa.Info{}
+	emptyIdentifier := ""
+
+	info.SetIdentifier(emptyIdentifier)
+
+	if info.GetIdentifier() != emptyIdentifier {
+		t.Errorf("Info.GetIdentifier() = %v, want %v", info.GetIdentifier(), emptyIdentifier)
+	}
+}
+
+// TestInfo_SetIdentifier_OverwriteIdentifier tests overwriting an existing identifier value.
+func TestInfo_SetIdentifier_OverwriteIdentifier(t *testing.T) {
+	info := twofa.Info{}
+	initialIdentifier := "123e4567-e89b-12d3-a456-426655440000"
+	newIdentifier := uuid.New().String()
+
+	info.SetIdentifier(initialIdentifier)
+	info.SetIdentifier(newIdentifier)
+
+	if info.GetIdentifier() != newIdentifier {
+		t.Errorf("Info.GetIdentifier() = %v, want %v", info.GetIdentifier(), newIdentifier)
+	}
+}
+
+// TestInfo_GetIdentifier_InitialValue tests getting the initial identifier value.
+func TestInfo_GetIdentifier_InitialValue(t *testing.T) {
+	info := twofa.Info{}
+
+	if info.GetIdentifier() != "" {
+		t.Errorf("Info.GetIdentifier() = %v, want empty string", info.GetIdentifier())
+	}
+}
+
 func TestMiddleware_Handle(t *testing.T) {
 	// Set up the storage with an in-memory store for simplicity
 	store := memory.New()
