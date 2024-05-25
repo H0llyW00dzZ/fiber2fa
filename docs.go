@@ -121,9 +121,61 @@
 //
 // You can customize the error handling by providing custom handlers for unauthorized and internal server errors using the UnauthorizedHandler and InternalErrorHandler fields in the [twofa.Config] struct.
 //
+// # Error Variables
+//
+// The 2FA middleware defines several error variables that represent different types of errors that can occur during the 2FA process. These error variables are:
+//
+//   - [twofa.ErrorFailedToRetrieveInfo]: Indicates a failure to retrieve 2FA information from the storage.
+//   - [twofa.ErrorFailedToUnmarshalInfo]: Indicates a failure to unmarshal the 2FA information.
+//   - [twofa.ErrorFailedToMarshalInfo]: Indicates a failure to marshal the updated 2FA information.
+//   - [twofa.ErrorFailedToStoreInfo]: Indicates a failure to store the updated 2FA information.
+//   - [twofa.ErrorFailedToDeleteInfo]: Indicates a failure to delete the 2FA information.
+//   - [twofa.ErrorFailedToResetStorage]: Indicates a failure to reset the storage.
+//   - [twofa.ErrorFailedToCloseStorage]: Indicates a failure to close the storage.
+//   - [twofa.ErrorContextKeyNotSet]: Indicates that the ContextKey is not set in the configuration.
+//   - [twofa.ErrorFailedToRetrieveContextKey]: Indicates a failure to retrieve the context key from the request.
+//
+// These error variables are used by the middleware to provide meaningful error messages when errors occur during the 2FA process.
+//
 // # Skipping 2FA
 //
 // You can skip the 2FA middleware for certain routes by specifying the paths in the SkipCookies field of the [twofa.Config] struct.
 //
 // Additionally, you can provide a custom function in the Next field of the [twofa.Config] struct to determine whether to skip the 2FA middleware for a given request. If the function returns true, the middleware will be skipped.
+//
+// # Info Management
+//
+// The 2FA middleware uses the [twofa.Info] struct to manage the 2FA information for each user. The [twofa.Info] struct implements the [twofa.InfoManager] interface, which defines methods for accessing and modifying the 2FA information.
+//
+// The [twofa.Info] struct contains the following fields:
+//
+//   - [twofa.Config.ContextKey]: The context key associated with the 2FA information.
+//   - [twofa.Config.Secret]: The secret used for generating and verifying TOTP tokens.
+//   - [twofa.Config.CookieValue]: The value of the 2FA cookie.
+//   - [twofa.Config.ExpirationTime]: The expiration time of the 2FA cookie.
+//   - [twofa.Config.Registered]: The registration status of the user.
+//   - [twofa.Config.Identifier]: The identifier associated with the user.
+//   - [twofa.Config.QRCodeData]: The QR code data for the user.
+//
+// The [twofa.InfoManager] interface provides methods for accessing and modifying these fields.
+//
+// # Cookie Management
+//
+// The 2FA middleware uses cookies to store the 2FA validation status for each user. The cookie-related configurations can be customized using the following fields in the [twofa.Config] struct:
+//
+//   - CookieName: The name of the cookie used to store the 2FA validation status.
+//   - CookieMaxAge: The maximum age of the 2FA cookie in seconds.
+//   - CookiePath: The path scope of the 2FA cookie.
+//   - CookieDomain: The domain scope of the 2FA cookie. If set to "auto", it will automatically set the cookie domain based on the request's domain if HTTPS is used.
+//   - CookieSecure: Determines whether the 2FA cookie should be sent only over HTTPS.
+//
+// The middleware generates a signed cookie value using HMAC to ensure the integrity of the cookie. The cookie value contains the expiration time of the cookie.
+//
+// # Token Verification
+//
+// The 2FA middleware verifies the TOTP token provided by the user during the 2FA process. The token can be extracted from various sources such as query parameters, form data, cookies, headers, or URL parameters.
+//
+// The token lookup configuration is specified using the TokenLookup field in the [twofa.Config] struct. It follows the format "<source>:<name>", where <source> can be "query", "form", "cookie", "header", or "param", and <name> is the name of the parameter or key.
+//
+// If a valid token is provided, the middleware sets a 2FA cookie to indicate that the user has successfully completed the 2FA process. The cookie value is generated using the [twofa.Middleware.GenerateCookieValue] function, which signs the cookie value using HMAC.
 package twofa
