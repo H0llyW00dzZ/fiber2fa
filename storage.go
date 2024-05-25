@@ -14,10 +14,12 @@ type InfoManager interface {
 	GetSecret() string
 	GetCookieValue() string
 	GetExpirationTime() time.Time
+	IsRegistered() bool
 	SetSecret(secret string)
 	SetCookieValue(value string)
 	SetExpirationTime(expiration time.Time)
 	SetContextKey(contextKey string)
+	SetRegistered(registered bool)
 }
 
 // Info represents the 2FA information stored for a user.
@@ -26,6 +28,7 @@ type Info struct {
 	Secret         string    `json:"secret"`
 	CookieValue    string    `json:"cookie_value"`
 	ExpirationTime time.Time `json:"expiration_time"`
+	Registered     bool      `json:"registered"`
 }
 
 // NewInfo creates a new empty Info struct based on the provided Config.
@@ -35,6 +38,7 @@ func NewInfo(cfg *Config) *Info {
 		Secret:         cfg.Secret,
 		CookieValue:    "",
 		ExpirationTime: time.Time{},
+		Registered:     false,
 	}
 }
 
@@ -51,6 +55,11 @@ func (i *Info) GetCookieValue() string {
 // GetExpirationTime returns the cookie expiration time.
 func (i *Info) GetExpirationTime() time.Time {
 	return i.ExpirationTime
+}
+
+// IsRegistered returns the registration status.
+func (i *Info) IsRegistered() bool {
+	return i.Registered
 }
 
 // SetSecret sets the secret for 2FA.
@@ -71,6 +80,11 @@ func (i *Info) SetExpirationTime(expiration time.Time) {
 // SetContextKey sets the context key in the Info struct.
 func (i *Info) SetContextKey(contextKey string) {
 	i.ContextKey = contextKey
+}
+
+// SetRegistered sets the registration status.
+func (i *Info) SetRegistered(registered bool) {
+	i.Registered = registered
 }
 
 // getInfoFromStorage retrieves the 2FA information for the user from the storage.
