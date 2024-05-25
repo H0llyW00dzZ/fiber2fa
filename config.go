@@ -10,13 +10,14 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/skip2/go-qrcode"
+	"github.com/xlzd/gotp"
 )
 
 // Config defines the configuration options for the 2FA middleware.
 type Config struct {
 	// Secret is the shared secret used for generating and verifying TOTP tokens.
 	//
-	// Required.
+	// Optional. Default: "gotp.RandomSecret(16)" (Recommended).
 	Secret string
 
 	// Issuer is the name of the issuer to be displayed in the authenticator app.
@@ -183,7 +184,7 @@ type Config struct {
 
 // DefaultConfig  holds the default configuration values.
 var DefaultConfig = Config{
-	Secret:               "",
+	Secret:               gotp.RandomSecret(16),
 	Issuer:               "MyApp",
 	DigitsCount:          6,
 	Period:               30,
