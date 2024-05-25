@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/skip2/go-qrcode"
@@ -74,7 +75,21 @@ func (m *Middleware) generateQRCode(c *fiber.Ctx, info *Info) (image.Image, []by
 
 	// Generate the QR code content
 	secretKey := info.GetSecret()
-	qrCodeContent := fmt.Sprintf(m.Config.QRCode.Content, m.Config.Issuer, contextValue, secretKey, m.Config.Issuer)
+
+	// Create a slice to hold the arguments for fmt.Sprintf
+	args := make([]any, 0) // zero allocation
+	args = append(args, m.Config.Issuer, contextValue, secretKey, m.Config.Issuer)
+
+	// Add additional arguments based on the placeholders in the Content template
+	numPlaceholders := strings.Count(m.Config.QRCode.Content, "%")
+	for i := 3; i < numPlaceholders; i++ { // Set the default starting index to 3 to avoid writing tests again for custom content.
+		// Get the value for the additional argument from the request context or configuration
+		argValue := c.Query((fmt.Sprintf("arg%d", i)))
+		args = append(args, argValue)
+	}
+
+	// Generate the QR code content using fmt.Sprintf with the variable arguments
+	qrCodeContent := fmt.Sprintf(m.Config.QRCode.Content, args...)
 
 	// Check if a custom QR code image is provided in the configuration
 	if m.Config.QRCode.Image != nil {
