@@ -62,6 +62,52 @@ func TestInfo_GetSetExpirationTime(t *testing.T) {
 	}
 }
 
+// TestInfo_IsSetRegistered tests the IsRegistered and SetRegistered methods of the Info struct.
+func TestInfo_IsSetRegistered(t *testing.T) {
+	info := twofa.Info{}
+
+	// Test initial registration status
+	if info.IsRegistered() {
+		t.Error("Info.IsRegistered() = true, want false")
+	}
+
+	// Set registration status to true
+	info.SetRegistered(true)
+	if !info.IsRegistered() {
+		t.Error("Info.IsRegistered() = false, want true")
+	}
+
+	// Set registration status back to false
+	info.SetRegistered(false)
+	if info.IsRegistered() {
+		t.Error("Info.IsRegistered() = true, want false")
+	}
+}
+
+// TestInfo_SetContextKey tests the SetContextKey method of the Info struct.
+func TestInfo_SetContextKey(t *testing.T) {
+	info := twofa.Info{}
+	contextKey := "user_id"
+
+	info.SetContextKey(contextKey)
+
+	if info.ContextKey != contextKey {
+		t.Errorf("Info.ContextKey = %v, want %v", info.ContextKey, contextKey)
+	}
+}
+
+// TestInfo_SetSecret tests the SetSecret method of the Info struct.
+func TestInfo_SetSecret(t *testing.T) {
+	info := twofa.Info{}
+	secret := gotp.RandomSecret(16)
+
+	info.SetSecret(secret)
+
+	if info.Secret != secret {
+		t.Errorf("Info.Secret = %v, want %v", info.Secret, secret)
+	}
+}
+
 func TestMiddleware_Handle(t *testing.T) {
 	// Set up the storage with an in-memory store for simplicity
 	store := memory.New()
