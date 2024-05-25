@@ -31,8 +31,14 @@ func (m *Middleware) GenerateQRcodePath(c *fiber.Ctx) error {
 		return m.SendUnauthorizedResponse(c, fiber.NewError(fiber.StatusUnauthorized, "2FA information not found"))
 	}
 
+	// Check if the user is already registered
+	if info.IsRegistered() {
+		// User is already registered, skip generating the QR code
+		return c.Next()
+	}
+
 	// Generate the QR code image and data
-	qrCodeImage, qrCodeData, err := m.generateQRCode(info)
+	qrCodeImage, qrCodeData, err := m.generateQRCode(c, info)
 	if err != nil {
 		return m.SendInternalErrorResponse(c, err)
 	}
@@ -59,9 +65,12 @@ func (m *Middleware) GenerateQRcodePath(c *fiber.Ctx) error {
 }
 
 // generateQRCode generates the QR code image and data based on the provided Info struct.
-func (m *Middleware) generateQRCode(info *Info) (image.Image, []byte, error) {
+func (m *Middleware) generateQRCode(c *fiber.Ctx, info *Info) (image.Image, []byte, error) {
 	// Get the value of the context key
 	contextValue := info.ContextKey
+
+	// Generate the identifier using the configured identifier generator
+	identifier := m.GenerateIdentifier(c)
 
 	// Generate the QR code content
 	secretKey := info.GetSecret()
@@ -103,6 +112,12 @@ func (m *Middleware) generateQRCode(info *Info) (image.Image, []byte, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+
+	// Set the registration status to true
+	info.SetRegistered(true)
+
+	// Set the identifier in the Info struct
+	info.SetIdentifier(identifier)
 
 	return qrCodeImage, buf.Bytes(), nil
 }

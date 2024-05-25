@@ -662,6 +662,60 @@ func TestMiddleware_GenerateQRcodePath(t *testing.T) {
 	}
 }
 
+func TestMiddleware_GenerateQRcodePathAlreadyRegistered(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+	// Create a new Fiber app
+	app := fiber.New()
+
+	// Create an in-memory storage
+	storage := memory.New()
+
+	// Create a new Middleware instance with a custom ContextKey, Issuer, and JSONUnmarshal
+	middleware := &twofa.Middleware{
+		Config: &twofa.Config{
+			ContextKey:    "accountName",
+			Issuer:        "MyApp",
+			Secret:        secret,
+			Storage:       storage,
+			JSONMarshal:   json.Marshal,   // Set the JSONMarshal field
+			JSONUnmarshal: json.Unmarshal, // Set the JSONUnmarshal field
+			Encode: twofa.EncodeConfig{
+				Level: qrcode.Medium,
+				Size:  256,
+			},
+			QRCode: twofa.QRCodeConfig{
+				Content: "otpauth://totp/%s:%s?secret=%s&issuer=%s",
+			},
+		},
+	}
+
+	// Store the 2FA information in the storage for the test account
+	info := &twofa.Info{
+		Secret:     secret,
+		Registered: true,
+	}
+	rawInfo, _ := middleware.Config.JSONMarshal(info)
+	storage.Set("gopher@example.com", rawInfo, 0)
+
+	// Define a test handler that sets the account name in c.Locals and calls GenerateQRcodePath
+	app.Get("/test", func(c *fiber.Ctx) error {
+		c.Locals("accountName", "gopher@example.com")
+		return middleware.GenerateQRcodePath(c)
+	})
+
+	// Send a test request to the "/test" route
+	req := httptest.NewRequest("GET", "/test", nil)
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatalf("Error when sending request to the app: %v", err)
+	}
+
+	// Check if the response status code is 200 OK
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("Expected status code %d, got %d", http.StatusNotFound, resp.StatusCode)
+	}
+}
+
 func TestMiddleware_GenerateQRcodePathWithVersion(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	// Create a new Fiber app

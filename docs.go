@@ -85,6 +85,7 @@
 //   - [fiber.MIMEOctetStream] (custom handler required)
 //   - UnauthorizedHandler: A custom handler for unauthorized responses. Default is nil.
 //   - InternalErrorHandler: A custom handler for internal server error responses. Default is nil.
+//   - IdentifierGenerator: A function that generates a unique identifier for the 2FA registration. Default is nil (uses fiber utils.UUIDv4 generator).
 //
 // # Storage Providers
 //
@@ -201,4 +202,36 @@
 // The token lookup configuration is specified using the TokenLookup field in the [twofa.Config] struct. It follows the format "<source>:<name>", where <source> can be "query", "form", "cookie", "header", or "param", and <name> is the name of the parameter or key.
 //
 // If a valid token is provided, the middleware sets a 2FA cookie to indicate that the user has successfully completed the 2FA process. The cookie value is generated using the [twofa.Middleware.GenerateCookieValue] function, which signs the cookie value using HMAC.
+//
+// # Identifier Generation
+//
+// The 2FA middleware generates a unique identifier for each 2FA registration. The identifier is used to associate the 2FA information with a specific user or account.
+//
+// By default, the middleware uses the [github.com/gofiber/utils.UUIDv4] function to generate a random UUID as the identifier.
+//
+// The identifier generation can be customized by providing a custom function in the IdentifierGenerator field of the [twofa.Config] struct. The custom function should take a [*fiber.Ctx] as a parameter and return a string identifier.
+//
+// The generated identifier is stored in the [twofa.Info] struct and can be accessed using the [twofa.Info.GetIdentifier] method.
+//
+//	 	// Example of a custom identifier generator function.
+//		func customIdentifierGenerator(c *fiber.Ctx) string {
+//			// Generate a custom identifier based on the request context
+//			identifier := // Custom logic to generate the identifier
+//			return identifier
+//		}
+//
+//		app.Use(twofa.New(twofa.Config{
+//			Issuer:              "MyApp",
+//			ContextKey:          "email",
+//			Storage:             storage,
+//			IdentifierGenerator: customIdentifierGenerator,
+//		}))
+//
+// In the example above, the customIdentifierGenerator function is provided as the value for the IdentifierGenerator field in the [twofa.Config] struct. This function will be called by the middleware to generate the identifier for each 2FA registration.
+//
+// The custom identifier generator function can access the request context through the [*fiber.Ctx] parameter and generate the identifier based on any relevant information available in the context, such as user ID, email, or any other unique attribute.
+//
+// Providing a custom identifier generator allows for the flexibility to generate identifiers that are specific to the application's requirements and ensures uniqueness and compatibility with the existing user or account management system.
+//
+// Note: If the IdentifierGenerator field is not provided or set to nil, the middleware will use the default identifier generator, which generates a random UUID using [github.com/gofiber/utils.UUIDv4].
 package twofa
