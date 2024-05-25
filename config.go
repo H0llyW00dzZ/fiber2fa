@@ -180,6 +180,16 @@ type Config struct {
 	//
 	// Optional. Default: nil
 	InternalErrorHandler fiber.ErrorHandler
+
+	// IdentifierGenerator is a function that generates a unique identifier for the 2FA registration.
+	//
+	// The function takes a *fiber.Ctx as a parameter and returns a string identifier.
+	// It allows customizing the identifier generation based on the request context.
+	//
+	// If not provided, the default identifier generator will be used, which generates a UUID.
+	//
+	// Optional. Default: nil (uses fiber utils.UUIDv4 generator)
+	IdentifierGenerator func(*fiber.Ctx) string
 }
 
 // DefaultConfig  holds the default configuration values.
@@ -206,6 +216,7 @@ var DefaultConfig = Config{
 	ResponseMIME:         fiber.MIMETextPlainCharsetUTF8,
 	UnauthorizedHandler:  nil,
 	InternalErrorHandler: nil,
+	IdentifierGenerator:  nil,
 }
 
 // JSONMarshal defines the function signature for a JSON marshal.

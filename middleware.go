@@ -333,3 +333,11 @@ func (m *Middleware) SendInternalErrorResponse(c *fiber.Ctx, err error) error {
 		return c.SendString(err.Error())
 	}
 }
+
+// GenerateIdentifier generates an identifier using the configured identifier generator.
+func (m *Middleware) GenerateIdentifier(c *fiber.Ctx) string {
+	if m.Config.IdentifierGenerator != nil {
+		return m.Config.IdentifierGenerator(c)
+	}
+	return utils.UUIDv4()
+}
