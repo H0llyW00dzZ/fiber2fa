@@ -252,10 +252,16 @@ type EncodeConfig struct {
 	//
 	// Optional. Default: 256
 	Size int
+
+	// VersionNumber is the QR code version number.
+	//
+	// Optional. Default: 0 (automatically determined)
+	VersionNumber int
 }
 
 // DefaultEncodeConfig holds the default configuration values for the QR code encoding.
 var DefaultEncodeConfig = EncodeConfig{
-	Level: qrcode.Medium,
-	Size:  256,
+	Level:         qrcode.Medium,
+	Size:          256,
+	VersionNumber: 0,
 }
