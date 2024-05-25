@@ -40,7 +40,7 @@ type Info struct {
 // NewInfo creates a new empty Info struct based on the provided Config.
 func NewInfo(cfg *Config) *Info {
 	return &Info{
-		ContextKey:     cfg.ContextKey,
+		ContextKey:     "",
 		Secret:         cfg.Secret,
 		CookieValue:    "",
 		ExpirationTime: time.Time{},

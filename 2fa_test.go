@@ -229,7 +229,6 @@ func TestMiddleware_Handle(t *testing.T) {
 
 	// Create a default Info struct and store it for Simulate State
 	info := twofa.Info{
-		ContextKey:     "user123",
 		Secret:         secret,
 		CookieValue:    "",
 		ExpirationTime: time.Time{},
@@ -1236,7 +1235,6 @@ func TestMiddlewareUUIDContextKey_Handle(t *testing.T) {
 
 	// Create a default Info struct and store it for Simulate State
 	info := twofa.Info{
-		ContextKey:     contextKey,
 		Secret:         secret,
 		CookieValue:    "",
 		ExpirationTime: time.Time{},
