@@ -111,6 +111,29 @@
 //
 // The content of the QR code can be customized by modifying the Content field in the [twofa.QRCodeConfig] struct. The default content format is "otpauth://totp/%s:%s?secret=%s&issuer=%s".
 //
+// # Custom QR Code Image Generation (Advanced use cases)
+//
+// The 2FA middleware allows generating custom QR code images for use with custom mobile apps or physical devices. This feature provides flexibility in integrating 2FA with custom cryptography and scanning mechanisms.
+//
+// To generate a custom QR code image, provide a custom image in the Image field of the [twofa.QRCodeConfig] struct. The custom image should be of type [image.Image].
+//
+// When a custom image is provided, the middleware will generate a QR code and overlay it on top of the custom image. The resulting QR code image can be scanned by a custom mobile app or physical device that supports QR code scanning.
+//
+// By using a custom QR code image, it's possible to incorporate custom branding, design, or additional information into the QR code. This allows creating a seamless and integrated 2FA experience for users.
+//
+// Additionally, custom cryptography techniques can be leveraged to secure the QR code data. Instead of using the default TOTP algorithm, custom encryption and decryption mechanisms can be implemented to protect the shared secret and other sensitive information embedded in the QR code.
+//
+// Furthermore, the custom QR code image generation feature enables extending 2FA beyond mobile apps. The QR code can be bound to physical devices or objects that have scanning capabilities, such as smart cards, badges, or dedicated hardware tokens. This provides an additional layer of security and convenience for users who prefer physical authentication methods.
+//
+// To implement custom QR code image generation, follow these steps:
+//
+//  1. Create a custom image of type [image.Image] that will serve as the background for the QR code.
+//  2. Set the custom image in the Image field of the [twofa.QRCodeConfig] struct when configuring the 2FA middleware.
+//  3. Implement a custom mobile app or physical device that can scan the custom QR code image and extract the necessary information for 2FA.
+//  4. Optionally, implement custom cryptography techniques to secure the QR code data and ensure the integrity and confidentiality of the shared secret.
+//
+// By leveraging custom QR code image generation, it's possible to create a unique and secure 2FA experience tailored to specific requirements and user preferences.
+//
 // # Error Handling
 //
 // The 2FA middleware handles errors internally and returns appropriate HTTP status codes and error messages.
