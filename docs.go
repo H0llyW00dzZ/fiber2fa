@@ -32,9 +32,8 @@
 //		app := fiber.New()
 //
 //		app.Use(twofa.New(twofa.Config{
-//			Secret:      "your-secret-key",
 //			Issuer:      "MyApp",
-//			AccountName: "email",
+//			ContextKey:  "email",
 //			Storage:     storage,
 //		}))
 //
@@ -44,13 +43,13 @@
 //		app.Listen(":3000")
 //	}
 //
-// In the example above, a new instance of the 2FA middleware is created with a configuration that specifies the secret key, issuer name, account name field, and storage provider.
+// In the example above, a new instance of the 2FA middleware is created with a configuration that specifies the issuer name, context key, and storage provider.
 //
 // # Configuration
 //
 // The 2FA middleware accepts a [twofa.Config] struct for configuration. The available options are:
 //
-//   - Secret: The shared secret used for generating and verifying TOTP tokens. This field is required.
+//   - Secret: The shared secret used for generating and verifying TOTP tokens. If not provided, a random secret will be generated using https://pkg.go.dev/github.com/xlzd/gotp#RandomSecret. Default is a random secret.
 //   - Issuer: The name of the issuer to be displayed in the authenticator app. Default is "MyApp".
 //   - AccountName: The name of the account to be displayed in the authenticator app. Deprecated: Use "ContextKey" Instead.
 //   - DigitsCount: The number of digits in the generated TOTP token. Default is 6.
@@ -94,11 +93,11 @@
 // You can use any storage provider that implements the [fiber.Storage] interface, such as:
 //
 //   - [fiber.Storage]: The default in-memory storage provider.
-//   - mongodb: A MongoDB storage provider.
-//   - mysql: A MySQL storage provider.
-//   - postgres: A PostgreSQL storage provider.
-//   - redis: A Redis storage provider.
-//   - sqlite3: An SQLite3 storage provider.
+//   - [github.com/gofiber/storage/mongodb]: A MongoDB storage provider.
+//   - [github.com/gofiber/storage/mysql]: A MySQL storage provider.
+//   - [github.com/gofiber/storage/postgres]: A PostgreSQL storage provider.
+//   - [github.com/gofiber/storage/redis]: A Redis storage provider.
+//   - [github.com/gofiber/storage/sqlite3]: An SQLite3 storage provider.
 //
 // The 2FA information is stored in the storage using the ContextKey as the unique identifier. The ContextKey is bound to the raw value (2FA information) in the storage.
 //
