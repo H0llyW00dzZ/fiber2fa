@@ -78,17 +78,31 @@ func (m *Middleware) generateQRCode(info *Info) (image.Image, []byte, error) {
 		return m.Config.QRCode.Image, buf.Bytes(), nil
 	}
 
-	// Generate the default QR code image
-	qrCodeBytes, err := qrcode.Encode(qrCodeContent, m.Config.Encode.Level, m.Config.Encode.Size)
+	// Generate the QR code
+	var qrCode *qrcode.QRCode
+	var err error
+
+	if m.Config.Encode.VersionNumber != 0 {
+		// Generate the QR code with the specified version number
+		qrCode, err = qrcode.NewWithForcedVersion(qrCodeContent, m.Config.Encode.VersionNumber, m.Config.Encode.Level)
+	} else {
+		// Generate the QR code with automatic version determination
+		qrCode, err = qrcode.New(qrCodeContent, m.Config.Encode.Level)
+	}
+
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// Decode the QR code bytes into an image.Image
-	qrCodeImage, _, err := image.Decode(bytes.NewReader(qrCodeBytes))
+	// Encode the QR code as PNG
+	qrCodeImage := qrCode.Image(m.Config.Encode.Size)
+
+	// Encode the QR code image to PNG format
+	var buf bytes.Buffer
+	err = png.Encode(&buf, qrCodeImage)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return qrCodeImage, qrCodeBytes, nil
+	return qrCodeImage, buf.Bytes(), nil
 }
