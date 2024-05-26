@@ -251,3 +251,65 @@ func TestTOTPVerifier_SaveQRCodeImage(t *testing.T) {
 		t.Errorf("QR code image file was not created")
 	}
 }
+
+func TestHOTPVerifier_BuildQRCode(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+	config := otpverifier.Config{
+		Secret:  secret,
+		Counter: 1337,
+	}
+	verifier := otpverifier.NewHOTPVerifier(config)
+
+	issuer := "TestIssuer"
+	accountName := "TestAccount"
+
+	// Create a custom QR code configuration
+	qrCodeConfig := otpverifier.QRCodeConfig{
+		Level:           qrcode.Medium,
+		Size:            256,
+		DisableBorder:   true,
+		TopText:         "Scan Me",
+		BottomText:      "OTP QR Code",
+		ForegroundColor: color.Black,
+	}
+
+	qrCodeBytes, err := verifier.BuildQRCode(issuer, accountName, qrCodeConfig)
+	if err != nil {
+		t.Errorf("Failed to build QR code: %v", err)
+	}
+
+	if len(qrCodeBytes) == 0 {
+		t.Errorf("QR code bytes should not be empty")
+	}
+
+	// Try decoding the QR code bytes as a PNG image
+	_, err = png.Decode(bytes.NewReader(qrCodeBytes))
+	if err != nil {
+		t.Errorf("Failed to decode QR code as PNG: %v", err)
+	}
+}
+
+func TestHOTPVerifier_SaveQRCodeImage(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+	config := otpverifier.Config{
+		Secret:  secret,
+		Counter: 1337,
+	}
+	verifier := otpverifier.NewHOTPVerifier(config)
+
+	issuer := "TestIssuer"
+	accountName := "TestAccount"
+	filename := "test_hotp_qrcode.png"
+
+	err := verifier.SaveQRCodeImage(issuer, accountName, filename, otpverifier.DefaultQRCodeConfig)
+	if err != nil {
+		t.Errorf("Failed to save QR code image: %v", err)
+	}
+	defer os.Remove(filename)
+
+	// Check if the file was created
+	_, err = os.Stat(filename)
+	if os.IsNotExist(err) {
+		t.Errorf("QR code image file was not created")
+	}
+}
