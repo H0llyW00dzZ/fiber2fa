@@ -17,4 +17,5 @@
 //
 // Note: The Blake2botp hash is based on the BLAKE2b hash function, which provides a secure and efficient hashing algorithm.
 // However, it's important to ensure that the secret key used with the OTP implementation is kept secure and not disclosed to unauthorized parties.
+// Also, note that some 2FA mobile apps might not support this hash function, so it is recommended to build your own 2FA mobile apps.
 package blake2botp

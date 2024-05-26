@@ -51,6 +51,4 @@
 //
 // The package uses the [github.com/xlzd/gotp] library for generating and verifying OTPs and the
 // [crypto/hmac] and [crypto/sha256] packages for generating and verifying signatures.
-//
-// Note: Some 2FA Mobile Apps might not support this hash function, so it is recommended to build your own 2FA Mobile apps.
 package otpverifier
