@@ -40,7 +40,7 @@ type Info struct {
 // NewInfo creates a new empty Info struct based on the provided Config.
 func NewInfo(cfg *Config) *Info {
 	return &Info{
-		ContextKey:     cfg.ContextKey,
+		ContextKey:     "",
 		Secret:         cfg.Secret,
 		CookieValue:    "",
 		ExpirationTime: time.Time{},
@@ -141,7 +141,12 @@ func (m *Middleware) updateInfoInStorage(contextKey string) error {
 		return ErrorFailedToMarshalInfo
 	}
 
-	err = m.Config.Storage.Set(contextKey, updatedRawInfo, time.Duration(m.Config.CookieMaxAge)*time.Second)
+	var expiration time.Duration
+	if m.Config.StorageExpiration > 0 {
+		expiration = m.Config.StorageExpiration
+	}
+
+	err = m.Config.Storage.Set(contextKey, updatedRawInfo, expiration)
 	if err != nil {
 		return ErrorFailedToStoreInfo
 	}
