@@ -5,17 +5,20 @@
 package otpverifier
 
 import (
-	"crypto/hmac"
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
-	"crypto/subtle"
-	"encoding/base32"
 	"fmt"
+	"image"
+	"image/color"
+	"net/url"
 	"time"
 
-	blake2botp "github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash"
+	blake2botp "github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash/blake2botp"
+	"github.com/skip2/go-qrcode"
 	"github.com/xlzd/gotp"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/basicfont"
 )
 
 const (
@@ -73,6 +76,20 @@ type Config struct {
 	Hasher       *gotp.Hasher
 }
 
+// QRCodeConfig represents the configuration for generating QR codes.
+type QRCodeConfig struct {
+	Level              qrcode.RecoveryLevel
+	Size               int
+	ForegroundColor    color.Color
+	BackgroundColor    color.Color
+	DisableBorder      bool
+	TopText            string
+	BottomText         string
+	Font               font.Face
+	TopTextPosition    image.Point
+	BottomTextPosition image.Point
+}
+
 // DefaultConfig represents the default configuration values.
 var DefaultConfig = Config{
 	Digits:       6,
@@ -80,125 +97,6 @@ var DefaultConfig = Config{
 	UseSignature: false,
 	TimeSource:   time.Now,
 	Hasher:       &gotp.Hasher{HashName: BLAKE2b512, Digest: blake2botp.New512},
-}
-
-// TOTPVerifier is a TOTP verifier that implements the OTPVerifier interface.
-type TOTPVerifier struct {
-	config Config
-	totp   *gotp.TOTP
-}
-
-// NewTOTPVerifier creates a new TOTPVerifier with the given configuration.
-func NewTOTPVerifier(config Config) *TOTPVerifier {
-	// Use default values if not provided
-	if config.Digits == 0 {
-		config.Digits = DefaultConfig.Digits
-	}
-	if config.Period == 0 {
-		config.Period = DefaultConfig.Period
-	}
-	if config.TimeSource == nil {
-		config.TimeSource = DefaultConfig.TimeSource
-	}
-	if config.Hasher == nil {
-		config.Hasher = DefaultConfig.Hasher
-	}
-
-	totp := gotp.NewTOTP(config.Secret, config.Digits, config.Period, config.Hasher)
-	return &TOTPVerifier{
-		config: config,
-		totp:   totp,
-	}
-}
-
-// Verify checks if the provided token and signature are valid for the current time.
-func (v *TOTPVerifier) Verify(token, signature string) bool {
-	generatedToken := v.totp.Now()
-	if v.config.UseSignature {
-		generatedSignature := v.generateSignature(generatedToken)
-		return subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 &&
-			subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1
-	}
-	return subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1
-}
-
-// GenerateToken generates a token and signature for the current time.
-func (v *TOTPVerifier) GenerateToken() (string, string) {
-	token := v.totp.Now()
-	signature := ""
-	if v.config.UseSignature {
-		signature = v.generateSignature(token)
-	}
-	return token, signature
-}
-
-// generateSignature generates an HMAC signature for the given token using the secret key.
-func (v *TOTPVerifier) generateSignature(token string) string {
-	key, _ := base32.StdEncoding.DecodeString(v.config.Secret)
-	h := hmac.New(v.config.Hasher.Digest, key)
-	h.Write([]byte(token))
-	return fmt.Sprintf("%x", h.Sum(nil))
-}
-
-// HOTPVerifier is an HOTP verifier that implements the OTPVerifier interface.
-type HOTPVerifier struct {
-	config Config
-	hotp   *gotp.HOTP
-}
-
-// NewHOTPVerifier creates a new HOTPVerifier with the given configuration.
-func NewHOTPVerifier(config Config) *HOTPVerifier {
-	// Use default values if not provided
-	if config.Digits == 0 {
-		config.Digits = DefaultConfig.Digits
-	}
-	if config.Hasher == nil {
-		config.Hasher = DefaultConfig.Hasher
-	}
-
-	hotp := gotp.NewHOTP(config.Secret, config.Digits, config.Hasher)
-	return &HOTPVerifier{
-		config: config,
-		hotp:   hotp,
-	}
-}
-
-// Verify checks if the provided token and signature are valid for the specified counter value.
-func (v *HOTPVerifier) Verify(token, signature string) bool {
-	generatedToken := v.hotp.At(int(v.config.Counter))
-	if v.config.UseSignature {
-		generatedSignature := v.generateSignature(generatedToken)
-		return subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 &&
-			subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1
-	}
-	return subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1
-}
-
-// GenerateToken generates a token and signature for the current counter value.
-func (v *HOTPVerifier) GenerateToken() (string, string) {
-	token := v.hotp.At(int(v.config.Counter))
-	signature := ""
-	if v.config.UseSignature {
-		signature = v.generateSignature(token)
-	}
-	return token, signature
-}
-
-// generateSignature generates an HMAC signature for the given token using the secret key.
-func (v *HOTPVerifier) generateSignature(token string) string {
-	key, _ := base32.StdEncoding.DecodeString(v.config.Secret)
-	h := hmac.New(v.config.Hasher.Digest, key)
-	h.Write([]byte(token))
-	return fmt.Sprintf("%x", h.Sum(nil))
-}
-
-// OTPFactory is a simple factory function to create an OTPVerifier.
-// It takes a Config and creates the appropriate verifier based on the configuration.
-func OTPFactory(config Config) OTPVerifier {
-	if config.Counter != 0 {
-		return NewHOTPVerifier(config)
-	}
-	return NewTOTPVerifier(config)
 }
 
 // Hashers is a map of supported hash functions.
@@ -209,4 +107,69 @@ var Hashers = map[string]*gotp.Hasher{
 	BLAKE2b256: {HashName: BLAKE2b256, Digest: blake2botp.New256},
 	BLAKE2b384: {HashName: BLAKE2b384, Digest: blake2botp.New384},
 	BLAKE2b512: {HashName: BLAKE2b512, Digest: blake2botp.New512},
+}
+
+// DefaultQRCodeConfig represents the default configuration for generating QR codes.
+var DefaultQRCodeConfig = InitializeDefaultQRCodeConfig()
+
+// InitializeDefaultQRCodeConfig sets up the default configuration for generating QR codes with dynamic text positions.
+func InitializeDefaultQRCodeConfig() QRCodeConfig {
+	size := 256      // This is the QR code size used in the default config
+	textHeight := 20 // This should be set to the height of the text
+
+	return QRCodeConfig{
+		Level:              qrcode.Medium,
+		Size:               size,
+		ForegroundColor:    color.Black,
+		BackgroundColor:    color.White,
+		DisableBorder:      false,
+		TopText:            "",
+		BottomText:         "",
+		Font:               basicfont.Face7x13,
+		TopTextPosition:    image.Point{X: size / 2, Y: textHeight / 1},      // Dynamically calculated
+		BottomTextPosition: image.Point{X: size / 2, Y: size + textHeight/1}, // Dynamically calculated
+	}
+}
+
+// ensureDefaultConfig checks the provided config and fills in any zero values with defaults.
+func ensureDefaultConfig(config QRCodeConfig) QRCodeConfig {
+	if config.Font == nil {
+		config.Font = DefaultQRCodeConfig.Font
+	}
+	if config.ForegroundColor == nil {
+		config.ForegroundColor = DefaultQRCodeConfig.ForegroundColor
+	}
+	if config.BackgroundColor == nil {
+		config.BackgroundColor = DefaultQRCodeConfig.BackgroundColor
+	}
+	if config.TopTextPosition == (image.Point{}) {
+		config.TopTextPosition = DefaultQRCodeConfig.TopTextPosition
+	}
+	if config.BottomTextPosition == (image.Point{}) {
+		config.BottomTextPosition = DefaultQRCodeConfig.BottomTextPosition
+	}
+	return config
+}
+
+// generateOTPURL creates the URL for the QR code.
+func generateOTPURL(issuer, accountName string, config Config) string {
+	var otpType string
+	if config.Counter != 0 {
+		otpType = gotp.OtpTypeHotp
+	} else {
+		otpType = gotp.OtpTypeTotp
+	}
+
+	return fmt.Sprintf("otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s&counter=%d",
+		otpType, url.QueryEscape(issuer), url.QueryEscape(accountName), config.Secret, url.QueryEscape(issuer),
+		config.Digits, config.Hasher.HashName, config.Counter)
+}
+
+// OTPFactory is a simple factory function to create an OTPVerifier.
+// It takes a Config and creates the appropriate verifier based on the configuration.
+func OTPFactory(config Config) OTPVerifier {
+	if config.Counter != 0 {
+		return NewHOTPVerifier(config)
+	}
+	return NewTOTPVerifier(config)
 }
