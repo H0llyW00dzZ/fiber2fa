@@ -141,7 +141,12 @@ func (m *Middleware) updateInfoInStorage(contextKey string) error {
 		return ErrorFailedToMarshalInfo
 	}
 
-	err = m.Config.Storage.Set(contextKey, updatedRawInfo, time.Duration(m.Config.CookieMaxAge)*time.Second)
+	var expiration time.Duration
+	if m.Config.StorageExpiration > 0 {
+		expiration = m.Config.StorageExpiration
+	}
+
+	err = m.Config.Storage.Set(contextKey, updatedRawInfo, expiration)
 	if err != nil {
 		return ErrorFailedToStoreInfo
 	}

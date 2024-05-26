@@ -7,6 +7,7 @@ package twofa
 import (
 	"encoding/json"
 	"image"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/skip2/go-qrcode"
@@ -81,6 +82,11 @@ type Config struct {
 	//
 	// Optional. Default: nil (in-memory storage)
 	Storage fiber.Storage
+
+	// StorageExpiration is the duration for which the 2FA information should be stored in the storage.
+	//
+	// Optional. Default: 0 (no expiration)
+	StorageExpiration time.Duration
 
 	// TokenLookup is a string in the form of "<source>:<name>" that is used to extract the token from the request.
 	//
@@ -206,6 +212,7 @@ var DefaultConfig = Config{
 	CookieSecure:         false,
 	RedirectURL:          "/2fa",
 	Storage:              nil,
+	StorageExpiration:    0,
 	TokenLookup:          "query:token",
 	ContextKey:           "",
 	JSONMarshal:          json.Marshal,
