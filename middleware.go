@@ -19,8 +19,18 @@ import (
 
 // Middleware represents the 2FA middleware.
 type Middleware struct {
-	Config *Config
-	Info   InfoManager
+	Config       *Config
+	Info         InfoManager
+	PathHandlers []PathHandler
+}
+
+// PathHandler represents a path handler for the 2FA middleware.
+type PathHandler struct {
+	// Path is the URL path to match for the handler.
+	Path string
+
+	// Handler is the fiber.Handler function to be executed when the path matches.
+	Handler fiber.Handler
 }
 
 // New creates a new instance of the 2FA middleware with the provided configuration.
@@ -51,6 +61,13 @@ func New(config ...Config) fiber.Handler {
 		Info:   info,
 	}
 
+	m.PathHandlers = []PathHandler{
+		{
+			Path:    m.Config.QRCode.PathTemplate,
+			Handler: m.GenerateQRcodePath,
+		},
+	}
+
 	// Return the handle method bound to the Middleware instance.
 	return m.Handle
 }
@@ -62,11 +79,13 @@ func (m *Middleware) Handle(c *fiber.Ctx) error {
 		return c.Next()
 	}
 
+	// Get the context key
 	contextKey, err := m.getContextKey(c)
 	if err != nil {
 		return m.SendInternalErrorResponse(c, err)
 	}
 
+	// Get the 2FA information from storage
 	info, err := m.getInfoFromStorage(contextKey)
 	if err != nil {
 		return m.SendInternalErrorResponse(c, ErrorFailedToRetrieveInfo)
@@ -84,6 +103,13 @@ func (m *Middleware) Handle(c *fiber.Ctx) error {
 	// Check if the user has a valid 2FA cookie
 	if m.isValidCookie(c) {
 		return c.Next()
+	}
+
+	// Find the matching path handler
+	for _, handler := range m.PathHandlers {
+		if c.Path() == handler.Path {
+			return handler.Handler(c)
+		}
 	}
 
 	// Handle token verification and further processing
@@ -114,6 +140,7 @@ func (m *Middleware) handleMissingInfo(c *fiber.Ctx) error {
 
 // handleTokenVerification handles the token verification process and further processing.
 func (m *Middleware) handleTokenVerification(c *fiber.Ctx, contextKey string) error {
+
 	// Extract the token from the specified token lookup sources
 	token := m.extractToken(c)
 	if token == "" {
@@ -122,23 +149,21 @@ func (m *Middleware) handleTokenVerification(c *fiber.Ctx, contextKey string) er
 	}
 
 	// Verify the provided token and get the updated Info struct
-	valid := m.verifyToken(token)
-	if !valid {
+	if !m.verifyToken(token) {
 		// Token is invalid, sending unauthorized response.
 		return m.SendUnauthorizedResponse(c, fiber.NewError(fiber.StatusUnauthorized, "Invalid 2FA token"))
 	}
 
 	// Check if the requested path is in the skip list
 	if !m.isPathSkipped(c.Path()) {
-		// Set the 2FA cookie.
 		if err := m.setCookie(c); err != nil {
 			return m.SendInternalErrorResponse(c, ErrorFailedToStoreInfo)
 		}
+	}
 
-		// Store the updated Info struct in the storage
-		if err := m.updateInfoInStorage(contextKey); err != nil {
-			return m.SendInternalErrorResponse(c, ErrorFailedToStoreInfo)
-		}
+	// Store the updated Info struct in the storage
+	if err := m.updateInfoInStorage(contextKey); err != nil {
+		return m.SendInternalErrorResponse(c, ErrorFailedToStoreInfo)
 	}
 
 	return c.Next()
