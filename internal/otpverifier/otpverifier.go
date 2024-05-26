@@ -36,6 +36,8 @@ const (
 
 	// BLAKE2b represents the secure BLAKE2b hash function.
 	// It provides a 512-bit (64-byte) hash value.
+	//
+	// Note: Some 2FA Mobile Apps might not support this hash function, so it is recommended to build your own 2FA Mobile apps.
 	BLAKE2b = "BLAKE2b"
 )
 
