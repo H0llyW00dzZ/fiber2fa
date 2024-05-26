@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"net/url"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -78,14 +79,14 @@ func (m *Middleware) generateQRCode(c *fiber.Ctx, info *Info) (image.Image, []by
 
 	// Create a slice to hold the arguments for fmt.Sprintf
 	args := make([]any, 0) // zero allocation
-	args = append(args, m.Config.Issuer, contextValue, secretKey, m.Config.Issuer)
+	args = append(args, url.QueryEscape(m.Config.Issuer), url.QueryEscape(contextValue), url.QueryEscape(secretKey), url.QueryEscape(m.Config.Issuer))
 
 	// Add additional arguments based on the placeholders in the Content template
 	numPlaceholders := strings.Count(m.Config.QRCode.Content, "%")
 	for i := 3; i < numPlaceholders; i++ { // Set the default starting index to 3 to avoid writing tests again for custom content.
 		// Get the value for the additional argument from the request context or configuration
-		argValue := c.Query((fmt.Sprintf("arg%d", i)))
-		args = append(args, argValue)
+		argValue := c.Query(fmt.Sprintf("arg%d", i))
+		args = append(args, url.QueryEscape(argValue))
 	}
 
 	// Generate the QR code content using fmt.Sprintf with the variable arguments
