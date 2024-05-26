@@ -49,6 +49,7 @@
 //	// Verify the token and signature
 //	isValid := hotpVerifier.Verify(token, signature)
 //
-// The package uses the [github.com/xlzd/gotp] library for generating and verifying OTPs and the
-// [crypto/hmac] and [crypto/sha256] packages for generating and verifying signatures.
+// The package uses the [github.com/xlzd/gotp] library for generating and verifying OTPs,
+// and the [crypto/hmac], [crypto/sha256], and [github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash/blake2botp] packages for
+// generating and verifying signatures using HMAC with SHA-1, SHA-256, SHA-512, and BLAKE2b.
 package otpverifier
