@@ -62,6 +62,7 @@
 //   - CookieSecure: Determines whether the 2FA cookie should be sent only over HTTPS. Default is false.
 //   - RedirectURL: The URL to redirect the user to when 2FA is required. Default is "/2fa".
 //   - Storage: The storage provider for storing 2FA information. Default is nil (in-memory storage).
+//   - StorageExpiration: The duration for which the 2FA information should be stored in the storage. Default is 0 (no expiration).
 //   - TokenLookup: A string in the form of "<source>:<name>" that is used to extract the token from the request. Default is "query:token".
 //   - ContextKey: The key used to store the 2FA information in the context. This field is required.
 //   - JSONMarshal: A custom JSON marshaling function. Default is [json.Marshal].
