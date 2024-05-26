@@ -11,7 +11,7 @@ import (
 )
 
 // New512 returns a new instance of the Blake2botp hash with a 512-bit output size.
-// The returned hash implements the hash.Hash interface.
+// The returned hash implements the [hash.Hash] interface.
 func New512() hash.Hash {
 	h, _ := blake2b.New512(nil)
 	return &Blake2botp{
@@ -20,7 +20,7 @@ func New512() hash.Hash {
 }
 
 // Blake2botp is a struct that wraps the BLAKE2b hash function.
-// It implements the hash.Hash interface.
+// It implements the [hash.Hash] interface.
 type Blake2botp struct {
 	hash hash.Hash
 }
