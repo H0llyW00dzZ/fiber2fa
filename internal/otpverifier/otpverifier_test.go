@@ -313,3 +313,59 @@ func TestHOTPVerifier_SaveQRCodeImage(t *testing.T) {
 		t.Errorf("QR code image file was not created")
 	}
 }
+
+func TestHOTPVerifier_VerifySyncWindow(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+	// An arbitrarily chosen initial counter value
+	initialCounter := uint64(1337)
+	// The sync window allows verification of tokens that are ahead by 2
+	syncWindow := 2
+
+	hashFunctions := []string{
+		otpverifier.SHA1,
+		otpverifier.SHA256,
+		otpverifier.SHA512,
+		otpverifier.BLAKE2b256,
+		otpverifier.BLAKE2b384,
+		otpverifier.BLAKE2b512,
+	}
+
+	for _, hashFunc := range hashFunctions {
+		config := otpverifier.Config{
+			Secret:     secret,
+			Counter:    initialCounter,
+			Hasher:     otpverifier.Hashers[hashFunc],
+			SyncWindow: syncWindow,
+		}
+		verifier := otpverifier.NewHOTPVerifier(config)
+
+		// Generate a token for the current counter value
+		currentToken := verifier.Hotp.At(int(initialCounter))
+
+		// Verify this token should pass
+		if !verifier.Verify(currentToken, "") {
+			t.Errorf("Current token did not verify but should have (hash function: %s)", hashFunc)
+		}
+
+		// Generate a token for a counter value within the sync window
+		withinWindowToken := verifier.Hotp.At(int(initialCounter) + syncWindow)
+
+		// Verify this token should also pass
+		if !verifier.Verify(withinWindowToken, "") {
+			t.Errorf("Token within sync window did not verify but should have (hash function: %s)", hashFunc)
+		}
+
+		// Verify that the counter has been updated to the last verified counter + 1
+		if verifier.GetCounter() != initialCounter+uint64(syncWindow)+1 {
+			t.Errorf("Counter was not updated correctly after sync window verification (hash function: %s)", hashFunc)
+		}
+
+		// Generate a token for a counter value outside the sync window
+		outsideWindowToken := verifier.Hotp.At(int(initialCounter) + syncWindow + 4)
+
+		// Verify this token should fail
+		if verifier.Verify(outsideWindowToken, "") {
+			t.Errorf("Token outside sync window verified but should not have (hash function: %s)", hashFunc)
+		}
+	}
+}
