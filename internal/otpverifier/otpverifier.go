@@ -34,11 +34,23 @@ const (
 	// It offers the highest level of security among the commonly used SHA variants.
 	SHA512 = "SHA512"
 
-	// BLAKE2b represents the secure BLAKE2b hash function.
+	// BLAKE2b256 represents the secure BLAKE2b hash function with a 256-bit output size.
+	// It provides a 256-bit (32-byte) hash value.
+	//
+	// Note: Some 2FA Mobile Apps might not support this hash function, so it is recommended to build your own 2FA Mobile apps.
+	BLAKE2b256 = "BLAKE2b256"
+
+	// BLAKE2b384 represents the secure BLAKE2b hash function with a 384-bit output size.
+	// It provides a 384-bit (48-byte) hash value.
+	//
+	// Note: Some 2FA Mobile Apps might not support this hash function, so it is recommended to build your own 2FA Mobile apps.
+	BLAKE2b384 = "BLAKE2b384"
+
+	// BLAKE2b512 represents the secure BLAKE2b hash function with a 512-bit output size.
 	// It provides a 512-bit (64-byte) hash value.
 	//
 	// Note: Some 2FA Mobile Apps might not support this hash function, so it is recommended to build your own 2FA Mobile apps.
-	BLAKE2b = "BLAKE2b"
+	BLAKE2b512 = "BLAKE2b512"
 )
 
 // TimeSource is a function type that returns the current time.
@@ -67,7 +79,7 @@ var DefaultConfig = Config{
 	Period:       30,
 	UseSignature: false,
 	TimeSource:   time.Now,
-	Hasher:       &gotp.Hasher{HashName: BLAKE2b, Digest: blake2botp.New512},
+	Hasher:       &gotp.Hasher{HashName: BLAKE2b512, Digest: blake2botp.New512},
 }
 
 // TOTPVerifier is a TOTP verifier that implements the OTPVerifier interface.
@@ -191,8 +203,10 @@ func OTPFactory(config Config) OTPVerifier {
 
 // Hashers is a map of supported hash functions.
 var Hashers = map[string]*gotp.Hasher{
-	SHA1:    {HashName: SHA1, Digest: sha1.New},
-	SHA256:  {HashName: SHA256, Digest: sha256.New},
-	SHA512:  {HashName: SHA512, Digest: sha512.New},
-	BLAKE2b: {HashName: BLAKE2b, Digest: blake2botp.New512},
+	SHA1:       {HashName: SHA1, Digest: sha1.New},
+	SHA256:     {HashName: SHA256, Digest: sha256.New},
+	SHA512:     {HashName: SHA512, Digest: sha512.New},
+	BLAKE2b256: {HashName: BLAKE2b256, Digest: blake2botp.New256},
+	BLAKE2b384: {HashName: BLAKE2b384, Digest: blake2botp.New384},
+	BLAKE2b512: {HashName: BLAKE2b512, Digest: blake2botp.New512},
 }

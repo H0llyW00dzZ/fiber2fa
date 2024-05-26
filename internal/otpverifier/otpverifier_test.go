@@ -26,34 +26,46 @@ func TestTOTPVerifier_Verify(t *testing.T) {
 		return fakeTime
 	}
 
-	// Create a TOTPVerifier with the mocked time source and UseSignature set to true
-	config := otpverifier.Config{
-		Secret:       secret,
-		UseSignature: true,
-		TimeSource:   timeSource,
-	}
-	verifier := otpverifier.NewTOTPVerifier(config)
-
-	// Generate a token and signature using the verifier
-	token, signature := verifier.GenerateToken()
-
-	// Verify the token and signature
-	isValid := verifier.Verify(token, signature)
-	if !isValid {
-		t.Errorf("Token and signature should be valid")
+	hashFunctions := []string{
+		otpverifier.SHA1,
+		otpverifier.SHA256,
+		otpverifier.SHA512,
+		otpverifier.BLAKE2b256,
+		otpverifier.BLAKE2b384,
+		otpverifier.BLAKE2b512,
 	}
 
-	// Create a TOTPVerifier with the mocked time source and UseSignature set to false
-	config.UseSignature = false
-	verifier = otpverifier.NewTOTPVerifier(config)
+	for _, hashFunc := range hashFunctions {
+		// Create a TOTPVerifier with the mocked time source, UseSignature set to true, and the specified hash function
+		config := otpverifier.Config{
+			Secret:       secret,
+			UseSignature: true,
+			TimeSource:   timeSource,
+			Hasher:       otpverifier.Hashers[hashFunc],
+		}
+		verifier := otpverifier.NewTOTPVerifier(config)
 
-	// Generate a token using the verifier
-	token, _ = verifier.GenerateToken()
+		// Generate a token and signature using the verifier
+		token, signature := verifier.GenerateToken()
 
-	// Verify the token
-	isValid = verifier.Verify(token, "")
-	if !isValid {
-		t.Errorf("Token should be valid")
+		// Verify the token and signature
+		isValid := verifier.Verify(token, signature)
+		if !isValid {
+			t.Errorf("Token and signature should be valid (hash function: %s)", hashFunc)
+		}
+
+		// Create a TOTPVerifier with the mocked time source, UseSignature set to false, and the specified hash function
+		config.UseSignature = false
+		verifier = otpverifier.NewTOTPVerifier(config)
+
+		// Generate a token using the verifier
+		token, _ = verifier.GenerateToken()
+
+		// Verify the token
+		isValid = verifier.Verify(token, "")
+		if !isValid {
+			t.Errorf("Token should be valid (hash function: %s)", hashFunc)
+		}
 	}
 }
 
@@ -61,97 +73,122 @@ func TestHOTPVerifier_Verify(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	initialCounter := uint64(1337)
 
-	// Create an HOTPVerifier with the initial counter and UseSignature set to true
-	config := otpverifier.Config{
-		Secret:       secret,
-		Counter:      initialCounter,
-		UseSignature: true,
-	}
-	verifier := otpverifier.NewHOTPVerifier(config)
-
-	// Generate a token and signature using the verifier
-	token, signature := verifier.GenerateToken()
-
-	// Verify the token and signature
-	isValid := verifier.Verify(token, signature)
-	if !isValid {
-		t.Errorf("Token and signature should be valid")
+	hashFunctions := []string{
+		otpverifier.SHA1,
+		otpverifier.SHA256,
+		otpverifier.SHA512,
+		otpverifier.BLAKE2b256,
+		otpverifier.BLAKE2b384,
+		otpverifier.BLAKE2b512,
 	}
 
-	// Increment the counter and generate a new token and signature
-	initialCounter++
-	config.Counter = initialCounter
-	verifier = otpverifier.NewHOTPVerifier(config)
-	newToken, newSignature := verifier.GenerateToken()
+	for _, hashFunc := range hashFunctions {
+		// Create an HOTPVerifier with the initial counter, UseSignature set to true, and the specified hash function
+		config := otpverifier.Config{
+			Secret:       secret,
+			Counter:      initialCounter,
+			UseSignature: true,
+			Hasher:       otpverifier.Hashers[hashFunc],
+		}
+		verifier := otpverifier.NewHOTPVerifier(config)
 
-	// Verify the new token and signature
-	isValid = verifier.Verify(newToken, newSignature)
-	if !isValid {
-		t.Errorf("New token and signature should be valid")
-	}
+		// Generate a token and signature using the verifier
+		token, signature := verifier.GenerateToken()
 
-	// Verify that the old token and signature are no longer valid
-	isValid = verifier.Verify(token, signature)
-	if isValid {
-		t.Errorf("Old token and signature should not be valid anymore")
-	}
+		// Verify the token and signature
+		isValid := verifier.Verify(token, signature)
+		if !isValid {
+			t.Errorf("Token and signature should be valid (hash function: %s)", hashFunc)
+		}
 
-	// Create an HOTPVerifier with the initial counter and UseSignature set to false
-	config.UseSignature = false
-	verifier = otpverifier.NewHOTPVerifier(config)
+		// Increment the counter and generate a new token and signature
+		initialCounter++
+		config.Counter = initialCounter
+		verifier = otpverifier.NewHOTPVerifier(config)
+		newToken, newSignature := verifier.GenerateToken()
 
-	// Generate a token using the verifier
-	token, _ = verifier.GenerateToken()
+		// Verify the new token and signature
+		isValid = verifier.Verify(newToken, newSignature)
+		if !isValid {
+			t.Errorf("New token and signature should be valid (hash function: %s)", hashFunc)
+		}
 
-	// Verify the token
-	isValid = verifier.Verify(token, "")
-	if !isValid {
-		t.Errorf("Token should be valid")
+		// Verify that the old token and signature are no longer valid
+		isValid = verifier.Verify(token, signature)
+		if isValid {
+			t.Errorf("Old token and signature should not be valid anymore (hash function: %s)", hashFunc)
+		}
+
+		// Create an HOTPVerifier with the initial counter, UseSignature set to false, and the specified hash function
+		config.UseSignature = false
+		verifier = otpverifier.NewHOTPVerifier(config)
+
+		// Generate a token using the verifier
+		token, _ = verifier.GenerateToken()
+
+		// Verify the token
+		isValid = verifier.Verify(token, "")
+		if !isValid {
+			t.Errorf("Token should be valid (hash function: %s)", hashFunc)
+		}
 	}
 }
 
 func TestOTPFactory(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 
-	// Test creating a TOTPVerifier
-	totpConfig := otpverifier.Config{
-		Secret: secret,
-	}
-	totpVerifier := otpverifier.OTPFactory(totpConfig)
-	if reflect.TypeOf(totpVerifier) != reflect.TypeOf(&otpverifier.TOTPVerifier{}) {
-		t.Errorf("Expected TOTPVerifier, got %v", reflect.TypeOf(totpVerifier))
-	}
-
-	// Test creating an HOTPVerifier
-	initialCounter := uint64(1337) // Set the counter to a non-zero value
-	hotpConfig := otpverifier.Config{
-		Secret:  secret,
-		Counter: initialCounter,
-	}
-	hotpVerifier := otpverifier.OTPFactory(hotpConfig)
-	if reflect.TypeOf(hotpVerifier) != reflect.TypeOf(&otpverifier.HOTPVerifier{}) {
-		t.Errorf("Expected HOTPVerifier, got %v", reflect.TypeOf(hotpVerifier))
+	hashFunctions := []string{
+		otpverifier.SHA1,
+		otpverifier.SHA256,
+		otpverifier.SHA512,
+		otpverifier.BLAKE2b256,
+		otpverifier.BLAKE2b384,
+		otpverifier.BLAKE2b512,
 	}
 
-	// Test TOTPVerifier token generation and verification
-	fakeTime := time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
-	timeSource := func() time.Time {
-		return fakeTime
-	}
-	totpConfig.UseSignature = true
-	totpConfig.TimeSource = timeSource
-	totpVerifier = otpverifier.NewTOTPVerifier(totpConfig)
-	totpToken, totpSignature := totpVerifier.GenerateToken()
-	if !totpVerifier.Verify(totpToken, totpSignature) {
-		t.Errorf("TOTP token and signature should be valid")
-	}
+	for _, hashFunc := range hashFunctions {
+		// Test creating a TOTPVerifier
+		totpConfig := otpverifier.Config{
+			Secret: secret,
+			Hasher: otpverifier.Hashers[hashFunc],
+		}
+		totpVerifier := otpverifier.OTPFactory(totpConfig)
+		if reflect.TypeOf(totpVerifier) != reflect.TypeOf(&otpverifier.TOTPVerifier{}) {
+			t.Errorf("Expected TOTPVerifier, got %v (hash function: %s)", reflect.TypeOf(totpVerifier), hashFunc)
+		}
 
-	// Test HOTPVerifier token generation and verification
-	hotpConfig.UseSignature = true
-	hotpVerifier = otpverifier.NewHOTPVerifier(hotpConfig)
-	hotpToken, hotpSignature := hotpVerifier.GenerateToken()
-	if !hotpVerifier.Verify(hotpToken, hotpSignature) {
-		t.Errorf("HOTP token and signature should be valid")
+		// Test creating an HOTPVerifier
+		initialCounter := uint64(1337) // Set the counter to a non-zero value
+		hotpConfig := otpverifier.Config{
+			Secret:  secret,
+			Counter: initialCounter,
+			Hasher:  otpverifier.Hashers[hashFunc],
+		}
+		hotpVerifier := otpverifier.OTPFactory(hotpConfig)
+		if reflect.TypeOf(hotpVerifier) != reflect.TypeOf(&otpverifier.HOTPVerifier{}) {
+			t.Errorf("Expected HOTPVerifier, got %v (hash function: %s)", reflect.TypeOf(hotpVerifier), hashFunc)
+		}
+
+		// Test TOTPVerifier token generation and verification
+		fakeTime := time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+		timeSource := func() time.Time {
+			return fakeTime
+		}
+		totpConfig.UseSignature = true
+		totpConfig.TimeSource = timeSource
+		totpVerifier = otpverifier.NewTOTPVerifier(totpConfig)
+		totpToken, totpSignature := totpVerifier.GenerateToken()
+		if !totpVerifier.Verify(totpToken, totpSignature) {
+			t.Errorf("TOTP token and signature should be valid (hash function: %s)", hashFunc)
+		}
+
+		// Test HOTPVerifier token generation and verification
+		hotpConfig.UseSignature = true
+		hotpVerifier = otpverifier.NewHOTPVerifier(hotpConfig)
+		hotpToken, hotpSignature := hotpVerifier.GenerateToken()
+		if !hotpVerifier.Verify(hotpToken, hotpSignature) {
+			t.Errorf("HOTP token and signature should be valid (hash function: %s)", hashFunc)
+		}
 	}
 }
 

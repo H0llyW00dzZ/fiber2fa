@@ -10,6 +10,24 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
+// New256 returns a new instance of the Blake2botp hash with a 256-bit output size.
+// The returned hash implements the [hash.Hash] interface.
+func New256() hash.Hash {
+	h, _ := blake2b.New256(nil)
+	return &Blake2botp{
+		hash: h,
+	}
+}
+
+// New384 returns a new instance of the Blake2botp hash with a 384-bit output size.
+// The returned hash implements the [hash.Hash] interface.
+func New384() hash.Hash {
+	h, _ := blake2b.New384(nil)
+	return &Blake2botp{
+		hash: h,
+	}
+}
+
 // New512 returns a new instance of the Blake2botp hash with a 512-bit output size.
 // The returned hash implements the [hash.Hash] interface.
 func New512() hash.Hash {
