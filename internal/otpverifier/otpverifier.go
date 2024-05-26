@@ -34,9 +34,9 @@ const (
 	// It offers the highest level of security among the commonly used SHA variants.
 	SHA512 = "SHA512"
 
-	// Blake2b represents the secure BLAKE2b hash function.
+	// BLAKE2b represents the secure BLAKE2b hash function.
 	// It provides a 512-bit (64-byte) hash value.
-	Blake2b = "Blake2b"
+	BLAKE2b = "BLAKE2b"
 )
 
 // TimeSource is a function type that returns the current time.
@@ -65,7 +65,7 @@ var DefaultConfig = Config{
 	Period:       30,
 	UseSignature: false,
 	TimeSource:   time.Now,
-	Hasher:       &gotp.Hasher{HashName: Blake2b, Digest: blake2botp.New512},
+	Hasher:       &gotp.Hasher{HashName: BLAKE2b, Digest: blake2botp.New512},
 }
 
 // TOTPVerifier is a TOTP verifier that implements the OTPVerifier interface.
@@ -192,5 +192,5 @@ var Hashers = map[string]*gotp.Hasher{
 	SHA1:    {HashName: SHA1, Digest: sha1.New},
 	SHA256:  {HashName: SHA256, Digest: sha256.New},
 	SHA512:  {HashName: SHA512, Digest: sha512.New},
-	Blake2b: {HashName: Blake2b, Digest: blake2botp.New512},
+	BLAKE2b: {HashName: BLAKE2b, Digest: blake2botp.New512},
 }
