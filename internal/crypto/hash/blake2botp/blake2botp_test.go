@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	blake2botp "github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash"
+	blake2botp "github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash/blake2botp"
 	"github.com/xlzd/gotp"
 )
 
