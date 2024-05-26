@@ -316,9 +316,12 @@ func TestHOTPVerifier_SaveQRCodeImage(t *testing.T) {
 
 func TestHOTPVerifier_VerifySyncWindow(t *testing.T) {
 	secret := gotp.RandomSecret(16)
-	// An arbitrarily chosen initial counter value
+	// Initialize the counter at an arbitrary value.
+	// Note: This situation simulates a scenario where a user's counter is significantly ahead,
+	// e.g., at 1337. If the user's counter is beyond the synchronization window,
+	// their tokens will not be verified, effectively rendering the tokens useless.
 	initialCounter := uint64(1337)
-	// The sync window allows verification of tokens that are ahead by 2
+	// The sync window defines how many tokens ahead of the last verified one can be accepted.
 	syncWindow := 2
 
 	hashFunctions := []string{
