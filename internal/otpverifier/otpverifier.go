@@ -63,6 +63,8 @@ type TimeSource func() time.Time
 type OTPVerifier interface {
 	Verify(token, signature string) bool
 	GenerateToken() (string, string)
+	SetCounter(counter uint64)
+	GetCounter() uint64
 }
 
 // Config is a struct that holds the configuration options for the OTP verifier.
@@ -74,6 +76,7 @@ type Config struct {
 	TimeSource   TimeSource
 	Counter      uint64
 	Hasher       *gotp.Hasher
+	SyncWindow   int
 }
 
 // QRCodeConfig represents the configuration for generating QR codes.
@@ -97,6 +100,7 @@ var DefaultConfig = Config{
 	UseSignature: false,
 	TimeSource:   time.Now,
 	Hasher:       &gotp.Hasher{HashName: BLAKE2b512, Digest: blake2botp.New512},
+	SyncWindow:   1,
 }
 
 // Hashers is a map of supported hash functions.

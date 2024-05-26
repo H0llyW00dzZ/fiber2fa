@@ -16,7 +16,7 @@ import (
 // HOTPVerifier is an HOTP verifier that implements the OTPVerifier interface.
 type HOTPVerifier struct {
 	config Config
-	hotp   *gotp.HOTP
+	Hotp   *gotp.HOTP
 }
 
 // NewHOTPVerifier creates a new HOTPVerifier with the given configuration.
@@ -32,34 +32,40 @@ func NewHOTPVerifier(config Config) *HOTPVerifier {
 	hotp := gotp.NewHOTP(config.Secret, config.Digits, config.Hasher)
 	return &HOTPVerifier{
 		config: config,
-		hotp:   hotp,
+		Hotp:   hotp,
 	}
 }
 
-// Verify checks if the provided token and signature are valid for the specified counter value.
+// Verify checks if the provided token and signature are valid for the specified counter value within the synchronization window.
+//
+// Note: Understanding how the "Synchronize in real-time" HOTP works requires a big brain.
 func (v *HOTPVerifier) Verify(token, signature string) bool {
-	generatedToken := v.hotp.At(int(v.config.Counter))
-	if v.config.UseSignature {
-		generatedSignature := v.generateSignature(generatedToken)
-		if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 &&
-			subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1 {
-			// Increment the counter value after successful verification
-			v.config.Counter++
+	for i := 0; i <= v.config.SyncWindow; i++ {
+		expectedCounter := int(v.config.Counter) + i
+		generatedToken := v.Hotp.At(expectedCounter)
+
+		tokenMatch := subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1
+		signatureMatch := true // Assume true if not using signatures.
+
+		if v.config.UseSignature {
+			generatedSignature := v.generateSignature(generatedToken)
+			signatureMatch = subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1
+		}
+
+		if tokenMatch && signatureMatch {
+			// Update the stored counter to the next expected value after a successful match
+			v.config.Counter = uint64(expectedCounter + 1)
 			return true
 		}
-		return false
 	}
-	if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 {
-		// Increment the counter value after successful verification
-		v.config.Counter++
-		return true
-	}
+
+	// If no match is found within the synchronization window, authentication fails
 	return false
 }
 
 // GenerateToken generates a token and signature for the current counter value.
 func (v *HOTPVerifier) GenerateToken() (string, string) {
-	token := v.hotp.At(int(v.config.Counter))
+	token := v.Hotp.At(int(v.config.Counter))
 	signature := ""
 	if v.config.UseSignature {
 		signature = v.generateSignature(token)
@@ -73,4 +79,24 @@ func (v *HOTPVerifier) generateSignature(token string) string {
 	h := hmac.New(v.config.Hasher.Digest, key)
 	h.Write([]byte(token))
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+// SetCounter sets the counter value in the HOTPVerifier's configuration.
+func (v *HOTPVerifier) SetCounter(counter uint64) {
+	v.config.Counter = counter
+}
+
+// GetCounter returns the current counter value from the HOTPVerifier's configuration.
+func (v *HOTPVerifier) GetCounter() uint64 {
+	return v.config.Counter
+}
+
+// SetCounter is a no-op for TOTPVerifier since TOTP doesn't use a counter.
+func (v *TOTPVerifier) SetCounter(counter uint64) {
+	// No-op for TOTP
+}
+
+// GetCounter always returns 0 for TOTPVerifier since TOTP doesn't use a counter.
+func (v *TOTPVerifier) GetCounter() uint64 {
+	return 0
 }
