@@ -2,20 +2,25 @@
 //
 // License: BSD 3-Clause License
 
-// Package blake2botp provides a BLAKE2b-based hash implementation for use with one-time passwords (OTP).
+// Package blake2botp provides BLAKE2b-based hash implementations for use with one-time passwords (OTP).
 //
-// The package defines a Blake2botp struct that wraps the BLAKE2b hash function from the [golang.org/x/crypto/blake2b] package.
-// It implements the [hash.Hash] interface, allowing it to be used as a drop-in replacement for other hash functions in OTP implementations.
+// The package defines hash functions ([blake2botp.New256], [blake2botp.New384], [blake2botp.New512]) that wrap the BLAKE2b hash function from the [golang.org/x/crypto/blake2b] package.
+// These functions return hash instances that implement the [hash.Hash] interface, allowing them to be used as drop-in replacements for other hash functions in OTP implementations.
 //
 // Usage:
 //
 //	hasher := blake2botp.New512()
 //	// Use the hasher with the OTP implementation
 //
-// The package provides a New512 function that returns a new instance of the Blake2botp hash with a 512-bit output size.
-// The returned hash implements the [hash.Hash] interface, so it can be used directly with OTP libraries that expect a hash function.
+// The package provides the following functions:
 //
-// Note: The Blake2botp hash is based on the BLAKE2b hash function, which provides a secure and efficient hashing algorithm.
+//   - [blake2botp.New256]: Returns a new instance of the BLAKE2b hash with a 256-bit output size.
+//   - [blake2botp.New384]: Returns a new instance of the BLAKE2b hash with a 384-bit output size.
+//   - [blake2botp.New512]: Returns a new instance of the BLAKE2b hash with a 512-bit output size.
+//
+// The returned hash instances implement the [hash.Hash] interface, so they can be used directly with OTP libraries that expect a hash function.
+//
+// Note: The BLAKE2b hash functions provided by this package are secure and efficient hashing algorithms.
 // However, it's important to ensure that the secret key used with the OTP implementation is kept secure and not disclosed to unauthorized parties.
-// Also, note that some 2FA mobile apps might not support this hash function, so it is recommended to build your own 2FA mobile apps.
+// Also, note that some 2FA mobile apps might not support these hash functions, so it is recommended to build your own 2FA mobile apps for compatibility.
 package blake2botp
