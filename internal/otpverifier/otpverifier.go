@@ -12,7 +12,6 @@ import (
 	"image"
 	"image/color"
 	"net/url"
-	"strings"
 	"time"
 
 	blake2botp "github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash/blake2botp"
@@ -103,7 +102,7 @@ var DefaultConfig = Config{
 	TimeSource:   time.Now,
 	Hasher:       &gotp.Hasher{HashName: BLAKE2b512, Digest: blake2botp.New512},
 	SyncWindow:   1,
-	URITemplate:  "otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s&counter=%d",
+	URITemplate:  "otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s",
 }
 
 // Hashers is a map of supported hash functions.
@@ -160,37 +159,42 @@ func ensureDefaultConfig(config QRCodeConfig) QRCodeConfig {
 
 // generateOTPURL creates the URL for the QR code based on the provided URI template.
 func generateOTPURL(issuer, accountName string, config Config) string {
-	var otpType string
+	// Determine the OTP type based on whether a counter is used.
+	otpType := gotp.OtpTypeTotp
 	if config.Counter != 0 {
 		otpType = gotp.OtpTypeHotp
-	} else {
-		otpType = gotp.OtpTypeTotp
 	}
 
-	// Create a slice to hold the arguments for fmt.Sprintf
-	args := make([]interface{}, 0) // Preallocate with a capacity of 0
-	args = append(args, otpType, url.QueryEscape(issuer), url.QueryEscape(accountName))
-
-	// Define a slice of parameter placeholders and their corresponding values
-	paramPairs := []struct {
-		placeholder string
-		value       interface{}
-	}{
-		{"secret", config.Secret},
-		{"issuer", url.QueryEscape(issuer)},
-		{"digits", config.Digits},
-		{"algorithm", config.Hasher.HashName},
-		{"counter", config.Counter},
+	// Parse the URI template to get a base URL object.
+	baseURL, err := url.Parse(fmt.Sprintf(config.URITemplate, otpType, url.PathEscape(issuer), url.PathEscape(accountName)))
+	if err != nil {
+		panic(err)
 	}
 
-	// Iterate over the parameter pairs and conditionally append parameters
-	for _, pair := range paramPairs {
-		if strings.Contains(config.URITemplate, "%"+pair.placeholder) {
-			args = append(args, pair.value)
-		}
+	// Prepare query parameters.
+	// Note: There is a bug that cannot be fixed. It is probably a mobile 2FA issue or something weird.
+	// The bug occurs when there is a space in the "issuer" field. For example, if the issuer is "Gopher Company",
+	// it will be displayed as:
+	// (issuer) Gopher+Company
+	// (Account Name) Gopher Company:XGopher@example.com
+	// The correct format should be:
+	// (issuer) Gopher
+	// (Account Name) Gopher Company:XGopher@example.com
+	// Adding "Gopher Company:" to the account name is optional because it is the value of the issuer.
+	query := baseURL.Query()
+	query.Set("secret", config.Secret)
+	query.Set("issuer", issuer)
+	query.Set("digits", fmt.Sprint(config.Digits))
+	query.Set("algorithm", config.Hasher.HashName)
+	if config.Counter != 0 {
+		query.Set("counter", fmt.Sprint(config.Counter))
 	}
 
-	return fmt.Sprintf(config.URITemplate, args...)
+	// Re-encode the query parameters.
+	baseURL.RawQuery = query.Encode()
+
+	// Return the fully constructed URL string.
+	return baseURL.String()
 }
 
 // OTPFactory is a simple factory function to create an OTPVerifier.

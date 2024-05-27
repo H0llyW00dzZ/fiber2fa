@@ -28,6 +28,9 @@ func NewHOTPVerifier(config Config) *HOTPVerifier {
 	if config.Hasher == nil {
 		config.Hasher = DefaultConfig.Hasher
 	}
+	if config.URITemplate == "" {
+		config.URITemplate = DefaultConfig.URITemplate
+	}
 
 	hotp := gotp.NewHOTP(config.Secret, config.Digits, config.Hasher)
 	return &HOTPVerifier{
