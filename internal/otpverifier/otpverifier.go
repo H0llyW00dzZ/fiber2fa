@@ -12,6 +12,7 @@ import (
 	"image"
 	"image/color"
 	"net/url"
+	"strings"
 	"time"
 
 	blake2botp "github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash/blake2botp"
@@ -77,6 +78,7 @@ type Config struct {
 	Counter      uint64
 	Hasher       *gotp.Hasher
 	SyncWindow   int
+	URITemplate  string
 }
 
 // QRCodeConfig represents the configuration for generating QR codes.
@@ -101,6 +103,7 @@ var DefaultConfig = Config{
 	TimeSource:   time.Now,
 	Hasher:       &gotp.Hasher{HashName: BLAKE2b512, Digest: blake2botp.New512},
 	SyncWindow:   1,
+	URITemplate:  "otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s&counter=%d",
 }
 
 // Hashers is a map of supported hash functions.
@@ -155,7 +158,7 @@ func ensureDefaultConfig(config QRCodeConfig) QRCodeConfig {
 	return config
 }
 
-// generateOTPURL creates the URL for the QR code.
+// generateOTPURL creates the URL for the QR code based on the provided URI template.
 func generateOTPURL(issuer, accountName string, config Config) string {
 	var otpType string
 	if config.Counter != 0 {
@@ -164,9 +167,30 @@ func generateOTPURL(issuer, accountName string, config Config) string {
 		otpType = gotp.OtpTypeTotp
 	}
 
-	return fmt.Sprintf("otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s&counter=%d",
-		otpType, url.QueryEscape(issuer), url.QueryEscape(accountName), config.Secret, url.QueryEscape(issuer),
-		config.Digits, config.Hasher.HashName, config.Counter)
+	// Create a slice to hold the arguments for fmt.Sprintf
+	args := make([]interface{}, 0) // Preallocate with a capacity of 0
+	args = append(args, otpType, url.QueryEscape(issuer), url.QueryEscape(accountName))
+
+	// Define a slice of parameter placeholders and their corresponding values
+	paramPairs := []struct {
+		placeholder string
+		value       interface{}
+	}{
+		{"secret", config.Secret},
+		{"issuer", url.QueryEscape(issuer)},
+		{"digits", config.Digits},
+		{"algorithm", config.Hasher.HashName},
+		{"counter", config.Counter},
+	}
+
+	// Iterate over the parameter pairs and conditionally append parameters
+	for _, pair := range paramPairs {
+		if strings.Contains(config.URITemplate, "%"+pair.placeholder) {
+			args = append(args, pair.value)
+		}
+	}
+
+	return fmt.Sprintf(config.URITemplate, args...)
 }
 
 // OTPFactory is a simple factory function to create an OTPVerifier.
