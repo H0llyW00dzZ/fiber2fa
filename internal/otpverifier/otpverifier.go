@@ -41,18 +41,21 @@ const (
 	// It provides a 256-bit (32-byte) hash value.
 	//
 	// Note: Some 2FA Mobile Apps might not support this hash function, so it is recommended to build your own 2FA Mobile apps.
+	// additionaly in Apple Device (Not 2FA Mobile Apps) BLAKE2b is supported, has been tested on iPhone by using qrcode scan directly
 	BLAKE2b256 = "BLAKE2b256"
 
 	// BLAKE2b384 represents the secure BLAKE2b hash function with a 384-bit output size.
 	// It provides a 384-bit (48-byte) hash value.
 	//
 	// Note: Some 2FA Mobile Apps might not support this hash function, so it is recommended to build your own 2FA Mobile apps.
+	// additionaly in Apple Device (Not 2FA Mobile Apps) BLAKE2b is supported, has been tested on iPhone by using qrcode scan directly
 	BLAKE2b384 = "BLAKE2b384"
 
 	// BLAKE2b512 represents the secure BLAKE2b hash function with a 512-bit output size.
 	// It provides a 512-bit (64-byte) hash value.
 	//
 	// Note: Some 2FA Mobile Apps might not support this hash function, so it is recommended to build your own 2FA Mobile apps.
+	// additionaly in Apple Device (Not 2FA Mobile Apps) BLAKE2b is supported, has been tested on iPhone by using qrcode scan directly
 	BLAKE2b512 = "BLAKE2b512"
 )
 
