@@ -32,7 +32,13 @@ func NewTOTPVerifier(config Config) *TOTPVerifier {
 		config.TimeSource = DefaultConfig.TimeSource
 	}
 	if config.Hasher == nil {
-		config.Hasher = DefaultConfig.Hasher
+		// If HashName is provided, use it to get the corresponding Hasher
+		if config.Hash != "" {
+			config.Hasher = config.GetHasherByName(config.Hash)
+		} else {
+			// Otherwise, use the default hasher
+			config.Hasher = DefaultConfig.Hasher
+		}
 	}
 	if config.URITemplate == "" {
 		config.URITemplate = DefaultConfig.URITemplate

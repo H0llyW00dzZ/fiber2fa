@@ -40,19 +40,22 @@ const (
 	// BLAKE2b256 represents the secure BLAKE2b hash function with a 256-bit output size.
 	// It provides a 256-bit (32-byte) hash value.
 	//
-	// Note: Some 2FA Mobile Apps might not support this hash function, so it is recommended to build your own 2FA Mobile apps.
+	// Note: Some 2FA mobile apps might not support (poor ecosystems) this hash function, so it is recommended to build your own 2FA mobile apps.
+	// Additionally, on Apple devices (not 2FA mobile apps), BLAKE2b is supported and has been tested on iPhone by using QR code scanning directly.
 	BLAKE2b256 = "BLAKE2b256"
 
 	// BLAKE2b384 represents the secure BLAKE2b hash function with a 384-bit output size.
 	// It provides a 384-bit (48-byte) hash value.
 	//
-	// Note: Some 2FA Mobile Apps might not support this hash function, so it is recommended to build your own 2FA Mobile apps.
+	// Note: Some 2FA mobile apps might not support (poor ecosystems) this hash function, so it is recommended to build your own 2FA mobile apps.
+	// Additionally, on Apple devices (not 2FA mobile apps), BLAKE2b is supported and has been tested on iPhone by using QR code scanning directly.
 	BLAKE2b384 = "BLAKE2b384"
 
 	// BLAKE2b512 represents the secure BLAKE2b hash function with a 512-bit output size.
 	// It provides a 512-bit (64-byte) hash value.
 	//
-	// Note: Some 2FA Mobile Apps might not support this hash function, so it is recommended to build your own 2FA Mobile apps.
+	// Note: Some 2FA mobile apps might not support (poor ecosystems) this hash function, so it is recommended to build your own 2FA mobile apps.
+	// Additionally, on Apple devices (not 2FA mobile apps), BLAKE2b is supported and has been tested on iPhone by using QR code scanning directly.
 	BLAKE2b512 = "BLAKE2b512"
 )
 
@@ -78,6 +81,7 @@ type Config struct {
 	Hasher       *gotp.Hasher
 	SyncWindow   int
 	URITemplate  string
+	Hash         string
 }
 
 // QRCodeConfig represents the configuration for generating QR codes.
@@ -207,4 +211,13 @@ func OTPFactory(config Config) OTPVerifier {
 		return NewHOTPVerifier(config)
 	}
 	return NewTOTPVerifier(config)
+}
+
+// GetHasherByName returns a pointer to a gotp.Hasher based on the given hash function name.
+func (v *Config) GetHasherByName(Hash string) *gotp.Hasher {
+	hasher, exists := Hashers[Hash]
+	if !exists {
+		panic(fmt.Sprintf("Hash function %s is not supported", Hash))
+	}
+	return hasher
 }
