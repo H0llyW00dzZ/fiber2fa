@@ -78,6 +78,7 @@ type Config struct {
 	Hasher       *gotp.Hasher
 	SyncWindow   int
 	URITemplate  string
+	Hash         string
 }
 
 // QRCodeConfig represents the configuration for generating QR codes.
@@ -207,4 +208,13 @@ func OTPFactory(config Config) OTPVerifier {
 		return NewHOTPVerifier(config)
 	}
 	return NewTOTPVerifier(config)
+}
+
+// GetHasherByName returns a pointer to a gotp.Hasher based on the given hash function name.
+func (v *Config) GetHasherByName(Hash string) *gotp.Hasher {
+	hasher, exists := Hashers[Hash]
+	if !exists {
+		panic(fmt.Sprintf("Hash function %s is not supported", Hash))
+	}
+	return hasher
 }

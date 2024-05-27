@@ -7,8 +7,12 @@ package otpverifier_test
 import (
 	"bytes"
 	"crypto/hmac"
+	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/base32"
 	"fmt"
+	"hash"
 	"image/color"
 	"image/png"
 	"os"
@@ -16,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash/blake2botp"
 	"github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier"
 	"github.com/skip2/go-qrcode"
 	"github.com/xlzd/gotp"
@@ -44,8 +49,9 @@ func TestTOTPVerifier_Verify(t *testing.T) {
 			Secret:       secret,
 			UseSignature: true,
 			TimeSource:   timeSource,
-			Hasher:       otpverifier.Hashers[hashFunc],
+			Hash:         hashFunc,
 		}
+		config.Hasher = config.GetHasherByName(hashFunc) // Use the GetHasherByName method
 		verifier := otpverifier.NewTOTPVerifier(config)
 
 		// Generate a token and signature using the verifier
@@ -91,8 +97,9 @@ func TestHOTPVerifier_Verify(t *testing.T) {
 			Secret:       secret,
 			Counter:      initialCounter,
 			UseSignature: true,
-			Hasher:       otpverifier.Hashers[hashFunc],
+			Hash:         hashFunc,
 		}
+		config.Hasher = config.GetHasherByName(hashFunc) // Use the GetHasherByName method
 		verifier := otpverifier.NewHOTPVerifier(config)
 
 		// Generate a token and signature using the verifier
@@ -511,4 +518,49 @@ func TestHOTPVerifier_ResetSyncWindowToDefault(t *testing.T) {
 	if currentSyncWindow := verifier.GetSyncWindow(); currentSyncWindow != otpverifier.DefaultConfig.SyncWindow {
 		t.Errorf("Sync window was not reset to default correctly after passing negative value, got %d, want %d", currentSyncWindow, otpverifier.DefaultConfig.SyncWindow)
 	}
+}
+
+func TestGetHasherByName(t *testing.T) {
+	// Create a dummy config to use its GetHasherByName method
+	config := &otpverifier.Config{}
+
+	// Test cases for supported hash functions
+	tests := []struct {
+		name       string
+		wantDigest func() hash.Hash
+	}{
+		{name: otpverifier.SHA1, wantDigest: sha1.New},
+		{name: otpverifier.SHA256, wantDigest: sha256.New},
+		{name: otpverifier.SHA512, wantDigest: sha512.New},
+		{name: otpverifier.BLAKE2b256, wantDigest: blake2botp.New256},
+		{name: otpverifier.BLAKE2b384, wantDigest: blake2botp.New384},
+		{name: otpverifier.BLAKE2b512, wantDigest: blake2botp.New512},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			hasher := config.GetHasherByName(tt.name)
+			if hasher == nil {
+				t.Errorf("GetHasherByName() = nil, want %T", tt.wantDigest())
+			}
+			if reflect.TypeOf(hasher.Digest()) != reflect.TypeOf(tt.wantDigest()) {
+				t.Errorf("GetHasherByName() = %T, want %T", hasher.Digest(), tt.wantDigest())
+			}
+		})
+	}
+
+	// Test case for unsupported hash function
+	t.Run("UnsupportedHash", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("GetHasherByName() did not panic with unsupported hash function")
+			} else {
+				expected := "Hash function NotAHash is not supported"
+				if r != expected {
+					t.Errorf("GetHasherByName() panic = %v, want %v", r, expected)
+				}
+			}
+		}()
+		config.GetHasherByName("NotAHash")
+	})
 }
