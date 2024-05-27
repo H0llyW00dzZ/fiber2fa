@@ -6,6 +6,9 @@ package otpverifier_test
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"encoding/base32"
+	"fmt"
 	"image/color"
 	"image/png"
 	"os"
@@ -369,6 +372,78 @@ func TestHOTPVerifier_VerifySyncWindow(t *testing.T) {
 		// Verify this token should fail
 		if verifier.Verify(outsideWindowToken, "") {
 			t.Errorf("Token outside sync window verified but should not have (hash function: %s)", hashFunc)
+		}
+	}
+}
+
+func TestHOTPVerifier_VerifySyncWindowWithSignature(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+	// Initialize the counter at an arbitrary value.
+	// Note: This situation simulates a scenario where a user's counter is significantly ahead,
+	// e.g., at 1337. If the user's counter is beyond the synchronization window,
+	// their tokens will not be verified, effectively rendering the tokens useless.
+	initialCounter := uint64(1337)
+	// The sync window defines how many tokens ahead of the last verified one can be accepted.
+	syncWindow := 2
+	useSignature := true
+
+	hashFunctions := []string{
+		otpverifier.SHA1,
+		otpverifier.SHA256,
+		otpverifier.SHA512,
+		otpverifier.BLAKE2b256,
+		otpverifier.BLAKE2b384,
+		otpverifier.BLAKE2b512,
+	}
+
+	for _, hashFunc := range hashFunctions {
+		config := otpverifier.Config{
+			Secret:       secret,
+			Counter:      initialCounter,
+			Hasher:       otpverifier.Hashers[hashFunc],
+			SyncWindow:   syncWindow,
+			UseSignature: useSignature,
+		}
+		verifier := otpverifier.NewHOTPVerifier(config)
+
+		// Helper function to generate a signature for a token
+		generateSignature := func(token string) string {
+			key, _ := base32.StdEncoding.DecodeString(secret)
+			h := hmac.New(otpverifier.Hashers[hashFunc].Digest, key)
+			h.Write([]byte(token))
+			return fmt.Sprintf("%x", h.Sum(nil))
+		}
+
+		// Generate a token and signature for the current counter value
+		currentToken := verifier.Hotp.At(int(initialCounter))
+		currentSignature := generateSignature(currentToken)
+
+		// Verify this token and signature should pass
+		if !verifier.Verify(currentToken, currentSignature) {
+			t.Errorf("Current token did not verify with signature but should have (hash function: %s)", hashFunc)
+		}
+
+		// Generate a token and signature for a counter value within the sync window
+		withinWindowToken := verifier.Hotp.At(int(initialCounter) + syncWindow)
+		withinWindowSignature := generateSignature(withinWindowToken)
+
+		// Verify this token and signature should also pass
+		if !verifier.Verify(withinWindowToken, withinWindowSignature) {
+			t.Errorf("Token within sync window did not verify with signature but should have (hash function: %s)", hashFunc)
+		}
+
+		// Verify that the counter has been updated to the last verified counter + 1
+		if verifier.GetCounter() != initialCounter+uint64(syncWindow)+1 {
+			t.Errorf("Counter was not updated correctly after sync window verification with signature (hash function: %s)", hashFunc)
+		}
+
+		// Generate a token and signature for a counter value outside the sync window
+		outsideWindowToken := verifier.Hotp.At(int(initialCounter) + syncWindow + 4)
+		outsideWindowSignature := generateSignature(outsideWindowToken)
+
+		// Verify this token and signature should fail
+		if verifier.Verify(outsideWindowToken, outsideWindowSignature) {
+			t.Errorf("Token outside sync window verified with signature but should not have (hash function: %s)", hashFunc)
 		}
 	}
 }
