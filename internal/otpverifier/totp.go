@@ -31,14 +31,9 @@ func NewTOTPVerifier(config Config) *TOTPVerifier {
 	if config.TimeSource == nil {
 		config.TimeSource = DefaultConfig.TimeSource
 	}
-	if config.Hasher == nil {
+	if config.Hash != "" {
 		// If HashName is provided, use it to get the corresponding Hasher
-		if config.Hash != "" {
-			config.Hasher = config.GetHasherByName(config.Hash)
-		} else {
-			// Otherwise, use the default hasher
-			config.Hasher = DefaultConfig.Hasher
-		}
+		config.Hasher = config.GetHasherByName(config.Hash)
 	}
 	if config.URITemplate == "" {
 		config.URITemplate = DefaultConfig.URITemplate
@@ -52,6 +47,9 @@ func NewTOTPVerifier(config Config) *TOTPVerifier {
 }
 
 // Verify checks if the provided token and signature are valid for the current time.
+//
+// Note: This TOTP verification using [crypto/subtle] requires careful consideration
+// when setting TimeSource and Period to ensure correct usage.
 func (v *TOTPVerifier) Verify(token, signature string) bool {
 	generatedToken := v.totp.Now()
 	if v.config.UseSignature {
