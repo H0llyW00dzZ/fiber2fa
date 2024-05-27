@@ -170,6 +170,7 @@ func generateOTPURL(issuer, accountName string, config Config) string {
 	// because the URL won't work correctly without it when scanning the QR code.
 	baseURL, err := url.Parse(fmt.Sprintf(config.URITemplate, otpType, url.PathEscape(issuer), url.PathEscape(accountName)))
 	if err != nil {
+		// Panic is better than handling the error using fmt, log, or any other method since this is an internal error.
 		panic(err)
 	}
 
