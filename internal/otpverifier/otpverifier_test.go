@@ -206,6 +206,7 @@ func TestTOTPVerifier_BuildQRCode(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	config := otpverifier.Config{
 		Secret: secret,
+		Hash:   otpverifier.BLAKE2b512,
 	}
 	verifier := otpverifier.NewTOTPVerifier(config)
 
@@ -214,12 +215,11 @@ func TestTOTPVerifier_BuildQRCode(t *testing.T) {
 
 	// Create a custom QR code configuration
 	qrCodeConfig := otpverifier.QRCodeConfig{
-		Level:           qrcode.Medium,
-		Size:            256,
-		DisableBorder:   true,
-		TopText:         "Scan Me",
-		BottomText:      "OTP QR Code",
-		ForegroundColor: color.Black,
+		Level:         qrcode.Medium,
+		Size:          256,
+		DisableBorder: true,
+		TopText:       "Scan Me",
+		BottomText:    "OTP QR Code",
 	}
 
 	qrCodeBytes, err := verifier.BuildQRCode(issuer, accountName, qrCodeConfig)
@@ -242,6 +242,7 @@ func TestTOTPVerifier_SaveQRCodeImage(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	config := otpverifier.Config{
 		Secret: secret,
+		Hash:   otpverifier.BLAKE2b512,
 	}
 	verifier := otpverifier.NewTOTPVerifier(config)
 
@@ -267,6 +268,7 @@ func TestHOTPVerifier_BuildQRCode(t *testing.T) {
 	config := otpverifier.Config{
 		Secret:  secret,
 		Counter: 1337,
+		Hash:    otpverifier.BLAKE2b512,
 	}
 	verifier := otpverifier.NewHOTPVerifier(config)
 
@@ -304,6 +306,7 @@ func TestHOTPVerifier_SaveQRCodeImage(t *testing.T) {
 	config := otpverifier.Config{
 		Secret:  secret,
 		Counter: 1337,
+		Hash:    otpverifier.BLAKE2b512,
 	}
 	verifier := otpverifier.NewHOTPVerifier(config)
 

@@ -104,7 +104,6 @@ var DefaultConfig = Config{
 	Period:       30,
 	UseSignature: false,
 	TimeSource:   time.Now,
-	Hasher:       &gotp.Hasher{HashName: BLAKE2b512, Digest: blake2botp.New512},
 	SyncWindow:   1,
 	URITemplate:  "otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s",
 }
@@ -214,6 +213,7 @@ func OTPFactory(config Config) OTPVerifier {
 }
 
 // GetHasherByName returns a pointer to a gotp.Hasher based on the given hash function name.
+// It panics if the hash function name is not supported or if the hash function name is empty.
 func (v *Config) GetHasherByName(Hash string) *gotp.Hasher {
 	hasher, exists := Hashers[Hash]
 	if !exists {

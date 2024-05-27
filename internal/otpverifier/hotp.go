@@ -25,14 +25,9 @@ func NewHOTPVerifier(config Config) *HOTPVerifier {
 	if config.Digits == 0 {
 		config.Digits = DefaultConfig.Digits
 	}
-	if config.Hasher == nil {
+	if config.Hash != "" {
 		// If HashName is provided, use it to get the corresponding Hasher
-		if config.Hash != "" {
-			config.Hasher = config.GetHasherByName(config.Hash)
-		} else {
-			// Otherwise, use the default hasher
-			config.Hasher = DefaultConfig.Hasher
-		}
+		config.Hasher = config.GetHasherByName(config.Hash)
 	}
 	if config.URITemplate == "" {
 		config.URITemplate = DefaultConfig.URITemplate
