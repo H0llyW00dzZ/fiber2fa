@@ -447,3 +447,68 @@ func TestHOTPVerifier_VerifySyncWindowWithSignature(t *testing.T) {
 		}
 	}
 }
+
+func TestHOTPVerifier_ResetSyncWindow(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+	initialCounter := uint64(1337)
+	initialSyncWindow := 2
+	resetSyncWindow := 1 // The new sync window value after reset
+
+	verifier := otpverifier.NewHOTPVerifier(otpverifier.Config{
+		Secret:     secret,
+		Counter:    initialCounter,
+		SyncWindow: initialSyncWindow,
+	})
+
+	// Generate a token for the current counter value
+	currentToken := verifier.Hotp.At(int(initialCounter))
+
+	// Verify this token should pass with the initial sync window
+	if !verifier.Verify(currentToken, "") {
+		t.Errorf("Token with initial sync window did not verify but should have")
+	}
+
+	// Reset the sync window to a new value
+	verifier.ResetSyncWindow(resetSyncWindow)
+
+	// Generate a token for a counter value that would have been within the initial sync window
+	// but is outside the reset sync window
+	outsideResetWindowToken := verifier.Hotp.At(int(initialCounter) + initialSyncWindow)
+
+	// Verify this token should fail with the reset sync window
+	if verifier.Verify(outsideResetWindowToken, "") {
+		t.Errorf("Token outside reset sync window verified but should not have")
+	}
+
+	// Check if the sync window was correctly reset
+	if currentSyncWindow := verifier.GetSyncWindow(); currentSyncWindow != resetSyncWindow {
+		t.Errorf("Sync window was not reset correctly, got %d, want %d", currentSyncWindow, resetSyncWindow)
+	}
+}
+
+func TestHOTPVerifier_ResetSyncWindowToDefault(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+	initialCounter := uint64(1337)
+	initialSyncWindow := 2
+	verifier := otpverifier.NewHOTPVerifier(otpverifier.Config{
+		Secret:     secret,
+		Counter:    initialCounter,
+		SyncWindow: initialSyncWindow,
+	})
+
+	// Reset the sync window to the default value
+	verifier.ResetSyncWindow() // No argument passed, should reset to default
+
+	// Check if the sync window was reset to the default value
+	if currentSyncWindow := verifier.GetSyncWindow(); currentSyncWindow != otpverifier.DefaultConfig.SyncWindow {
+		t.Errorf("Sync window was not reset to default correctly, got %d, want %d", currentSyncWindow, otpverifier.DefaultConfig.SyncWindow)
+	}
+
+	// Alternatively, test resetting to default by passing a negative value
+	verifier.ResetSyncWindow(-1) // Passing a negative value, should reset to default
+
+	// Check again if the sync window was reset to the default value
+	if currentSyncWindow := verifier.GetSyncWindow(); currentSyncWindow != otpverifier.DefaultConfig.SyncWindow {
+		t.Errorf("Sync window was not reset to default correctly after passing negative value, got %d, want %d", currentSyncWindow, otpverifier.DefaultConfig.SyncWindow)
+	}
+}
