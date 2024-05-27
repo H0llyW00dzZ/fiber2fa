@@ -118,3 +118,20 @@ func (v *HOTPVerifier) SetCounter(counter uint64) {
 func (v *HOTPVerifier) GetCounter() uint64 {
 	return v.config.Counter
 }
+
+// GetSyncWindow returns the current synchronization window value from the HOTPVerifier's configuration.
+func (v *HOTPVerifier) GetSyncWindow() int {
+	return v.config.SyncWindow
+}
+
+// ResetSyncWindow resets the synchronization window to a default or specified value.
+// If no value is provided, it resets to the default value defined in DefaultConfig.
+func (v *HOTPVerifier) ResetSyncWindow(newSyncWindow ...int) {
+	if len(newSyncWindow) > 0 && newSyncWindow[0] >= 0 {
+		// Set the sync window to the provided new value if it's non-negative.
+		v.config.SyncWindow = newSyncWindow[0]
+	} else {
+		// Reset the sync window to the default value if no value is provided or if it's negative.
+		v.config.SyncWindow = DefaultConfig.SyncWindow
+	}
+}
