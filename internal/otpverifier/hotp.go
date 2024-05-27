@@ -39,30 +39,55 @@ func NewHOTPVerifier(config Config) *HOTPVerifier {
 	}
 }
 
-// Verify checks if the provided token and signature are valid for the specified counter value within the synchronization window.
+// Verify checks if the provided token and signature are valid for the specified counter value.
+// If the 'SyncWindow' configuration is greater than 1, the method will validate the token against
+// a range of counter values defined by the current counter and the sync window size. This allows
+// for a degree of error tolerance in scenarios where the verifier's counter may be out of sync
+// with the token generator's counter. If the 'UseSignature' configuration is set to true, the method
+// also verifies the provided signature against the expected signature for the token.
+// A successful verification will result in the counter being updated to the next expected value.
 //
-// Note: Understanding how the "Synchronize in real-time" HOTP works requires a big brain.
+// Note: A firm grasp of the sync window concept is essential for understanding its role in the verification process.
 func (v *HOTPVerifier) Verify(token, signature string) bool {
-	for i := 0; i <= v.config.SyncWindow; i++ {
-		expectedCounter := int(v.config.Counter) + i
-		generatedToken := v.Hotp.At(expectedCounter)
+	// Check if sync window is applied
+	// Note: Understanding this sync window requires skilled mathematical reasoning.
+	if v.config.SyncWindow > 1 {
+		for i := 0; i <= v.config.SyncWindow; i++ {
+			expectedCounter := int(v.config.Counter) + i
+			generatedToken := v.Hotp.At(expectedCounter)
+			tokenMatch := subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1
+			signatureMatch := true // Assume true if not using signatures.
 
-		tokenMatch := subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1
-		signatureMatch := true // Assume true if not using signatures.
+			if v.config.UseSignature {
+				generatedSignature := v.generateSignature(generatedToken)
+				signatureMatch = subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1
+			}
 
-		if v.config.UseSignature {
-			generatedSignature := v.generateSignature(generatedToken)
-			signatureMatch = subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1
+			if tokenMatch && signatureMatch {
+				// Update the stored counter to the next expected value after a successful match
+				v.config.Counter = uint64(expectedCounter + 1)
+				return true
+			}
 		}
-
-		if tokenMatch && signatureMatch {
-			// Update the stored counter to the next expected value after a successful match
-			v.config.Counter = uint64(expectedCounter + 1)
-			return true
-		}
+		// If no match is found within the synchronization window, authentication fails
+		return false
 	}
 
-	// If no match is found within the synchronization window, authentication fails
+	// Default case when sync window is not applied
+	generatedToken := v.Hotp.At(int(v.config.Counter))
+	tokenMatch := subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1
+	signatureMatch := true // Assume true if not using signatures.
+
+	if v.config.UseSignature {
+		generatedSignature := v.generateSignature(generatedToken)
+		signatureMatch = subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1
+	}
+
+	if tokenMatch && signatureMatch {
+		// Increment the counter value after successful verification
+		v.config.Counter++
+		return true
+	}
 	return false
 }
 
