@@ -166,6 +166,8 @@ func generateOTPURL(issuer, accountName string, config Config) string {
 	}
 
 	// Parse the URI template to get a base URL object.
+	// Note: It is important to use url.PathEscape for the issuer and account name
+	// because the URL won't work correctly without it when scanning the QR code.
 	baseURL, err := url.Parse(fmt.Sprintf(config.URITemplate, otpType, url.PathEscape(issuer), url.PathEscape(accountName)))
 	if err != nil {
 		panic(err)
