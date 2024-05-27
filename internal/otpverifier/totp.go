@@ -34,6 +34,9 @@ func NewTOTPVerifier(config Config) *TOTPVerifier {
 	if config.Hasher == nil {
 		config.Hasher = DefaultConfig.Hasher
 	}
+	if config.URITemplate == "" {
+		config.URITemplate = DefaultConfig.URITemplate
+	}
 
 	totp := gotp.NewTOTP(config.Secret, config.Digits, config.Period, config.Hasher)
 	return &TOTPVerifier{
