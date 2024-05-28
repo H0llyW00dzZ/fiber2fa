@@ -16,9 +16,26 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
+// GenerateQRCodeImage generates a QR code image based on the provided OTP URL and configuration.
+func (qr *QRCodeConfig) GenerateQRCodeImage(otpURL string) (image.Image, error) {
+	qrCodeImage, err := qr.generateQRImage(otpURL)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a new image with space for text above and below the QR code
+	newImage := qr.prepareImageCanvas(qrCodeImage)
+
+	// Draw the top and bottom text using the drawTextOnImage function
+	qr.drawTextOnImage(newImage, qr.TopText, qr.TopTextPosition, qr.ForegroundColor, qr.Font)
+	qr.drawTextOnImage(newImage, qr.BottomText, qr.BottomTextPosition, qr.ForegroundColor, qr.Font)
+
+	return newImage, nil
+}
+
 // generateQRImage creates the QR code image from the OTP URL.
-func generateQRImage(otpURL string, config QRCodeConfig) (image.Image, error) {
-	qrCodeBytes, err := qrcode.Encode(otpURL, config.Level, config.Size)
+func (qr *QRCodeConfig) generateQRImage(otpURL string) (image.Image, error) {
+	qrCodeBytes, err := qrcode.Encode(otpURL, qr.Level, qr.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +49,7 @@ func generateQRImage(otpURL string, config QRCodeConfig) (image.Image, error) {
 }
 
 // fillBackground fills the background of the image with the specified color.
-func fillBackground(img *image.RGBA, backgroundColor color.Color) {
+func (qr *QRCodeConfig) fillBackground(img *image.RGBA, backgroundColor color.Color) {
 	if backgroundColor == nil {
 		backgroundColor = color.White
 	}
@@ -40,7 +57,7 @@ func fillBackground(img *image.RGBA, backgroundColor color.Color) {
 }
 
 // drawTextOnImage draws text on the image at the specified position.
-func drawTextOnImage(img *image.RGBA, text string, position image.Point, foregroundColor color.Color, font font.Face) {
+func (qr *QRCodeConfig) drawTextOnImage(img *image.RGBA, text string, position image.Point, foregroundColor color.Color, font font.Face) {
 	if text == "" || font == nil {
 		return // No text or font provided, skip drawing
 	}
@@ -49,11 +66,11 @@ func drawTextOnImage(img *image.RGBA, text string, position image.Point, foregro
 		foregroundColor = color.Black
 	}
 
-	drawText(img, text, position.X, position.Y, foregroundColor, font)
+	qr.drawText(img, text, position.X, position.Y, foregroundColor, font)
 }
 
 // encodeImageToPNGBytes encodes the image to PNG format and returns the bytes.
-func encodeImageToPNGBytes(img *image.RGBA) ([]byte, error) {
+func (qr *QRCodeConfig) encodeImageToPNGBytes(img *image.RGBA) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := png.Encode(&buf, img); err != nil {
 		return nil, err
@@ -62,7 +79,7 @@ func encodeImageToPNGBytes(img *image.RGBA) ([]byte, error) {
 }
 
 // drawText draws centered text on the image at the specified position using the provided font face.
-func drawText(img *image.RGBA, text string, x, y int, color color.Color, face font.Face) {
+func (qr *QRCodeConfig) drawText(img *image.RGBA, text string, x, y int, color color.Color, face font.Face) {
 	drawer := &font.Drawer{
 		Dst:  img,
 		Src:  image.NewUniform(color),
@@ -77,16 +94,16 @@ func drawText(img *image.RGBA, text string, x, y int, color color.Color, face fo
 }
 
 // prepareImageCanvas creates a new RGBA image with space for text above and below the QR code.
-func prepareImageCanvas(qrCodeImage image.Image, config QRCodeConfig) *image.RGBA {
+func (qr *QRCodeConfig) prepareImageCanvas(qrCodeImage image.Image) *image.RGBA {
 	textHeight := 20 // This should be dynamic based on actual font size
-	newWidth := config.Size
-	newHeight := config.Size + 2*textHeight
+	newWidth := qr.Size
+	newHeight := qr.Size + 2*textHeight
 	newImage := image.NewRGBA(image.Rect(0, 0, newWidth, newHeight))
 
-	fillBackground(newImage, config.BackgroundColor)
+	qr.fillBackground(newImage, qr.BackgroundColor)
 
 	// Draw the QR code image onto the new image
-	qrCodeBounds := image.Rect(0, textHeight, config.Size, textHeight+config.Size)
+	qrCodeBounds := image.Rect(0, textHeight, qr.Size, textHeight+qr.Size)
 	draw.Draw(newImage, qrCodeBounds, qrCodeImage, image.Point{}, draw.Over)
 
 	return newImage

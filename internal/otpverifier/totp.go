@@ -77,3 +77,8 @@ func (v *TOTPVerifier) generateSignature(token string) string {
 	h.Write([]byte(token))
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
+
+// GenerateOTPURL creates the URL for the QR code based on the provided URI template.
+func (v *TOTPVerifier) GenerateOTPURL(issuer, accountName string) string {
+	return v.config.generateOTPURL(issuer, accountName)
+}

@@ -68,6 +68,7 @@ type OTPVerifier interface {
 	GenerateToken() (string, string)
 	SetCounter(counter uint64)
 	GetCounter() uint64
+	GenerateOTPURL(issuer, accountName string) string
 }
 
 // Config is a struct that holds the configuration options for the OTP verifier.
@@ -161,17 +162,17 @@ func ensureDefaultConfig(config QRCodeConfig) QRCodeConfig {
 }
 
 // generateOTPURL creates the URL for the QR code based on the provided URI template.
-func generateOTPURL(issuer, accountName string, config Config) string {
+func (v *Config) generateOTPURL(issuer, accountName string) string {
 	// Determine the OTP type based on whether a counter is used.
 	otpType := gotp.OtpTypeTotp
-	if config.Counter != 0 {
+	if v.Counter != 0 {
 		otpType = gotp.OtpTypeHotp
 	}
 
 	// Parse the URI template to get a base URL object.
 	// Note: It is important to use url.PathEscape for the issuer and account name
 	// because the URL won't work correctly without it when scanning the QR code.
-	baseURL, err := url.Parse(fmt.Sprintf(config.URITemplate, otpType, url.PathEscape(issuer), url.PathEscape(accountName)))
+	baseURL, err := url.Parse(fmt.Sprintf(v.URITemplate, otpType, url.PathEscape(issuer), url.PathEscape(accountName)))
 	if err != nil {
 		// Panic is better than handling the error using fmt, log, or any other method since this is an internal error.
 		panic(err)
@@ -188,15 +189,15 @@ func generateOTPURL(issuer, accountName string, config Config) string {
 	// (Account Name) Gopher Company:XGopher@example.com
 	// Adding "Gopher Company:" to the account name is optional because it is the value of the issuer.
 	query := baseURL.Query()
-	query.Set("secret", config.Secret)
+	query.Set("secret", v.Secret)
 	query.Set("issuer", issuer)
-	query.Set("digits", fmt.Sprint(config.Digits))
-	query.Set("algorithm", config.Hasher.HashName)
+	query.Set("digits", fmt.Sprint(v.Digits))
+	query.Set("algorithm", v.Hasher.HashName)
 	if otpType != gotp.OtpTypeTotp {
-		query.Set("counter", fmt.Sprint(config.Counter))
+		query.Set("counter", fmt.Sprint(v.Counter))
 	}
 	if otpType != gotp.OtpTypeHotp {
-		query.Set("period", fmt.Sprint(config.Period))
+		query.Set("period", fmt.Sprint(v.Period))
 	}
 
 	// Re-encode the query parameters.
