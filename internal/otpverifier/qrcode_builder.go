@@ -5,6 +5,7 @@
 package otpverifier
 
 import (
+	"image"
 	"os"
 )
 
@@ -13,20 +14,13 @@ func (v *TOTPVerifier) BuildQRCode(issuer, accountName string, config QRCodeConf
 	// Ensure the configuration has default values where needed
 	config = ensureDefaultConfig(config)
 
-	otpURL := generateOTPURL(issuer, accountName, v.config)
-	qrCodeImage, err := generateQRImage(otpURL, config)
+	otpURL := v.GenerateOTPURL(issuer, accountName)
+	qrCodeImage, err := config.GenerateQRCodeImage(otpURL)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create a new image with space for text above and below the QR code
-	newImage := prepareImageCanvas(qrCodeImage, config)
-
-	// Draw the top and bottom text using the drawTextOnImage function
-	drawTextOnImage(newImage, config.TopText, config.TopTextPosition, config.ForegroundColor, config.Font)
-	drawTextOnImage(newImage, config.BottomText, config.BottomTextPosition, config.ForegroundColor, config.Font)
-
-	return encodeImageToPNGBytes(newImage)
+	return config.encodeImageToPNGBytes(qrCodeImage.(*image.RGBA))
 }
 
 // SaveQRCodeImage saves the QR code image to a file.
@@ -68,18 +62,11 @@ func (v *HOTPVerifier) BuildQRCode(issuer, accountName string, config QRCodeConf
 	// Ensure the configuration has default values where needed
 	config = ensureDefaultConfig(config)
 
-	otpURL := generateOTPURL(issuer, accountName, v.config)
-	qrCodeImage, err := generateQRImage(otpURL, config)
+	otpURL := v.GenerateOTPURL(issuer, accountName)
+	qrCodeImage, err := config.GenerateQRCodeImage(otpURL)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create a new image with space for text above and below the QR code
-	newImage := prepareImageCanvas(qrCodeImage, config)
-
-	// Draw the top and bottom text using the drawTextOnImage function
-	drawTextOnImage(newImage, config.TopText, config.TopTextPosition, config.ForegroundColor, config.Font)
-	drawTextOnImage(newImage, config.BottomText, config.BottomTextPosition, config.ForegroundColor, config.Font)
-
-	return encodeImageToPNGBytes(newImage)
+	return config.encodeImageToPNGBytes(qrCodeImage.(*image.RGBA))
 }

@@ -136,3 +136,8 @@ func (v *HOTPVerifier) ResetSyncWindow(newSyncWindow ...int) {
 		v.config.SyncWindow = DefaultConfig.SyncWindow
 	}
 }
+
+// GenerateOTPURL creates the URL for the QR code based on the provided URI template.
+func (v *HOTPVerifier) GenerateOTPURL(issuer, accountName string) string {
+	return v.config.generateOTPURL(issuer, accountName)
+}
