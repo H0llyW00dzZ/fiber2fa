@@ -28,11 +28,6 @@ import (
 
 func TestTOTPVerifier_Verify(t *testing.T) {
 	secret := gotp.RandomSecret(16)
-	// Mock time for testing
-	fakeTime := time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
-	timeSource := func() time.Time {
-		return fakeTime
-	}
 
 	hashFunctions := []string{
 		otpverifier.SHA1,
@@ -45,36 +40,84 @@ func TestTOTPVerifier_Verify(t *testing.T) {
 
 	for _, hashFunc := range hashFunctions {
 		// Create a TOTPVerifier with the mocked time source, UseSignature set to true, and the specified hash function
-		config := otpverifier.Config{
-			Secret:       secret,
-			UseSignature: true,
-			TimeSource:   timeSource,
-			Hash:         hashFunc,
-		}
-		config.Hasher = config.GetHasherByName(hashFunc) // Use the GetHasherByName method
-		verifier := otpverifier.NewTOTPVerifier(config)
+		t.Run(fmt.Sprintf("HashFunc=%s", hashFunc), func(t *testing.T) {
+			// Mock time for testing
+			currentTime := time.Now()
+			timeSource := func() time.Time {
+				return currentTime
+			}
+			config := otpverifier.Config{
+				Secret:       secret,
+				UseSignature: true,
+				TimeSource:   timeSource,
+				Hash:         hashFunc,
+			}
+			verifier := otpverifier.NewTOTPVerifier(config)
 
-		// Generate a token and signature using the verifier
-		token, signature := verifier.GenerateToken()
+			// Generate a token and signature using the verifier
+			token, signature := verifier.GenerateToken()
 
-		// Verify the token and signature
-		isValid := verifier.Verify(token, signature)
-		if !isValid {
-			t.Errorf("Token and signature should be valid (hash function: %s)", hashFunc)
-		}
+			// Verify the token and signature (should succeed)
+			isValid := verifier.Verify(token, signature)
+			if !isValid {
+				t.Errorf("Token and signature should be valid (hash function: %s)", hashFunc)
+			}
 
-		// Create a TOTPVerifier with the mocked time source, UseSignature set to false, and the specified hash function
-		config.UseSignature = false
-		verifier = otpverifier.NewTOTPVerifier(config)
+			// Attempt to verify the token again (should fail since the token has already been used)
+			isValid = verifier.Verify(token, signature)
+			if isValid {
+				t.Errorf("Token and signature should be invalid since they have already been used (hash function: %s)", hashFunc)
+			}
 
-		// Generate a token using the verifier
-		token, _ = verifier.GenerateToken()
+			// Verify with an invalid token (should fail)
+			isValid = verifier.Verify("invalidToken", signature)
+			if isValid {
+				t.Errorf("Invalid token should not be accepted (hash function: %s)", hashFunc)
+			}
 
-		// Verify the token
-		isValid = verifier.Verify(token, "")
-		if !isValid {
-			t.Errorf("Token should be valid (hash function: %s)", hashFunc)
-		}
+			// Switch to a non-signature mode and test again
+			config.UseSignature = false
+			verifier = otpverifier.NewTOTPVerifier(config)
+			token, _ = verifier.GenerateToken()
+
+			// Verify the token without a signature (should succeed)
+			isValid = verifier.Verify(token, "")
+			if !isValid {
+				t.Errorf("Token should be valid with UseSignature=false (hash function: %s)", hashFunc)
+			}
+
+			// Verify an invalid token without a signature (should fail)
+			isValid = verifier.Verify("invalidToken", "")
+			if isValid {
+				t.Errorf("Invalid token should not be valid with UseSignature=false (hash function: %s)", hashFunc)
+			}
+		})
+	}
+}
+
+func TestTOTPVerifier_PeriodicCleanup(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+	period := 10 // Set the token validity period to 10 seconds
+	config := otpverifier.Config{
+		Secret:     secret,
+		Period:     period,
+		SyncWindow: 1,
+		Digits:     6,
+		Hash:       otpverifier.SHA256,
+	}
+
+	verifier := otpverifier.NewTOTPVerifier(config)
+
+	// Simulate used tokens
+	token1, _ := verifier.GenerateToken()
+	verifier.Verify(token1, "")
+
+	// Wait for periodic cleanup to occur (less than the token validity period)
+	time.Sleep(time.Duration(period*3/4) * time.Second)
+
+	// Verify expired tokens are removed
+	if len(verifier.UsedTokens) != 1 {
+		t.Errorf("Expected 1 used token after periodic cleanup, but got %d", len(verifier.UsedTokens))
 	}
 }
 
@@ -180,9 +223,9 @@ func TestOTPFactory(t *testing.T) {
 		}
 
 		// Test TOTPVerifier token generation and verification
-		fakeTime := time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+		currentTime := time.Now()
 		timeSource := func() time.Time {
-			return fakeTime
+			return currentTime
 		}
 		totpConfig.UseSignature = true
 		totpConfig.TimeSource = timeSource
