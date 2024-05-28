@@ -192,8 +192,11 @@ func generateOTPURL(issuer, accountName string, config Config) string {
 	query.Set("issuer", issuer)
 	query.Set("digits", fmt.Sprint(config.Digits))
 	query.Set("algorithm", config.Hasher.HashName)
-	if config.Counter != 0 {
+	if otpType != gotp.OtpTypeTotp {
 		query.Set("counter", fmt.Sprint(config.Counter))
+	}
+	if otpType != gotp.OtpTypeHotp {
+		query.Set("period", fmt.Sprint(config.Period))
 	}
 
 	// Re-encode the query parameters.
