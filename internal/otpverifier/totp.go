@@ -60,10 +60,6 @@ func NewTOTPVerifier(config Config) *TOTPVerifier {
 //
 // Note: This TOTP verification using [crypto/subtle] requires careful consideration
 // when setting TimeSource and Period to ensure correct usage.
-// Verify checks if the provided token and signature are valid for the current time.
-//
-// Note: This TOTP verification using [crypto/subtle] requires careful consideration
-// when setting TimeSource and Period to ensure correct usage.
 func (v *TOTPVerifier) Verify(token, signature string) bool {
 	currentTimestamp := v.config.TimeSource().Unix()
 	currentTimeStep := currentTimestamp / int64(v.config.Period)
