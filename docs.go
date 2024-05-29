@@ -54,6 +54,9 @@
 //   - AccountName: The name of the account to be displayed in the authenticator app. Deprecated: Use "ContextKey" Instead.
 //   - DigitsCount: The number of digits in the generated TOTP token. Default is 6.
 //   - Period: The time step size in seconds for generating TOTP tokens. Default is 30 seconds.
+//   - Hash: The hashing algorithm used for generating TOTP tokens. Default is [otp.SHA512].
+//   - TimeSource: The time source used for generating TOTP tokens. Default is [time.Now].
+//   - SyncWindow: The number of time steps to check before and after the current time step when verifying TOTP tokens. Default is [otp.DefaultConfig.SyncWindow].
 //   - SkipCookies: A list of paths that should skip the 2FA middleware. Default is nil.
 //   - CookieName: The name of the cookie used to store the 2FA validation status. Default is "twofa_cookie".
 //   - CookieMaxAge: The maximum age of the 2FA cookie in seconds. Default is 86400 (24 hours).

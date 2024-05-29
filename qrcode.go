@@ -17,6 +17,8 @@ import (
 )
 
 // GenerateQRcodePath generates the QR code image for the 2FA secret key and stores the QR code data.
+//
+// TODO: Improve this function by using an otpverifier (internal) package.
 func (m *Middleware) GenerateQRcodePath(c *fiber.Ctx) error {
 	// Get the context key from c.Locals
 	contextKey, err := m.getContextKey(c)

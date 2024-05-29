@@ -301,8 +301,6 @@ func (m *Middleware) extractToken(c *fiber.Ctx) string {
 }
 
 // verifyToken verifies the provided token against the user's secret and returns the updated Info struct.
-//
-// TODO: Improve this function by using an otpverifier (internal) package.
 func (m *Middleware) verifyToken(token string) bool {
 	totp := otp.NewTOTPVerifier(otp.Config{
 		Secret:       m.Info.GetSecret(),
