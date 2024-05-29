@@ -15,6 +15,7 @@ import (
 	"time"
 
 	blake2botp "github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash/blake2botp"
+	"github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash/blake3otp"
 	"github.com/skip2/go-qrcode"
 	"github.com/xlzd/gotp"
 	"golang.org/x/image/font"
@@ -82,6 +83,27 @@ const (
 	//
 	// Note: Some 2FA mobile apps might not support (poor ecosystems) this hash function, so it is recommended to build your own 2FA mobile apps.
 	BLAKE2b512 = "BLAKE2b512"
+
+	// BLAKE3256 represents the secure BLAKE3 hash function with a 256-bit output size.
+	// It provides a 256-bit (32-byte) hash value.
+	// BLAKE3 is a modern, high-performance cryptographic hash function that is faster and more secure than SHA-3 and BLAKE2.
+	//
+	// Note: Some 2FA mobile apps might not support this hash function due to its relatively new adoption, so it is recommended to build your own 2FA mobile apps when using BLAKE3.
+	BLAKE3256 = "BLAKE3256"
+
+	// BLAKE3384 represents the secure BLAKE3 hash function with a 384-bit output size.
+	// It provides a 384-bit (48-byte) hash value.
+	// BLAKE3 is a modern, high-performance cryptographic hash function that is faster and more secure than SHA-3 and BLAKE2.
+	//
+	// Note: Some 2FA mobile apps might not support this hash function due to its relatively new adoption, so it is recommended to build your own 2FA mobile apps when using BLAKE3.
+	BLAKE3384 = "BLAKE3384"
+
+	// BLAKE3512 represents the secure BLAKE3 hash function with a 512-bit output size.
+	// It provides a 512-bit (64-byte) hash value.
+	// BLAKE3 is a modern, high-performance cryptographic hash function that is faster and more secure than SHA-3 and BLAKE2.
+	//
+	// Note: Some 2FA mobile apps might not support this hash function due to its relatively new adoption, so it is recommended to build your own 2FA mobile apps when using BLAKE3.
+	BLAKE3512 = "BLAKE3512"
 )
 
 // TimeSource is a function type that returns the current time.
@@ -152,6 +174,9 @@ var Hashers = map[string]*gotp.Hasher{
 	BLAKE2b256: {HashName: BLAKE2b256, Digest: blake2botp.New256},
 	BLAKE2b384: {HashName: BLAKE2b384, Digest: blake2botp.New384},
 	BLAKE2b512: {HashName: BLAKE2b512, Digest: blake2botp.New512},
+	BLAKE3256:  {HashName: BLAKE3256, Digest: blake3otp.New256},
+	BLAKE3384:  {HashName: BLAKE3384, Digest: blake3otp.New384},
+	BLAKE3512:  {HashName: BLAKE3512, Digest: blake3otp.New512},
 }
 
 // DefaultQRCodeConfig represents the default configuration for generating QR codes.
