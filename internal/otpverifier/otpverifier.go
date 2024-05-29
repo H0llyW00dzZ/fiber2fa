@@ -107,6 +107,9 @@ var DefaultConfig = Config{
 }
 
 // Hashers is a map of supported hash functions.
+//
+// Note: This design allows for flexibility at the top level. For example,
+// it can be used for experimental purposes, such as creating custom hashing functions (advanced use cases) related to cryptography.
 var Hashers = map[string]*gotp.Hasher{
 	SHA1:       {HashName: SHA1, Digest: sha1.New},
 	SHA256:     {HashName: SHA256, Digest: sha256.New},
