@@ -50,6 +50,10 @@ func NewHOTPVerifier(config Config) *HOTPVerifier {
 //
 // Note: A firm grasp of the sync window concept is essential for understanding its role in the verification process.
 func (v *HOTPVerifier) Verify(token, signature string) bool {
+	if v.config.SyncWindow < 0 {
+		panic("hotp: SyncWindow must be greater than or equal to zero")
+	}
+
 	// Check if sync window is applied
 	// Note: Understanding this sync window requires skilled mathematical reasoning.
 	if v.config.SyncWindow > 1 {
