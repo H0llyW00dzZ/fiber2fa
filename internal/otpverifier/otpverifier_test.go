@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash/blake2botp"
+	"github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash/blake3otp"
 	"github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier"
 	"github.com/skip2/go-qrcode"
 	"github.com/xlzd/gotp"
@@ -282,6 +283,9 @@ func TestDefaultConfigHOTPVerifier_Verify(t *testing.T) {
 		otpverifier.BLAKE2b256,
 		otpverifier.BLAKE2b384,
 		otpverifier.BLAKE2b512,
+		otpverifier.BLAKE3256,
+		otpverifier.BLAKE3384,
+		otpverifier.BLAKE3512,
 	}
 
 	for _, hashFunc := range hashFunctions {
@@ -341,11 +345,18 @@ func TestOTPFactory(t *testing.T) {
 
 	hashFunctions := []string{
 		otpverifier.SHA1,
+		otpverifier.SHA224,
 		otpverifier.SHA256,
+		otpverifier.SHA384,
 		otpverifier.SHA512,
+		otpverifier.SHA512S224,
+		otpverifier.SHA512S256,
 		otpverifier.BLAKE2b256,
 		otpverifier.BLAKE2b384,
 		otpverifier.BLAKE2b512,
+		otpverifier.BLAKE3256,
+		otpverifier.BLAKE3384,
+		otpverifier.BLAKE3512,
 	}
 
 	for _, hashFunc := range hashFunctions {
@@ -611,11 +622,18 @@ func TestHOTPVerifier_VerifySyncWindow(t *testing.T) {
 
 	hashFunctions := []string{
 		otpverifier.SHA1,
+		otpverifier.SHA224,
 		otpverifier.SHA256,
+		otpverifier.SHA384,
 		otpverifier.SHA512,
+		otpverifier.SHA512S224,
+		otpverifier.SHA512S256,
 		otpverifier.BLAKE2b256,
 		otpverifier.BLAKE2b384,
 		otpverifier.BLAKE2b512,
+		otpverifier.BLAKE3256,
+		otpverifier.BLAKE3384,
+		otpverifier.BLAKE3512,
 	}
 
 	for _, hashFunc := range hashFunctions {
@@ -671,11 +689,18 @@ func TestHOTPVerifier_VerifySyncWindowWithSignature(t *testing.T) {
 
 	hashFunctions := []string{
 		otpverifier.SHA1,
+		otpverifier.SHA224,
 		otpverifier.SHA256,
+		otpverifier.SHA384,
 		otpverifier.SHA512,
+		otpverifier.SHA512S224,
+		otpverifier.SHA512S256,
 		otpverifier.BLAKE2b256,
 		otpverifier.BLAKE2b384,
 		otpverifier.BLAKE2b512,
+		otpverifier.BLAKE3256,
+		otpverifier.BLAKE3384,
+		otpverifier.BLAKE3512,
 	}
 
 	for _, hashFunc := range hashFunctions {
@@ -814,6 +839,9 @@ func TestGetHasherByName(t *testing.T) {
 		{name: otpverifier.BLAKE2b256, wantDigest: blake2botp.New256},
 		{name: otpverifier.BLAKE2b384, wantDigest: blake2botp.New384},
 		{name: otpverifier.BLAKE2b512, wantDigest: blake2botp.New512},
+		{name: otpverifier.BLAKE3256, wantDigest: blake3otp.New256},
+		{name: otpverifier.BLAKE3384, wantDigest: blake3otp.New384},
+		{name: otpverifier.BLAKE3512, wantDigest: blake3otp.New512},
 	}
 
 	for _, tt := range tests {
