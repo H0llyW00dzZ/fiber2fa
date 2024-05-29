@@ -40,6 +40,9 @@ func TestTOTPVerifier_Verify(t *testing.T) {
 		otpverifier.BLAKE2b256,
 		otpverifier.BLAKE2b384,
 		otpverifier.BLAKE2b512,
+		otpverifier.BLAKE3256,
+		otpverifier.BLAKE3384,
+		otpverifier.BLAKE3512,
 	}
 
 	for _, hashFunc := range hashFunctions {
@@ -206,6 +209,9 @@ func TestHOTPVerifier_Verify(t *testing.T) {
 		otpverifier.BLAKE2b256,
 		otpverifier.BLAKE2b384,
 		otpverifier.BLAKE2b512,
+		otpverifier.BLAKE3256,
+		otpverifier.BLAKE3384,
+		otpverifier.BLAKE3512,
 	}
 
 	for _, hashFunc := range hashFunctions {
