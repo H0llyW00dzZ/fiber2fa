@@ -645,7 +645,7 @@ func TestTOTPVerifier_VerifyPanic(t *testing.T) {
 func TestHOTPVerifier_VerifyPanic(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 
-	// Create a TOTPVerifier with a negative sync window
+	// Create a HOTPVerifier with a negative sync window
 	config := otpverifier.Config{
 		Secret:     secret,
 		SyncWindow: -1,
