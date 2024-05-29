@@ -81,6 +81,10 @@ func (v *TOTPVerifier) Verify(token, signature string) bool {
 		v.m.Unlock()
 
 		// Verify the token for this time step
+		// This should be safe now because a synchronization window similar to HOTP is implemented.
+		// The token will be marked as used even if there is still time remaining in the period (e.g., 30 seconds).
+		// Without implementing a synchronization window similar to HOTP, this can lead to a high vulnerability
+		// where a used token is still considered valid due to the period.
 		if v.totp.Verify(token, expectedTimestamp) {
 			if v.config.UseSignature {
 				generatedSignature := v.generateSignature(token)
