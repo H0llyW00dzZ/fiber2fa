@@ -20,6 +20,12 @@ type HOTPVerifier struct {
 }
 
 // NewHOTPVerifier creates a new HOTPVerifier with the given configuration.
+//
+// Note: When using HOTP, consider setting the counter to start from 1. In some 2FA apps, including mobile apps,
+// when a device is registered, the counter is often initialized to 1 when generating the token (e.g., a 6-digit password)
+// because by default, the counter starts at 0 and is hidden the token.
+// Also note that this is still a basic mathematical implementation about counter. More advanced mathematical concepts might be implemented
+// in the future, but not at this time due to the limitations of some mobile 2FA ecosystems (poor ecosystems).
 func NewHOTPVerifier(config Config) *HOTPVerifier {
 	// Use default values if not provided
 	if config.Digits == 0 {
