@@ -65,6 +65,10 @@ func NewTOTPVerifier(config Config) *TOTPVerifier {
 // Note: This TOTP verification using [crypto/subtle] requires careful consideration
 // when setting TimeSource and Period to ensure correct usage.
 func (v *TOTPVerifier) Verify(token, signature string) bool {
+	if v.config.SyncWindow < 0 {
+		panic("totp: SyncWindow must be greater than or equal to zero")
+	}
+
 	currentTimestamp := v.config.TimeSource().Unix()
 	currentTimeStep := currentTimestamp / int64(v.config.Period)
 
@@ -86,17 +90,19 @@ func (v *TOTPVerifier) Verify(token, signature string) bool {
 		// Without implementing a synchronization window similar to HOTP, this can lead to a high vulnerability
 		// where a used token is still considered valid due to the period.
 		if v.totp.Verify(token, expectedTimestamp) {
+			signatureMatch := true // Assume true if not using signatures.
+
 			if v.config.UseSignature {
 				generatedSignature := v.generateSignature(token)
-				if subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) != 1 {
-					return false
-				}
+				signatureMatch = subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1
 			}
 
-			v.m.Lock()
-			v.UsedTokens[expectedTimeStep] = token // Record the token as used
-			v.m.Unlock()
-			return true
+			if signatureMatch {
+				v.m.Lock()
+				v.UsedTokens[expectedTimeStep] = token // Record the token as used
+				v.m.Unlock()
+				return true
+			}
 		}
 	}
 

@@ -610,3 +610,65 @@ func TestGetHasherByName(t *testing.T) {
 		config.GetHasherByName("NotAHash")
 	})
 }
+
+func TestTOTPVerifier_VerifyPanic(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+
+	// Create a TOTPVerifier with a negative sync window
+	config := otpverifier.Config{
+		Secret:     secret,
+		SyncWindow: -1,
+	}
+
+	// Create a new TOTPVerifier instance
+	verifier := otpverifier.NewTOTPVerifier(config)
+
+	// Generate a token and signature using the verifier
+	token, signature := verifier.GenerateToken()
+
+	// Expect a panic when calling Verify with a negative sync window
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected Verify to panic with a negative sync window, but it didn't")
+		} else {
+			expectedPanicMessage := "totp: SyncWindow must be greater than or equal to zero"
+			if r != expectedPanicMessage {
+				t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+			}
+		}
+	}()
+
+	// Call Verify, which should panic
+	verifier.Verify(token, signature)
+}
+
+func TestHOTPVerifier_VerifyPanic(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+
+	// Create a TOTPVerifier with a negative sync window
+	config := otpverifier.Config{
+		Secret:     secret,
+		SyncWindow: -1,
+	}
+
+	// Create a new HOTPVerifier instance
+	verifier := otpverifier.NewHOTPVerifier(config)
+
+	// Generate a token and signature using the verifier
+	token, signature := verifier.GenerateToken()
+
+	// Expect a panic when calling Verify with a negative sync window
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected Verify to panic with a negative sync window, but it didn't")
+		} else {
+			expectedPanicMessage := "hotp: SyncWindow must be greater than or equal to zero"
+			if r != expectedPanicMessage {
+				t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+			}
+		}
+	}()
+
+	// Call Verify, which should panic
+	verifier.Verify(token, signature)
+}
