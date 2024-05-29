@@ -9,6 +9,7 @@ import (
 	"image"
 	"time"
 
+	otp "github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier"
 	"github.com/gofiber/fiber/v2"
 	"github.com/skip2/go-qrcode"
 	"github.com/xlzd/gotp"
@@ -40,6 +41,21 @@ type Config struct {
 	//
 	// Optional. Default: 30
 	Period int
+
+	// Hash is the hashing algorithm used for generating TOTP tokens.
+	//
+	// Optional. Default: otp.SHA512
+	Hash string
+
+	// TimeSource is the time source used for generating TOTP tokens.
+	//
+	// Optional. Default: otp.DefaultConfig.TimeSource
+	TimeSource otp.TimeSource
+
+	// SyncWindow is the number of time steps to check before and after the current time step when verifying TOTP tokens.
+	//
+	// Optional. Default: otp.DefaultConfig.SyncWindow
+	SyncWindow int
 
 	// SkipCookies is a list of paths that should skip the 2FA middleware.
 	//
@@ -202,8 +218,11 @@ type Config struct {
 var DefaultConfig = Config{
 	Secret:               gotp.RandomSecret(16),
 	Issuer:               "MyApp",
-	DigitsCount:          6,
-	Period:               30,
+	DigitsCount:          otp.DefaultConfig.Digits,
+	Period:               otp.DefaultConfig.Period,
+	Hash:                 otp.SHA512,
+	TimeSource:           otp.DefaultConfig.TimeSource,
+	SyncWindow:           otp.DefaultConfig.SyncWindow,
 	SkipCookies:          nil,
 	CookieName:           "twofa_cookie",
 	CookieMaxAge:         86400,

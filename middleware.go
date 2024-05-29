@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
+	otp "github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/gofiber/storage/memory/v2"
-	"github.com/xlzd/gotp"
 )
 
 // Middleware represents the 2FA middleware.
@@ -304,8 +304,17 @@ func (m *Middleware) extractToken(c *fiber.Ctx) string {
 //
 // TODO: Improve this function by using an otpverifier (internal) package.
 func (m *Middleware) verifyToken(token string) bool {
-	totp := gotp.NewDefaultTOTP(m.Info.GetSecret())
-	if !totp.Verify(token, time.Now().Unix()) {
+	totp := otp.NewTOTPVerifier(otp.Config{
+		Secret:       m.Info.GetSecret(),
+		Digits:       m.Config.DigitsCount,
+		Period:       m.Config.Period,
+		SyncWindow:   m.Config.SyncWindow,
+		UseSignature: otp.DefaultConfig.UseSignature,
+		Hash:         m.Config.Hash,
+		TimeSource:   m.Config.TimeSource,
+	})
+
+	if !totp.Verify(token, "") {
 		return false
 	}
 
