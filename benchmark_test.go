@@ -11,6 +11,7 @@ import (
 	"time"
 
 	twofa "github.com/H0llyW00dzZ/fiber2fa"
+	otp "github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
@@ -85,8 +86,12 @@ func BenchmarkJSONSonicWithValid2FA(b *testing.B) {
 	})
 
 	// Generate a valid 2FA token
-	totp := gotp.NewDefaultTOTP(secret)
-	token := totp.Now()
+	totp := otp.NewTOTPVerifier(otp.Config{
+		Secret: twoFAConfig.Secret,
+	})
+
+	token, _ := totp.GenerateToken()
+	totp.Verify(token, "")
 
 	// Create a valid 2FA cookie
 	cookieValue := twoFAMiddleware.GenerateCookieValue(time.Now().Add(time.Duration(86400) * time.Second))
@@ -145,8 +150,12 @@ func BenchmarkJSONSonicWithValidCookie(b *testing.B) {
 	})
 
 	// Generate a valid 2FA token
-	totp := gotp.NewDefaultTOTP(secret)
-	token := totp.Now()
+	totp := otp.NewTOTPVerifier(otp.Config{
+		Secret: twoFAConfig.Secret,
+	})
+
+	token, _ := totp.GenerateToken()
+	totp.Verify(token, "")
 
 	// Create a valid 2FA cookie
 	cookieValue := twoFAMiddleware.GenerateCookieValue(time.Now().Add(time.Duration(86400) * time.Second))
@@ -267,8 +276,12 @@ func BenchmarkJSONStdLibraryMiddlewareWithValid2FA(b *testing.B) {
 	})
 
 	// Generate a valid 2FA token
-	totp := gotp.NewDefaultTOTP(secret)
-	token := totp.Now()
+	totp := otp.NewTOTPVerifier(otp.Config{
+		Secret: twoFAConfig.Secret,
+	})
+
+	token, _ := totp.GenerateToken()
+	totp.Verify(token, "")
 
 	// Create a valid 2FA cookie
 	cookieValue := twoFAMiddleware.GenerateCookieValue(time.Now().Add(time.Duration(86400) * time.Second))
@@ -327,8 +340,12 @@ func BenchmarkJSONStdLibraryWithValidCookie(b *testing.B) {
 	})
 
 	// Generate a valid 2FA token
-	totp := gotp.NewDefaultTOTP(secret)
-	token := totp.Now()
+	totp := otp.NewTOTPVerifier(otp.Config{
+		Secret: twoFAConfig.Secret,
+	})
+
+	token, _ := totp.GenerateToken()
+	totp.Verify(token, "")
 
 	// Create a valid 2FA cookie
 	cookieValue := twoFAMiddleware.GenerateCookieValue(time.Now().Add(time.Duration(86400) * time.Second))
