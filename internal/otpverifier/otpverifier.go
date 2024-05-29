@@ -39,10 +39,31 @@ const (
 	// It provides a higher level of security compared to SHA-1 and is recommended for newer applications.
 	SHA256 = "SHA256"
 
+	// SHA384 represents the SHA-384 hash function.
+	// SHA-384 produces a 384-bit (48-byte) hash value.
+	// It is a truncated version of SHA-512 and provides a balance between security and performance.
+	//
+	// Note: Some 2FA mobile apps might not support SHA-384 due to poor ecosystem.
+	SHA384 = "SHA384"
+
 	// SHA512 represents the SHA-512 hash function.
 	// SHA-512 produces a 512-bit (64-byte) hash value.
 	// It offers the highest level of security among the commonly used SHA variants.
 	SHA512 = "SHA512"
+
+	// SHA512S224 represents the SHA-512/224 hash function.
+	// SHA-512/224 produces a 224-bit (28-byte) hash value.
+	// It is a truncated version of SHA-512 and provides a balance between security and performance.
+	//
+	// Note: Some 2FA mobile apps might not support SHA-512/224 due to poor ecosystem.
+	SHA512S224 = "SHA512/224"
+
+	// SHA512S256 represents the SHA-512/256 hash function.
+	// SHA-512/256 produces a 256-bit (32-byte) hash value.
+	// It is a truncated version of SHA-512 and provides a balance between security and performance.
+	//
+	// Note: Some 2FA mobile apps might not support SHA-512/256 due to poor ecosystem.
+	SHA512S256 = "SHA512/256"
 
 	// BLAKE2b256 represents the secure BLAKE2b hash function with a 256-bit output size.
 	// It provides a 256-bit (32-byte) hash value.
@@ -121,7 +142,10 @@ var Hashers = map[string]*gotp.Hasher{
 	SHA1:       {HashName: SHA1, Digest: sha1.New},
 	SHA224:     {HashName: SHA224, Digest: sha256.New224},
 	SHA256:     {HashName: SHA256, Digest: sha256.New},
+	SHA384:     {HashName: SHA384, Digest: sha512.New384},
 	SHA512:     {HashName: SHA512, Digest: sha512.New},
+	SHA512S224: {HashName: SHA512S224, Digest: sha512.New512_224},
+	SHA512S256: {HashName: SHA512S256, Digest: sha512.New512_256},
 	BLAKE2b256: {HashName: BLAKE2b256, Digest: blake2botp.New256},
 	BLAKE2b384: {HashName: BLAKE2b384, Digest: blake2botp.New384},
 	BLAKE2b512: {HashName: BLAKE2b512, Digest: blake2botp.New512},
