@@ -51,6 +51,10 @@ func NewTOTPVerifier(config Config) *TOTPVerifier {
 	}
 
 	// Start the periodic cleanup goroutine
+	// Note: This is important to minimize the memory footprint. Unlike HOTP,
+	// TOTP authentication must implement a synchronization window similar to HOTP.
+	// Without implementing a synchronization window similar to HOTP, it can lead to high vulnerability
+	// where a used token is still considered valid when the user is entering the same token again (which was used previously).
 	go verifier.startPeriodicCleanup()
 
 	return verifier
