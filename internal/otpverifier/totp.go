@@ -125,7 +125,9 @@ func (v *TOTPVerifier) startPeriodicCleanup() {
 	defer cleanupTicker.Stop()
 
 	for range cleanupTicker.C {
-		v.CleanUpExpiredTokens()
+		if len(v.UsedTokens) > 0 {
+			v.CleanUpExpiredTokens()
+		}
 	}
 }
 
