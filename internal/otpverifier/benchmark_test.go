@@ -11,6 +11,7 @@ import (
 	"github.com/xlzd/gotp"
 )
 
+// Note: TOTP Has Zero allocation without signature
 func BenchmarkTOTPVerify(b *testing.B) {
 	secret := gotp.RandomSecret(16)
 
@@ -105,6 +106,7 @@ func BenchmarkHOTPVerify(b *testing.B) {
 			config := otpverifier.Config{
 				Secret:       secret,
 				Hash:         hashFunc,
+				SyncWindow:   1,
 				UseSignature: true,
 			}
 			verifier := otpverifier.NewHOTPVerifier(config)
