@@ -24,28 +24,33 @@ type TOTPVerifier struct {
 }
 
 // NewTOTPVerifier creates a new TOTPVerifier with the given configuration.
-func NewTOTPVerifier(config Config) *TOTPVerifier {
-	// Use default values if not provided
-	if config.Digits == 0 {
-		config.Digits = DefaultConfig.Digits
-	}
-	if config.Period == 0 {
-		config.Period = DefaultConfig.Period
-	}
-	if config.TimeSource == nil {
-		config.TimeSource = DefaultConfig.TimeSource
-	}
-	if config.Hash != "" {
-		// If HashName is provided, use it to get the corresponding Hasher
-		config.Hasher = config.GetHasherByName(config.Hash)
-	}
-	if config.URITemplate == "" {
-		config.URITemplate = DefaultConfig.URITemplate
+func NewTOTPVerifier(config ...Config) *TOTPVerifier {
+	c := DefaultConfig
+	if len(config) > 0 {
+		c = config[0]
 	}
 
-	totp := gotp.NewTOTP(config.Secret, config.Digits, config.Period, config.Hasher)
+	// Use default values if not provided
+	if c.Digits == 0 {
+		c.Digits = DefaultConfig.Digits
+	}
+	if c.Period == 0 {
+		c.Period = DefaultConfig.Period
+	}
+	if c.TimeSource == nil {
+		c.TimeSource = DefaultConfig.TimeSource
+	}
+	if c.Hash != "" {
+		// If HashName is provided, use it to get the corresponding Hasher
+		c.Hasher = c.GetHasherByName(c.Hash)
+	}
+	if c.URITemplate == "" {
+		c.URITemplate = DefaultConfig.URITemplate
+	}
+
+	totp := gotp.NewTOTP(c.Secret, c.Digits, c.Period, c.Hasher)
 	verifier := &TOTPVerifier{
-		config:     config,
+		config:     c,
 		totp:       totp,
 		UsedTokens: make(map[int64]string),
 	}
