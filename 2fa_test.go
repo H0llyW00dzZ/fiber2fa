@@ -21,6 +21,7 @@ import (
 	"time"
 
 	twofa "github.com/H0llyW00dzZ/fiber2fa"
+	otp "github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/storage/memory/v2"
 	"github.com/google/uuid"
@@ -264,8 +265,12 @@ func TestMiddleware_Handle(t *testing.T) {
 	})
 
 	// Generate a valid 2FA token
-	totp := gotp.NewDefaultTOTP(secret)
-	validToken := totp.Now()
+	totp := otp.NewTOTPVerifier(otp.Config{
+		Secret: info.Secret,
+	})
+
+	validToken, _ := totp.GenerateToken()
+	totp.Verify(validToken, "")
 
 	// Create a separate instance of the Middleware struct for testing
 	testMiddleware := &twofa.Middleware{
@@ -1270,8 +1275,12 @@ func TestMiddlewareUUIDContextKey_Handle(t *testing.T) {
 	})
 
 	// Generate a valid 2FA token
-	totp := gotp.NewDefaultTOTP(secret)
-	validToken := totp.Now()
+	totp := otp.NewTOTPVerifier(otp.Config{
+		Secret: info.Secret,
+	})
+
+	validToken, _ := totp.GenerateToken()
+	totp.Verify(validToken, "")
 
 	// Create a separate instance of the Middleware struct for testing
 	testMiddleware := &twofa.Middleware{
