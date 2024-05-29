@@ -98,16 +98,17 @@ type OTPVerifier interface {
 
 // Config is a struct that holds the configuration options for the OTP verifier.
 type Config struct {
-	Secret       string
-	Digits       int
-	Period       int
-	UseSignature bool
-	TimeSource   TimeSource
-	Counter      uint64
-	Hasher       *gotp.Hasher
-	SyncWindow   int
-	URITemplate  string
-	Hash         string
+	Secret                  string
+	Digits                  int
+	Period                  int
+	UseSignature            bool
+	TimeSource              TimeSource
+	Counter                 uint64
+	Hasher                  *gotp.Hasher
+	SyncWindow              int
+	URITemplate             string
+	CustomURITemplateParams map[string]string
+	Hash                    string
 }
 
 // QRCodeConfig represents the configuration for generating QR codes.
@@ -126,12 +127,13 @@ type QRCodeConfig struct {
 
 // DefaultConfig represents the default configuration values.
 var DefaultConfig = Config{
-	Digits:       6,
-	Period:       30,
-	UseSignature: false,
-	TimeSource:   time.Now,
-	SyncWindow:   1,
-	URITemplate:  "otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s",
+	Digits:                  6,
+	Period:                  30,
+	UseSignature:            false,
+	TimeSource:              time.Now,
+	SyncWindow:              1,
+	URITemplate:             "otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s",
+	CustomURITemplateParams: nil,
 }
 
 // Hashers is a map of supported hash functions.
@@ -230,6 +232,15 @@ func (v *Config) generateOTPURL(issuer, accountName string) string {
 	}
 	if otpType != gotp.OtpTypeHotp {
 		query.Set("period", fmt.Sprint(v.Period))
+	}
+
+	// Add custom URI Template parameters to the query if CustomURITemplateParams is not nil
+	if v.CustomURITemplateParams != nil {
+		for key, value := range v.CustomURITemplateParams {
+			escapedKey := url.PathEscape(key)
+			escapedValue := url.PathEscape(value)
+			query.Set(escapedKey, escapedValue)
+		}
 	}
 
 	// Re-encode the query parameters.
