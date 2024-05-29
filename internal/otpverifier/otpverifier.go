@@ -27,6 +27,13 @@ const (
 	// It is considered less secure compared to newer variants due to potential vulnerabilities.
 	SHA1 = "SHA1"
 
+	// SHA224 represents the SHA-224 hash function.
+	// SHA-224 produces a 224-bit (28-byte) hash value.
+	// It is a truncated version of SHA-256 and provides a balance between security and performance.
+	//
+	// Note: Some 2FA mobile apps might not support SHA-224 due to poor ecosystem.
+	SHA224 = "SHA224"
+
 	// SHA256 represents the SHA-256 hash function.
 	// SHA-256 produces a 256-bit (32-byte) hash value.
 	// It provides a higher level of security compared to SHA-1 and is recommended for newer applications.
@@ -112,6 +119,7 @@ var DefaultConfig = Config{
 // it can be used for experimental purposes, such as creating custom hashing functions (advanced use cases) related to cryptography.
 var Hashers = map[string]*gotp.Hasher{
 	SHA1:       {HashName: SHA1, Digest: sha1.New},
+	SHA224:     {HashName: SHA224, Digest: sha256.New224},
 	SHA256:     {HashName: SHA256, Digest: sha256.New},
 	SHA512:     {HashName: SHA512, Digest: sha512.New},
 	BLAKE2b256: {HashName: BLAKE2b256, Digest: blake2botp.New256},
