@@ -31,6 +31,7 @@ func TestTOTPVerifier_Verify(t *testing.T) {
 
 	hashFunctions := []string{
 		otpverifier.SHA1,
+		otpverifier.SHA224,
 		otpverifier.SHA256,
 		otpverifier.SHA512,
 		otpverifier.BLAKE2b256,
@@ -127,6 +128,7 @@ func TestHOTPVerifier_Verify(t *testing.T) {
 
 	hashFunctions := []string{
 		otpverifier.SHA1,
+		otpverifier.SHA224,
 		otpverifier.SHA256,
 		otpverifier.SHA512,
 		otpverifier.BLAKE2b256,
@@ -576,6 +578,7 @@ func TestGetHasherByName(t *testing.T) {
 		wantDigest func() hash.Hash
 	}{
 		{name: otpverifier.SHA1, wantDigest: sha1.New},
+		{name: otpverifier.SHA224, wantDigest: sha256.New224},
 		{name: otpverifier.SHA256, wantDigest: sha256.New},
 		{name: otpverifier.SHA512, wantDigest: sha512.New},
 		{name: otpverifier.BLAKE2b256, wantDigest: blake2botp.New256},
