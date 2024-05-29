@@ -26,22 +26,30 @@ type HOTPVerifier struct {
 // because by default, the counter starts at 0 and is hidden the token.
 // Also note that this is still a basic mathematical implementation about counter. More advanced mathematical concepts might be implemented
 // in the future, but not at this time due to the limitations of some mobile 2FA ecosystems (poor ecosystems).
-func NewHOTPVerifier(config Config) *HOTPVerifier {
-	// Use default values if not provided
-	if config.Digits == 0 {
-		config.Digits = DefaultConfig.Digits
-	}
-	if config.Hash != "" {
-		// If HashName is provided, use it to get the corresponding Hasher
-		config.Hasher = config.GetHasherByName(config.Hash)
-	}
-	if config.URITemplate == "" {
-		config.URITemplate = DefaultConfig.URITemplate
+func NewHOTPVerifier(config ...Config) *HOTPVerifier {
+	c := DefaultConfig
+	if len(config) > 0 {
+		c = config[0]
 	}
 
-	hotp := gotp.NewHOTP(config.Secret, config.Digits, config.Hasher)
+	// Use default values if not provided
+	if c.Digits == 0 {
+		c.Digits = DefaultConfig.Digits
+	}
+	if c.Counter == 0 {
+		c.Digits = int(DefaultConfig.Counter)
+	}
+	if c.Hash != "" {
+		// If HashName is provided, use it to get the corresponding Hasher
+		c.Hasher = c.GetHasherByName(c.Hash)
+	}
+	if c.URITemplate == "" {
+		c.URITemplate = DefaultConfig.URITemplate
+	}
+
+	hotp := gotp.NewHOTP(c.Secret, c.Digits, c.Hasher)
 	return &HOTPVerifier{
-		config: config,
+		config: c,
 		Hotp:   hotp,
 	}
 }
