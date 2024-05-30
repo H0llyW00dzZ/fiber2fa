@@ -50,8 +50,10 @@ func NewTOTPVerifier(config ...Config) *TOTPVerifier {
 
 	totp := gotp.NewTOTP(c.Secret, c.Digits, c.Period, c.Hasher)
 	verifier := &TOTPVerifier{
-		config:     c,
-		totp:       totp,
+		config: c,
+		totp:   totp,
+		// Allocates 11 to 15 allocs/op without signature (depends on the hash function), which is relatively inexpensive for this TOTP synchronization window.
+		// Without implementing a synchronization window similar to HOTP, it can lead to high vulnerability
 		UsedTokens: make(map[int64]string),
 	}
 
