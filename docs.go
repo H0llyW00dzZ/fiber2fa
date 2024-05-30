@@ -36,9 +36,10 @@
 //		// Use the fiber.Locals middleware to set c.Locals
 //		app.Use(func(c *fiber.Ctx) error {
 //
-//		// Note: c.Locals is pretty useful and can directly store values from a database.
-//		c.Locals("email", "user@example.com")
-//		return c.Next()
+//			// Note: c.Locals is pretty useful and can directly store values from a database.
+//			c.Locals("email", "user@example.com")
+//			return c.Next()
+//		})
 //
 //		app.Use(twofa.New(twofa.Config{
 //			Issuer:      "MyApp",
