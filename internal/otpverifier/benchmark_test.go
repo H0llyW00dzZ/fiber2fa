@@ -88,7 +88,7 @@ func BenchmarkHOTPVerify(b *testing.B) {
 		b.Run(hashFunc, func(b *testing.B) {
 			config := otpverifier.Config{
 				Secret:     secret,
-				SyncWindow: 1,
+				SyncWindow: 2,
 				Hash:       hashFunc,
 			}
 			verifier := otpverifier.NewHOTPVerifier(config)
@@ -105,7 +105,7 @@ func BenchmarkHOTPVerify(b *testing.B) {
 			config := otpverifier.Config{
 				Secret:       secret,
 				Hash:         hashFunc,
-				SyncWindow:   1,
+				SyncWindow:   2,
 				UseSignature: true,
 			}
 			verifier := otpverifier.NewHOTPVerifier(config)

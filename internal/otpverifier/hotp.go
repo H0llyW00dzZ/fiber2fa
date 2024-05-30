@@ -70,7 +70,7 @@ func (v *HOTPVerifier) Verify(token, signature string) bool {
 
 	// Check if sync window is applied
 	// Note: Understanding this sync window requires skilled mathematical reasoning.
-	if v.config.SyncWindow > 1 {
+	if v.config.SyncWindow > 0 {
 		for i := 0; i <= v.config.SyncWindow; i++ {
 			expectedCounter := int(v.config.Counter) + i
 			generatedToken := v.Hotp.At(expectedCounter)

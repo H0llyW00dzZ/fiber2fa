@@ -618,7 +618,7 @@ func TestHOTPVerifier_VerifySyncWindow(t *testing.T) {
 	// their tokens will not be verified, effectively rendering the tokens useless.
 	initialCounter := uint64(1337)
 	// The sync window defines how many tokens ahead of the last verified one can be accepted.
-	syncWindow := 2
+	syncWindow := 1
 
 	hashFunctions := []string{
 		otpverifier.SHA1,
@@ -667,7 +667,7 @@ func TestHOTPVerifier_VerifySyncWindow(t *testing.T) {
 		}
 
 		// Generate a token for a counter value outside the sync window
-		outsideWindowToken := verifier.Hotp.At(int(initialCounter) + syncWindow + 4)
+		outsideWindowToken := verifier.Hotp.At(int(initialCounter) + syncWindow + 3)
 
 		// Verify this token should fail
 		if verifier.Verify(outsideWindowToken, "") {
@@ -684,7 +684,7 @@ func TestHOTPVerifier_VerifySyncWindowWithSignature(t *testing.T) {
 	// their tokens will not be verified, effectively rendering the tokens useless.
 	initialCounter := uint64(1337)
 	// The sync window defines how many tokens ahead of the last verified one can be accepted.
-	syncWindow := 2
+	syncWindow := 1
 	useSignature := true
 
 	hashFunctions := []string{
@@ -745,7 +745,7 @@ func TestHOTPVerifier_VerifySyncWindowWithSignature(t *testing.T) {
 		}
 
 		// Generate a token and signature for a counter value outside the sync window
-		outsideWindowToken := verifier.Hotp.At(int(initialCounter) + syncWindow + 4)
+		outsideWindowToken := verifier.Hotp.At(int(initialCounter) + syncWindow + 3)
 		outsideWindowSignature := generateSignature(outsideWindowToken)
 
 		// Verify this token and signature should fail
@@ -759,7 +759,7 @@ func TestHOTPVerifier_ResetSyncWindow(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	initialCounter := uint64(1337)
 	initialSyncWindow := 2
-	resetSyncWindow := 1 // The new sync window value after reset
+	resetSyncWindow := 0 // The new sync window value after reset
 
 	verifier := otpverifier.NewHOTPVerifier(otpverifier.Config{
 		Secret:     secret,
@@ -796,7 +796,7 @@ func TestHOTPVerifier_ResetSyncWindow(t *testing.T) {
 func TestHOTPVerifier_ResetSyncWindowToDefault(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	initialCounter := uint64(1337)
-	initialSyncWindow := 2
+	initialSyncWindow := 1
 	verifier := otpverifier.NewHOTPVerifier(otpverifier.Config{
 		Secret:     secret,
 		Counter:    initialCounter,
