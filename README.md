@@ -3,8 +3,8 @@
 
 This is a custom 2FA (Two-Factor Authentication) middleware for the Fiber web framework. It provides a secure and easy-to-use solution for implementing 2FA in Fiber applications. The middleware supports TOTP (Time-based One-Time Password) authentication and offers customizable configuration options.
 
-> [!NOTE]
-> This 2FA middleware is still a work in progress and may not be stable for use in production environments. Use it with caution and thoroughly test it before deploying to production.
+> [!WARNING]
+> This 2FA middleware is still a work in progress and may not be stable for use in production environments (e.g., QR Code Builder), since it is rewritten from scratch with some improvements. Use it with caution and thoroughly test it before deploying to production. It is recommended to use it locally for testing purposes.
 
 
 > [!NOTE]
