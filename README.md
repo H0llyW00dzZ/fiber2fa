@@ -6,6 +6,11 @@ This is a custom 2FA (Two-Factor Authentication) middleware for the Fiber web fr
 > [!NOTE]
 > This 2FA middleware is still a work in progress and may not be stable for use in production environments. Use it with caution and thoroughly test it before deploying to production.
 
+
+> [!NOTE]
+> This 2FA project was inspired by some QR code systems in my country (e.g., https://qris.id/). However, it is built in a modern way and purely written in Go (which is more secure and can leverage the system easily), rather than the traditional way (where it is written in PHP).
+> More QR code system projects might be implemented in the future (e.g., payment systems through banking smiliar https://qris.id/).
+
 ## Features
 
 The middleware provides the following features:
