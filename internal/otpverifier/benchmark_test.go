@@ -11,7 +11,6 @@ import (
 	"github.com/xlzd/gotp"
 )
 
-// Note: TOTP Has Zero allocation without signature
 func BenchmarkTOTPVerify(b *testing.B) {
 	secret := gotp.RandomSecret(16)
 
@@ -39,10 +38,10 @@ func BenchmarkTOTPVerify(b *testing.B) {
 			}
 			verifier := otpverifier.NewTOTPVerifier(config)
 
-			token, _ := verifier.GenerateToken()
-
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
+				// Note: This now each token are different
+				token, _ := verifier.GenerateToken()
 				verifier.Verify(token, "")
 			}
 		})
@@ -56,10 +55,10 @@ func BenchmarkTOTPVerify(b *testing.B) {
 			}
 			verifier := otpverifier.NewTOTPVerifier(config)
 
-			token, signature := verifier.GenerateToken()
-
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
+				// Note: This now each token are different
+				token, signature := verifier.GenerateToken()
 				verifier.Verify(token, signature)
 			}
 		})
@@ -94,10 +93,10 @@ func BenchmarkHOTPVerify(b *testing.B) {
 			}
 			verifier := otpverifier.NewHOTPVerifier(config)
 
-			token, _ := verifier.GenerateToken()
-
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
+				// Note: This now each token are different
+				token, _ := verifier.GenerateToken()
 				verifier.Verify(token, "")
 			}
 		})
@@ -111,10 +110,10 @@ func BenchmarkHOTPVerify(b *testing.B) {
 			}
 			verifier := otpverifier.NewHOTPVerifier(config)
 
-			token, signature := verifier.GenerateToken()
-
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
+				// Note: This now each token are different
+				token, signature := verifier.GenerateToken()
 				verifier.Verify(token, signature)
 			}
 		})
