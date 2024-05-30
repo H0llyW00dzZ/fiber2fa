@@ -269,8 +269,8 @@ func TestMiddleware_Handle(t *testing.T) {
 		Secret: info.Secret,
 	})
 
-	validToken, _ := totp.GenerateToken()
-	totp.Verify(validToken, "")
+	validToken := totp.GenerateToken()
+	totp.Verify(validToken)
 
 	// Create a separate instance of the Middleware struct for testing
 	testMiddleware := &twofa.Middleware{
@@ -1279,8 +1279,8 @@ func TestMiddlewareUUIDContextKey_Handle(t *testing.T) {
 		Secret: info.Secret,
 	})
 
-	validToken, _ := totp.GenerateToken()
-	totp.Verify(validToken, "")
+	validToken := totp.GenerateToken()
+	totp.Verify(validToken)
 
 	// Create a separate instance of the Middleware struct for testing
 	testMiddleware := &twofa.Middleware{
