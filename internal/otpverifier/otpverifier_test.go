@@ -86,6 +86,9 @@ func TestTOTPVerifier_Verify(t *testing.T) {
 			// Switch to a non-signature mode and test again
 			config.UseSignature = false
 			verifier = otpverifier.NewTOTPVerifier(config)
+
+			// Note: This is a hack hahaha. It succeeds (valid) because the verification process uses crypto/subtle for constant-time comparison.
+			// Without using crypto/subtle, it can potentially lead to high vulnerability to timing attacks.
 			token, _ = verifier.GenerateTokenWithSignature()
 
 			// Verify the token without a signature (should succeed)
@@ -152,6 +155,9 @@ func TestDefaultConfigTOTPVerifier_Verify(t *testing.T) {
 			// Switch to a non-signature mode and test again
 			config.UseSignature = false
 			verifier = otpverifier.NewTOTPVerifier(config)
+
+			// Note: This is a hack hahaha. It succeeds (valid) because the verification process uses crypto/subtle for constant-time comparison.
+			// Without using crypto/subtle, it can potentially lead to high vulnerability to timing attacks.
 			token, _ = verifier.GenerateTokenWithSignature()
 
 			// Verify the token without a signature (should succeed)
@@ -330,6 +336,8 @@ func TestDefaultConfigHOTPVerifier_Verify(t *testing.T) {
 		verifier = otpverifier.NewHOTPVerifier(config)
 
 		// Generate a token using the verifier
+		// Note: This is a hack hahaha. It succeeds (valid) because the verification process uses crypto/subtle for constant-time comparison.
+		// Without using crypto/subtle, it can potentially lead to high vulnerability to timing attacks.
 		token, _ = verifier.GenerateTokenWithSignature()
 
 		// Verify the token
