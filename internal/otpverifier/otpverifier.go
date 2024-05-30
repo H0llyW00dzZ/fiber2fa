@@ -240,18 +240,10 @@ func (v *Config) generateOTPURL(issuer, accountName string) string {
 	}
 
 	// Prepare query parameters.
-	// Note: There is a bug that cannot be fixed. It is probably a mobile 2FA issue or something weird.
-	// The bug occurs when there is a space in the "issuer" field. For example, if the issuer is "Gopher Company",
-	// it will be displayed as:
-	// (issuer) Gopher+Company
-	// (Account Name) Gopher Company:XGopher@example.com
-	// The correct format should be:
-	// (issuer) Gopher
-	// (Account Name) Gopher Company:XGopher@example.com
-	// Adding "Gopher Company:" to the account name is optional because it is the value of the issuer.
+	// Note: This should be fixing a weird bug related to the "issuer" field when spaces are included,
+	// ensuring that "Gopher Company" is displayed correctly instead of "Gopher+Company".
 	query := baseURL.Query()
 	query.Set("secret", v.Secret)
-	query.Set("issuer", issuer)
 	query.Set("digits", fmt.Sprint(v.Digits))
 	query.Set("algorithm", v.Hasher.HashName)
 	if otpType != gotp.OtpTypeTotp {
