@@ -19,10 +19,10 @@ import (
 // GenerateQRcodePath generates the QR code image for the 2FA secret key and stores the QR code data.
 //
 // TODO: Improve this function by using an otpverifier (internal) package.
-// The QRCodePath (This function) should be the location where the user wants to scan the QR code. For example, if the user registers from example.com/2fa/register,
+// The QRCodePath (this function) should be the location where the user wants to scan the QR code. For example, if the user registers from example.com/2fa/register,
 // then this is the place for the QR code image: example.com/2fa/register/scanqrcode/b689a842-065f-4664-xxxx-xxxxxxxxx.png (note: "b689a842-065f-4664-xxxx-xxxxxxxxx" is a UUID).
-// After the user completes scanning the QR code in example.com/2fa/register, this path will redirect to another page using c.Next().
-// It's possible to improve this method without relying on or needing a filesystem such as a file manager (e.g, for store Image QR Code), since this is written in Go.
+// After the user completes scanning the QR code at example.com/2fa/register, this path will redirect to another page using c.Next().
+// It's possible to improve this method using the above approach without relying on or needing a filesystem such as a file manager (e.g., for storing the QR code image), since this is written in Go.
 func (m *Middleware) GenerateQRcodePath(c *fiber.Ctx) error {
 	// Get the context key from c.Locals
 	contextKey, err := m.getContextKey(c)
