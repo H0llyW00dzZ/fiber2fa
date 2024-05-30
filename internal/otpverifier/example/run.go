@@ -10,6 +10,9 @@ import (
 	"image"
 	"image/color"
 	"os"
+	"os/signal"
+	"strings"
+	"syscall"
 	"time"
 
 	"github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier"
@@ -25,10 +28,9 @@ func main() {
 		Secret:       gotp.RandomSecret(16),
 		Digits:       6,
 		UseSignature: false,
-		Period:       5,
+		Period:       30,
 		TimeSource:   time.Now, // Support Custom Timezone
 		// Set to SHA512 as example since Some 2FA Mobile Apps might not supported (Poor Ecosystems) using Hash BLAKE2b,
-		// additionaly in Apple Device (Not 2FA Mobile Apps) BLAKE2b is supported, has been tested on iPhone by using qrcode scan directly
 		Hash: otpverifier.SHA512,
 	})
 
@@ -60,23 +62,43 @@ func main() {
 	}
 	fmt.Println("QR code image saved successfully. Please scan it with your authenticator app.")
 
-	// Wait for the user to scan the QR code and enter the token
-	fmt.Print("Please enter the token from your authenticator app: ")
+	// Create a channel to receive OS signals
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
 	scanner := bufio.NewScanner(os.Stdin)
-	if scanner.Scan() {
-		token := scanner.Text()
 
-		// Verify the token
-		valid := verifier.Verify(token, "")
-		if valid {
-			fmt.Println("Token is valid.")
-		} else {
-			fmt.Println("Token is invalid.")
+	for {
+		fmt.Print("Please enter the token from your authenticator app (or type 'exit' to quit): ")
+
+		// Use a select statement to wait for either user input or OS signal
+		select {
+		case <-signalChan:
+			fmt.Println("Exiting...")
+			return
+		default:
+			if scanner.Scan() {
+				token := strings.TrimSpace(scanner.Text())
+
+				if token == "exit" {
+					fmt.Println("Exiting...")
+					return
+				}
+
+				// Verify the token
+				valid := verifier.Verify(token, "")
+				if valid {
+					fmt.Println("Token is valid.")
+				} else {
+					fmt.Println("Token is invalid.")
+				}
+			} else {
+				// If scanner.Scan() returns false, it means there was an error or EOF
+				if scanner.Err() != nil {
+					fmt.Println("Error reading token:", scanner.Err())
+				}
+				return
+			}
 		}
-	}
-
-	if scanner.Err() != nil {
-		fmt.Println("Error reading token:", scanner.Err())
 	}
 }
