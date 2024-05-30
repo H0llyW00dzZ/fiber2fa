@@ -63,7 +63,7 @@ func TestTOTPVerifier_Verify(t *testing.T) {
 			verifier := otpverifier.NewTOTPVerifier(config)
 
 			// Generate a token and signature using the verifier
-			token, signature := verifier.GenerateToken()
+			token, signature := verifier.GenerateTokenWithSignature()
 
 			// Verify the token and signature (should succeed)
 			isValid := verifier.Verify(token, signature)
@@ -86,7 +86,7 @@ func TestTOTPVerifier_Verify(t *testing.T) {
 			// Switch to a non-signature mode and test again
 			config.UseSignature = false
 			verifier = otpverifier.NewTOTPVerifier(config)
-			token, _ = verifier.GenerateToken()
+			token, _ = verifier.GenerateTokenWithSignature()
 
 			// Verify the token without a signature (should succeed)
 			isValid = verifier.Verify(token, "")
@@ -129,7 +129,7 @@ func TestDefaultConfigTOTPVerifier_Verify(t *testing.T) {
 			verifier := otpverifier.NewTOTPVerifier(config)
 
 			// Generate a token and signature using the verifier
-			token, signature := verifier.GenerateToken()
+			token, signature := verifier.GenerateTokenWithSignature()
 
 			// Verify the token and signature (should succeed)
 			isValid := verifier.Verify(token, signature)
@@ -152,7 +152,7 @@ func TestDefaultConfigTOTPVerifier_Verify(t *testing.T) {
 			// Switch to a non-signature mode and test again
 			config.UseSignature = false
 			verifier = otpverifier.NewTOTPVerifier(config)
-			token, _ = verifier.GenerateToken()
+			token, _ = verifier.GenerateTokenWithSignature()
 
 			// Verify the token without a signature (should succeed)
 			isValid = verifier.Verify(token, "")
@@ -183,8 +183,8 @@ func TestTOTPVerifier_PeriodicCleanup(t *testing.T) {
 	verifier := otpverifier.NewTOTPVerifier(config)
 
 	// Simulate used tokens
-	token1, _ := verifier.GenerateToken()
-	verifier.Verify(token1, "")
+	token1 := verifier.GenerateToken()
+	verifier.Verify(token1)
 
 	// Wait for periodic cleanup to occur (less than the token validity period)
 	time.Sleep(time.Duration(period*3/4) * time.Second)
@@ -227,7 +227,7 @@ func TestHOTPVerifier_Verify(t *testing.T) {
 		verifier := otpverifier.NewHOTPVerifier(config)
 
 		// Generate a token and signature using the verifier
-		token, signature := verifier.GenerateToken()
+		token, signature := verifier.GenerateTokenWithSignature()
 
 		// Verify the token and signature
 		isValid := verifier.Verify(token, signature)
@@ -239,7 +239,7 @@ func TestHOTPVerifier_Verify(t *testing.T) {
 		initialCounter++
 		config.Counter = initialCounter
 		verifier = otpverifier.NewHOTPVerifier(config)
-		newToken, newSignature := verifier.GenerateToken()
+		newToken, newSignature := verifier.GenerateTokenWithSignature()
 
 		// Verify the new token and signature
 		isValid = verifier.Verify(newToken, newSignature)
@@ -258,10 +258,10 @@ func TestHOTPVerifier_Verify(t *testing.T) {
 		verifier = otpverifier.NewHOTPVerifier(config)
 
 		// Generate a token using the verifier
-		token, _ = verifier.GenerateToken()
+		token = verifier.GenerateToken()
 
 		// Verify the token
-		isValid = verifier.Verify(token, "")
+		isValid = verifier.Verify(token)
 		if !isValid {
 			t.Errorf("Token should be valid (hash function: %s)", hashFunc)
 		}
@@ -299,7 +299,7 @@ func TestDefaultConfigHOTPVerifier_Verify(t *testing.T) {
 		verifier := otpverifier.NewHOTPVerifier(config)
 
 		// Generate a token and signature using the verifier
-		token, signature := verifier.GenerateToken()
+		token, signature := verifier.GenerateTokenWithSignature()
 
 		// Verify the token and signature
 		isValid := verifier.Verify(token, signature)
@@ -311,7 +311,7 @@ func TestDefaultConfigHOTPVerifier_Verify(t *testing.T) {
 		initialCounter++
 		config.Counter = initialCounter
 		verifier = otpverifier.NewHOTPVerifier(config)
-		newToken, newSignature := verifier.GenerateToken()
+		newToken, newSignature := verifier.GenerateTokenWithSignature()
 
 		// Verify the new token and signature
 		isValid = verifier.Verify(newToken, newSignature)
@@ -330,7 +330,7 @@ func TestDefaultConfigHOTPVerifier_Verify(t *testing.T) {
 		verifier = otpverifier.NewHOTPVerifier(config)
 
 		// Generate a token using the verifier
-		token, _ = verifier.GenerateToken()
+		token, _ = verifier.GenerateTokenWithSignature()
 
 		// Verify the token
 		isValid = verifier.Verify(token, "")
@@ -390,7 +390,7 @@ func TestOTPFactory(t *testing.T) {
 		totpConfig.UseSignature = true
 		totpConfig.TimeSource = timeSource
 		totpVerifier = otpverifier.NewTOTPVerifier(totpConfig)
-		totpToken, totpSignature := totpVerifier.GenerateToken()
+		totpToken, totpSignature := totpVerifier.GenerateTokenWithSignature()
 		if !totpVerifier.Verify(totpToken, totpSignature) {
 			t.Errorf("TOTP token and signature should be valid (hash function: %s)", hashFunc)
 		}
@@ -398,7 +398,7 @@ func TestOTPFactory(t *testing.T) {
 		// Test HOTPVerifier token generation and verification
 		hotpConfig.UseSignature = true
 		hotpVerifier = otpverifier.NewHOTPVerifier(hotpConfig)
-		hotpToken, hotpSignature := hotpVerifier.GenerateToken()
+		hotpToken, hotpSignature := hotpVerifier.GenerateTokenWithSignature()
 		if !hotpVerifier.Verify(hotpToken, hotpSignature) {
 			t.Errorf("HOTP token and signature should be valid (hash function: %s)", hashFunc)
 		}
@@ -877,15 +877,17 @@ func TestTOTPVerifier_VerifyPanic(t *testing.T) {
 
 	// Create a TOTPVerifier with a negative sync window
 	config := otpverifier.Config{
-		Secret:     secret,
-		SyncWindow: -1,
+		Secret:       secret,
+		SyncWindow:   -1,
+		UseSignature: true,
+		Hash:         otpverifier.SHA256,
 	}
 
 	// Create a new TOTPVerifier instance
 	verifier := otpverifier.NewTOTPVerifier(config)
 
 	// Generate a token and signature using the verifier
-	token, signature := verifier.GenerateToken()
+	token, signature := verifier.GenerateTokenWithSignature()
 
 	// Expect a panic when calling Verify with a negative sync window
 	defer func() {
@@ -910,13 +912,14 @@ func TestHOTPVerifier_VerifyPanic(t *testing.T) {
 	config := otpverifier.Config{
 		Secret:     secret,
 		SyncWindow: -1,
+		Hash:       otpverifier.SHA256,
 	}
 
 	// Create a new HOTPVerifier instance
 	verifier := otpverifier.NewHOTPVerifier(config)
 
 	// Generate a token and signature using the verifier
-	token, signature := verifier.GenerateToken()
+	token, signature := verifier.GenerateTokenWithSignature()
 
 	// Expect a panic when calling Verify with a negative sync window
 	defer func() {
@@ -932,4 +935,96 @@ func TestHOTPVerifier_VerifyPanic(t *testing.T) {
 
 	// Call Verify, which should panic
 	verifier.Verify(token, signature)
+}
+
+func TestTOTPVerifier_VerifyMissingSignature(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+
+	config := otpverifier.Config{
+		Secret:       secret,
+		UseSignature: true,
+		Hash:         otpverifier.SHA256,
+	}
+
+	verifier := otpverifier.NewTOTPVerifier(config)
+
+	token, _ := verifier.GenerateTokenWithSignature()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected Verify to panic with missing signature, but it didn't")
+		} else {
+			expectedPanicMessage := "totp: Signature is required but not provided"
+			if r != expectedPanicMessage {
+				t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+			}
+		}
+	}()
+
+	verifier.Verify(token)
+}
+
+func TestTOTPVerifier_VerifySignatureMismatch(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+
+	config := otpverifier.Config{
+		Secret:       secret,
+		UseSignature: true,
+		Hash:         otpverifier.SHA256,
+	}
+
+	verifier := otpverifier.NewTOTPVerifier(config)
+
+	token, _ := verifier.GenerateTokenWithSignature()
+	invalidSignature := "invalid_signature"
+
+	if verifier.Verify(token, invalidSignature) {
+		t.Errorf("Expected Verify to return false for signature mismatch, but it returned true")
+	}
+}
+
+func TestHOTPVerifier_VerifyMissingSignature(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+
+	config := otpverifier.Config{
+		Secret:       secret,
+		UseSignature: true,
+		Hash:         otpverifier.SHA256,
+	}
+
+	verifier := otpverifier.NewHOTPVerifier(config)
+
+	token, _ := verifier.GenerateTokenWithSignature()
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected Verify to panic with missing signature, but it didn't")
+		} else {
+			expectedPanicMessage := "hotp: Signature is required but not provided"
+			if r != expectedPanicMessage {
+				t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+			}
+		}
+	}()
+
+	verifier.Verify(token)
+}
+
+func TestHOTPVerifier_VerifySignatureMismatch(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+
+	config := otpverifier.Config{
+		Secret:       secret,
+		UseSignature: true,
+		Hash:         otpverifier.SHA256,
+	}
+
+	verifier := otpverifier.NewHOTPVerifier(config)
+
+	token, _ := verifier.GenerateTokenWithSignature()
+	invalidSignature := "invalid_signature"
+
+	if verifier.Verify(token, invalidSignature) {
+		t.Errorf("Expected Verify to return false for signature mismatch, but it returned true")
+	}
 }

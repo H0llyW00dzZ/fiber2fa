@@ -41,8 +41,8 @@ func BenchmarkTOTPVerify(b *testing.B) {
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				// Note: This now each token are different
-				token, _ := verifier.GenerateToken()
-				verifier.Verify(token, "")
+				token := verifier.GenerateToken()
+				verifier.Verify(token)
 			}
 		})
 
@@ -58,7 +58,7 @@ func BenchmarkTOTPVerify(b *testing.B) {
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				// Note: This now each token are different
-				token, signature := verifier.GenerateToken()
+				token, signature := verifier.GenerateTokenWithSignature()
 				verifier.Verify(token, signature)
 			}
 		})
@@ -96,8 +96,8 @@ func BenchmarkHOTPVerify(b *testing.B) {
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				// Note: This now each token are different
-				token, _ := verifier.GenerateToken()
-				verifier.Verify(token, "")
+				token := verifier.GenerateToken()
+				verifier.Verify(token)
 			}
 		})
 
@@ -113,7 +113,7 @@ func BenchmarkHOTPVerify(b *testing.B) {
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				// Note: This now each token are different
-				token, signature := verifier.GenerateToken()
+				token, signature := verifier.GenerateTokenWithSignature()
 				verifier.Verify(token, signature)
 			}
 		})

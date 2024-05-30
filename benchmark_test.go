@@ -90,8 +90,8 @@ func BenchmarkJSONSonicWithValid2FA(b *testing.B) {
 		Secret: twoFAConfig.Secret,
 	})
 
-	token, _ := totp.GenerateToken()
-	totp.Verify(token, "")
+	token := totp.GenerateToken()
+	totp.Verify(token)
 
 	// Create a valid 2FA cookie
 	cookieValue := twoFAMiddleware.GenerateCookieValue(time.Now().Add(time.Duration(86400) * time.Second))
@@ -154,8 +154,8 @@ func BenchmarkJSONSonicWithValidCookie(b *testing.B) {
 		Secret: twoFAConfig.Secret,
 	})
 
-	token, _ := totp.GenerateToken()
-	totp.Verify(token, "")
+	token := totp.GenerateToken()
+	totp.Verify(token)
 
 	// Create a valid 2FA cookie
 	cookieValue := twoFAMiddleware.GenerateCookieValue(time.Now().Add(time.Duration(86400) * time.Second))
@@ -280,8 +280,8 @@ func BenchmarkJSONStdLibraryMiddlewareWithValid2FA(b *testing.B) {
 		Secret: twoFAConfig.Secret,
 	})
 
-	token, _ := totp.GenerateToken()
-	totp.Verify(token, "")
+	token := totp.GenerateToken()
+	totp.Verify(token)
 
 	// Create a valid 2FA cookie
 	cookieValue := twoFAMiddleware.GenerateCookieValue(time.Now().Add(time.Duration(86400) * time.Second))
@@ -344,8 +344,8 @@ func BenchmarkJSONStdLibraryWithValidCookie(b *testing.B) {
 		Secret: twoFAConfig.Secret,
 	})
 
-	token, _ := totp.GenerateToken()
-	totp.Verify(token, "")
+	token := totp.GenerateToken()
+	totp.Verify(token)
 
 	// Create a valid 2FA cookie
 	cookieValue := twoFAMiddleware.GenerateCookieValue(time.Now().Add(time.Duration(86400) * time.Second))

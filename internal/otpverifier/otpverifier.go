@@ -111,8 +111,9 @@ type TimeSource func() time.Time
 
 // OTPVerifier is an interface that defines the behavior of an OTP verifier.
 type OTPVerifier interface {
-	Verify(token, signature string) bool
-	GenerateToken() (string, string)
+	Verify(token string, signature ...string) bool
+	GenerateToken() string
+	GenerateTokenWithSignature() (string, string)
 	SetCounter(counter uint64)
 	GetCounter() uint64
 	GenerateOTPURL(issuer, accountName string) string
