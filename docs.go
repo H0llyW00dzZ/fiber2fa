@@ -21,6 +21,8 @@
 //
 // To use the 2FA middleware in a Fiber application, create a new instance of the middleware with the desired configuration and register it with the application.
 //
+// Note: This 2FA middleware requires c.Locals to be set before using it. Use the [fiber.Ctx.Locals] middleware to set c.Locals.
+//
 //	package main
 //
 //	import (
@@ -30,6 +32,13 @@
 //
 //	func main() {
 //		app := fiber.New()
+//
+//		// Use the fiber.Locals middleware to set c.Locals
+//		app.Use(func(c *fiber.Ctx) error {
+//
+//		// Note: c.Locals is pretty useful and can directly store values from a database.
+//		c.Locals("email", "user@example.com")
+//		return c.Next()
 //
 //		app.Use(twofa.New(twofa.Config{
 //			Issuer:      "MyApp",
@@ -43,7 +52,9 @@
 //		app.Listen(":3000")
 //	}
 //
-// In the example above, a new instance of the 2FA middleware is created with a configuration that specifies the issuer name, context key, and storage provider.
+// In the example above, the fiber.Locals middleware is used to set c.Locals with the "email" key and the corresponding value. This value can be accessed in the 2FA middleware using the ContextKey specified in the configuration.
+//
+// The 2FA middleware is then created with a configuration that specifies the issuer name, context key, and storage provider.
 //
 // # Configuration
 //
