@@ -28,13 +28,13 @@ type InfoManager interface {
 
 // Info represents the 2FA information stored for a user.
 type Info struct {
-	ContextKey     string    `json:"context_key"`
+	ContextKey     string    `json:"contextkey"`
 	Secret         string    `json:"secret"`
-	CookieValue    string    `json:"cookie_value"`
-	ExpirationTime time.Time `json:"expiration_time"`
+	CookieValue    string    `json:"cookie"`
+	ExpirationTime time.Time `json:"expiration"`
 	Registered     bool      `json:"registered"`
 	Identifier     string    `json:"identifier"`
-	QRCodeData     []byte    `json:"qr_code_data"`
+	QRCodeData     []byte    `json:"qrcodedata"`
 }
 
 // NewInfo creates a new empty Info struct based on the provided Config.
