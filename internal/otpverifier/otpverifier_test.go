@@ -419,9 +419,10 @@ func TestHOTPVerifier_VerifyWithSecureRandomCounter(t *testing.T) {
 	for _, hashFunc := range hashFunctions {
 		// Create an HOTPVerifier with the initial counter, UseSignature set to true, and the specified hash function
 		config := otpverifier.Config{
-			Secret:  secret,
-			Counter: initialCounter,
-			Hash:    hashFunc,
+			Secret:       secret,
+			Counter:      initialCounter,
+			Hash:         hashFunc,
+			UseSignature: true,
 		}
 		config.Hasher = config.GetHasherByName(hashFunc) // Use the GetHasherByName method
 		verifier := otpverifier.NewHOTPVerifier(config)
@@ -429,7 +430,7 @@ func TestHOTPVerifier_VerifyWithSecureRandomCounter(t *testing.T) {
 		// Generate a token and signature using the verifier
 		token, signature := verifier.GenerateTokenWithSignature()
 
-		// Verify the token and signature
+		// Verify the token
 		isValid := verifier.Verify(token, signature)
 		if !isValid {
 			t.Errorf("Token and signature should be valid (hash function: %s)", hashFunc)
@@ -439,16 +440,16 @@ func TestHOTPVerifier_VerifyWithSecureRandomCounter(t *testing.T) {
 		initialCounter++
 		config.Counter = initialCounter
 		verifier = otpverifier.NewHOTPVerifier(config)
-		newToken := verifier.GenerateToken()
+		newToken, newSignature := verifier.GenerateTokenWithSignature()
 
-		// Verify the new token and signature
-		isValid = verifier.Verify(newToken)
+		// Verify the new token and new signature
+		isValid = verifier.Verify(newToken, newSignature)
 		if !isValid {
 			t.Errorf("New token and signature should be valid (hash function: %s)", hashFunc)
 		}
 
-		// Verify that the old token and signature are no longer valid
-		isValid = verifier.Verify(token)
+		// Verify that the old token and old signature are no longer valid
+		isValid = verifier.Verify(token, signature)
 		if isValid {
 			t.Errorf("Old token and signature should not be valid anymore (hash function: %s)", hashFunc)
 		}
