@@ -348,6 +348,126 @@ func TestDefaultConfigHOTPVerifier_Verify(t *testing.T) {
 	}
 }
 
+func TestGenerateSecureRandomCounter(t *testing.T) {
+	config := &otpverifier.Config{}
+
+	// Test case 1: maxDigits is 0
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("GenerateSecureRandomCounter did not panic with maxDigits = 0")
+			}
+		}()
+		config.GenerateSecureRandomCounter(0)
+	}()
+
+	// Test case 2: maxDigits is negative
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("GenerateSecureRandomCounter did not panic with maxDigits = -1")
+			}
+		}()
+		config.GenerateSecureRandomCounter(-1)
+	}()
+
+	// Test case 3: maxDigits is greater than maxSafeDigits
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("GenerateSecureRandomCounter did not panic with maxDigits = 31")
+			}
+		}()
+		config.GenerateSecureRandomCounter(31)
+	}()
+
+	// Test case 4: maxDigits is within the safe range
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("GenerateSecureRandomCounter panicked with maxDigits = 10: %v", r)
+			}
+		}()
+		randomCounter := config.GenerateSecureRandomCounter(10)
+		if randomCounter < 0 || randomCounter > 9999999999 {
+			t.Errorf("GenerateSecureRandomCounter returned an invalid counter: %d", randomCounter)
+		}
+	}()
+}
+
+func TestHOTPVerifier_VerifyWithSecureRandomCounter(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+
+	initialCounter := otpverifier.DefaultConfig.GenerateSecureRandomCounter(30)
+
+	hashFunctions := []string{
+		otpverifier.SHA1,
+		otpverifier.SHA224,
+		otpverifier.SHA256,
+		otpverifier.SHA384,
+		otpverifier.SHA512,
+		otpverifier.SHA512S224,
+		otpverifier.SHA512S256,
+		otpverifier.BLAKE2b256,
+		otpverifier.BLAKE2b384,
+		otpverifier.BLAKE2b512,
+		otpverifier.BLAKE3256,
+		otpverifier.BLAKE3384,
+		otpverifier.BLAKE3512,
+	}
+
+	for _, hashFunc := range hashFunctions {
+		// Create an HOTPVerifier with the initial counter, UseSignature set to true, and the specified hash function
+		config := otpverifier.Config{
+			Secret:  secret,
+			Counter: initialCounter,
+			Hash:    hashFunc,
+		}
+		config.Hasher = config.GetHasherByName(hashFunc) // Use the GetHasherByName method
+		verifier := otpverifier.NewHOTPVerifier(config)
+
+		// Generate a token and signature using the verifier
+		token, signature := verifier.GenerateTokenWithSignature()
+
+		// Verify the token and signature
+		isValid := verifier.Verify(token, signature)
+		if !isValid {
+			t.Errorf("Token and signature should be valid (hash function: %s)", hashFunc)
+		}
+
+		// Increment the counter and generate a new token and signature
+		initialCounter++
+		config.Counter = initialCounter
+		verifier = otpverifier.NewHOTPVerifier(config)
+		newToken := verifier.GenerateToken()
+
+		// Verify the new token and signature
+		isValid = verifier.Verify(newToken)
+		if !isValid {
+			t.Errorf("New token and signature should be valid (hash function: %s)", hashFunc)
+		}
+
+		// Verify that the old token and signature are no longer valid
+		isValid = verifier.Verify(token)
+		if isValid {
+			t.Errorf("Old token and signature should not be valid anymore (hash function: %s)", hashFunc)
+		}
+
+		// Create an HOTPVerifier with the initial counter, UseSignature set to false, and the specified hash function
+		config.UseSignature = false
+		verifier = otpverifier.NewHOTPVerifier(config)
+
+		// Generate a token using the verifier
+		token = verifier.GenerateToken()
+
+		// Verify the token
+		isValid = verifier.Verify(token)
+		if !isValid {
+			t.Errorf("Token should be valid (hash function: %s)", hashFunc)
+		}
+	}
+}
+
 func TestOTPFactory(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 
