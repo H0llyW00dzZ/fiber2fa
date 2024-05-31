@@ -322,6 +322,8 @@ func (v *Config) GetHasherByName(Hash string) *gotp.Hasher {
 // GenerateSecureRandomCounter generates a random counter number for HOTP with a specified maximum number of digits.
 //
 // Note: The maximum value for maxDigits is 30. Setting maxDigits to a value greater than 30 may result in integer overflow and panic.
+// Also note that, there is no guarantee about digits for example when set 6 it the result can be possible 5 digits but it secure,
+// the reason why there is no guarantee it requires skilled mathematical reasoning to understand about cryptography
 func (v *Config) GenerateSecureRandomCounter(maxDigits int) uint64 {
 	if maxDigits <= 0 {
 		panic("GenerateSecureRandomCounter: maxDigits must be greater than 0")
