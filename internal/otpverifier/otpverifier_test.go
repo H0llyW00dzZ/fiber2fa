@@ -625,8 +625,6 @@ func TestHOTPVerifier_VerifySyncWindow(t *testing.T) {
 	// e.g., at 1337. If the user's counter is beyond the synchronization window,
 	// their tokens will not be verified, effectively rendering the tokens useless.
 	initialCounter := uint64(1337)
-	// The sync window defines how many tokens ahead of the last verified one can be accepted.
-	syncWindow := 1
 
 	hashFunctions := []string{
 		otpverifier.SHA1,
@@ -649,7 +647,7 @@ func TestHOTPVerifier_VerifySyncWindow(t *testing.T) {
 			Secret:     secret,
 			Counter:    initialCounter,
 			Hasher:     otpverifier.Hashers[hashFunc],
-			SyncWindow: syncWindow,
+			SyncWindow: otpverifier.HighStrict,
 		}
 		verifier := otpverifier.NewHOTPVerifier(config)
 
@@ -662,7 +660,7 @@ func TestHOTPVerifier_VerifySyncWindow(t *testing.T) {
 		}
 
 		// Generate a token for a counter value within the sync window
-		withinWindowToken := verifier.Hotp.At(int(initialCounter) + syncWindow)
+		withinWindowToken := verifier.Hotp.At(int(initialCounter) + otpverifier.HighStrict)
 
 		// Verify this token should also pass
 		if !verifier.Verify(withinWindowToken, "") {
@@ -670,12 +668,12 @@ func TestHOTPVerifier_VerifySyncWindow(t *testing.T) {
 		}
 
 		// Verify that the counter has been updated to the last verified counter + 1
-		if verifier.GetCounter() != initialCounter+uint64(syncWindow)+1 {
+		if verifier.GetCounter() != initialCounter+uint64(otpverifier.HighStrict)+1 {
 			t.Errorf("Counter was not updated correctly after sync window verification (hash function: %s)", hashFunc)
 		}
 
 		// Generate a token for a counter value outside the sync window
-		outsideWindowToken := verifier.Hotp.At(int(initialCounter) + syncWindow + 3)
+		outsideWindowToken := verifier.Hotp.At(int(initialCounter) + otpverifier.HighStrict + 3)
 
 		// Verify this token should fail
 		if verifier.Verify(outsideWindowToken, "") {
@@ -691,8 +689,6 @@ func TestHOTPVerifier_VerifySyncWindowWithSignature(t *testing.T) {
 	// e.g., at 1337. If the user's counter is beyond the synchronization window,
 	// their tokens will not be verified, effectively rendering the tokens useless.
 	initialCounter := uint64(1337)
-	// The sync window defines how many tokens ahead of the last verified one can be accepted.
-	syncWindow := 1
 	useSignature := true
 
 	hashFunctions := []string{
@@ -716,7 +712,7 @@ func TestHOTPVerifier_VerifySyncWindowWithSignature(t *testing.T) {
 			Secret:       secret,
 			Counter:      initialCounter,
 			Hasher:       otpverifier.Hashers[hashFunc],
-			SyncWindow:   syncWindow,
+			SyncWindow:   otpverifier.HighStrict,
 			UseSignature: useSignature,
 		}
 		verifier := otpverifier.NewHOTPVerifier(config)
@@ -739,7 +735,7 @@ func TestHOTPVerifier_VerifySyncWindowWithSignature(t *testing.T) {
 		}
 
 		// Generate a token and signature for a counter value within the sync window
-		withinWindowToken := verifier.Hotp.At(int(initialCounter) + syncWindow)
+		withinWindowToken := verifier.Hotp.At(int(initialCounter) + otpverifier.HighStrict)
 		withinWindowSignature := generateSignature(withinWindowToken)
 
 		// Verify this token and signature should also pass
@@ -748,12 +744,12 @@ func TestHOTPVerifier_VerifySyncWindowWithSignature(t *testing.T) {
 		}
 
 		// Verify that the counter has been updated to the last verified counter + 1
-		if verifier.GetCounter() != initialCounter+uint64(syncWindow)+1 {
+		if verifier.GetCounter() != initialCounter+uint64(otpverifier.HighStrict)+1 {
 			t.Errorf("Counter was not updated correctly after sync window verification with signature (hash function: %s)", hashFunc)
 		}
 
 		// Generate a token and signature for a counter value outside the sync window
-		outsideWindowToken := verifier.Hotp.At(int(initialCounter) + syncWindow + 3)
+		outsideWindowToken := verifier.Hotp.At(int(initialCounter) + otpverifier.HighStrict + 3)
 		outsideWindowSignature := generateSignature(outsideWindowToken)
 
 		// Verify this token and signature should fail
@@ -766,7 +762,7 @@ func TestHOTPVerifier_VerifySyncWindowWithSignature(t *testing.T) {
 func TestHOTPVerifier_ResetSyncWindow(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	initialCounter := uint64(1337)
-	initialSyncWindow := 2
+	initialSyncWindow := otpverifier.MediumStrict
 	resetSyncWindow := 0 // The new sync window value after reset
 
 	verifier := otpverifier.NewHOTPVerifier(otpverifier.Config{
@@ -804,11 +800,10 @@ func TestHOTPVerifier_ResetSyncWindow(t *testing.T) {
 func TestHOTPVerifier_ResetSyncWindowToDefault(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	initialCounter := uint64(1337)
-	initialSyncWindow := 1
 	verifier := otpverifier.NewHOTPVerifier(otpverifier.Config{
 		Secret:     secret,
 		Counter:    initialCounter,
-		SyncWindow: initialSyncWindow,
+		SyncWindow: otpverifier.HighStrict,
 	})
 
 	// Reset the sync window to the default value
@@ -825,6 +820,130 @@ func TestHOTPVerifier_ResetSyncWindowToDefault(t *testing.T) {
 	// Check again if the sync window was reset to the default value
 	if currentSyncWindow := verifier.GetSyncWindow(); currentSyncWindow != otpverifier.DefaultConfig.SyncWindow {
 		t.Errorf("Sync window was not reset to default correctly after passing negative value, got %d, want %d", currentSyncWindow, otpverifier.DefaultConfig.SyncWindow)
+	}
+}
+
+func TestHOTPVerifier_VerifySyncWindowMediumStrict(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+	initialCounter := uint64(1337)
+
+	hashFunctions := []string{
+		otpverifier.SHA1,
+		otpverifier.SHA256,
+		otpverifier.SHA512,
+		otpverifier.BLAKE2b256,
+		otpverifier.BLAKE3256,
+	}
+
+	for _, hashFunc := range hashFunctions {
+		config := otpverifier.Config{
+			Secret:     secret,
+			Counter:    initialCounter,
+			Hasher:     otpverifier.Hashers[hashFunc],
+			SyncWindow: otpverifier.MediumStrict,
+		}
+		verifier := otpverifier.NewHOTPVerifier(config)
+
+		// Get the actual sync window size based on the counter value
+		syncWindowRange := otpverifier.SyncWindowRanges[otpverifier.MediumStrict]
+		// Let's consider "syncWindowSize" is the number of attempts verifier tries after the current value of counter.
+		syncWindowSize := int(initialCounter) % (syncWindowRange[1] - syncWindowRange[0] + 1)
+
+		// Generate a token for the current counter value.
+		currentToken := verifier.Hotp.At(int(verifier.GetCounter()))
+
+		// Verify this token should pass.
+		if !verifier.Verify(currentToken) {
+			t.Fatalf("Expected the current counter token to verify")
+		}
+
+		// Generate a token within the sync window.
+		withinWindowCounter := verifier.GetCounter() + uint64(syncWindowSize)
+		withinWindowToken := verifier.Hotp.At(int(withinWindowCounter))
+
+		// Verify this token should also pass.
+		if !verifier.Verify(withinWindowToken) {
+			t.Fatalf("Expected the within sync window token to verify")
+		}
+
+		// Ensure the counter has been incremented after the verification within the sync window.
+		if verifier.GetCounter() != withinWindowCounter+1 {
+			t.Fatalf("Expected the counter to be incremented to %d, but got %d", withinWindowCounter+1, verifier.GetCounter())
+		}
+
+		// Generate a token for a counter value outside the sync window.
+		outsideWindowCounter := withinWindowCounter + 6
+		outsideWindowToken := verifier.Hotp.At(int(outsideWindowCounter))
+
+		// Verify this token should fail.
+		if verifier.Verify(outsideWindowToken) {
+			t.Fatalf("Expected the outside sync window token to fail verification")
+		}
+	}
+}
+
+func TestHOTPVerifier_VerifySyncWindowLowStrict(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+	initialCounter := uint64(1337)
+
+	hashFunctions := []string{
+		otpverifier.SHA1,
+		otpverifier.SHA256,
+		otpverifier.SHA512,
+		otpverifier.BLAKE2b256,
+		otpverifier.BLAKE3256,
+	}
+
+	for _, hashFunc := range hashFunctions {
+		config := otpverifier.Config{
+			Secret:     secret,
+			Counter:    initialCounter,
+			Hasher:     otpverifier.Hashers[hashFunc],
+			SyncWindow: otpverifier.LowStrict,
+		}
+		verifier := otpverifier.NewHOTPVerifier(config)
+
+		// Get the actual sync window size based on the counter value
+		syncWindowRange := otpverifier.SyncWindowRanges[otpverifier.LowStrict]
+		// Let's consider "syncWindowSize" as the dynamic value based on the current counter value
+		syncWindowSize := int(initialCounter) % (syncWindowRange[1] - syncWindowRange[0] + 1)
+
+		// Generate a token for the current counter value
+		currentToken := verifier.GenerateToken()
+
+		// Verify this token should pass
+		if !verifier.Verify(currentToken) {
+			t.Errorf("Current token did not verify but should have (hash function: %s)", hashFunc)
+		}
+
+		// Generate a token for a counter value within the sync window
+		withinWindowCounter := verifier.GetCounter() + uint64(syncWindowSize)
+		withinWindowToken := verifier.Hotp.At(int(withinWindowCounter))
+
+		// This token should be valid as it is within the synchronization window
+		if !verifier.Verify(withinWindowToken) {
+			t.Errorf("Token within sync window did not verify but should have (hash function: %s)", hashFunc)
+		}
+
+		expectedNextCounter := withinWindowCounter + 1
+		if verifier.GetCounter() != expectedNextCounter {
+			t.Errorf("Counter was not set correctly; expected %d, got %d (hash function: %s)", expectedNextCounter, verifier.GetCounter(), hashFunc)
+		}
+
+		// Generate a token for a counter value just outside the sync window
+		// Test the verification of a token just outside the sync window
+		outsideWindowCounter := withinWindowCounter + 11 // next value after the sync window
+		outsideWindowToken := verifier.Hotp.At(int(outsideWindowCounter))
+
+		// This token should not verify
+		if verifier.Verify(outsideWindowToken) {
+			t.Errorf("Token outside sync window verified but should not have (hash function: %s)", hashFunc)
+		}
+
+		// Counter should not change after unsuccessful verification
+		if verifier.GetCounter() != expectedNextCounter {
+			t.Errorf("Counter should not change after unsuccessful verification; expected %d, got %d (hash function: %s)", expectedNextCounter, verifier.GetCounter(), hashFunc)
+		}
 	}
 }
 
@@ -918,9 +1037,11 @@ func TestHOTPVerifier_VerifyPanic(t *testing.T) {
 
 	// Create a HOTPVerifier with a negative sync window
 	config := otpverifier.Config{
-		Secret:     secret,
-		SyncWindow: -1,
-		Hash:       otpverifier.SHA256,
+		Secret:       secret,
+		SyncWindow:   -1,
+		UseSignature: true,
+		Hash:         otpverifier.SHA256,
+		Counter:      1,
 	}
 
 	// Create a new HOTPVerifier instance

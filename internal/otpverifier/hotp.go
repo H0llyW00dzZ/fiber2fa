@@ -68,74 +68,99 @@ func (v *HOTPVerifier) Verify(token string, signature ...string) bool {
 		panic("hotp: SyncWindow must be greater than or equal to zero")
 	}
 
+	// Calculate the actual synchronization window size
+	syncWindowSize := v.calculateSyncWindowSize()
+
 	if v.config.UseSignature {
 		if len(signature) == 0 {
 			panic("hotp: Signature is required but not provided")
 		}
 
-		return v.verifyWithSignature(token, signature[0])
+		return v.verifyWithSignature(token, signature[0], syncWindowSize)
 	}
 
-	return v.verifyWithoutSignature(token)
+	return v.verifyWithoutSignature(token, syncWindowSize)
+}
+
+// calculateSyncWindowSize calculates the actual synchronization window size based on the configured sync window and any defined sync window ranges.
+func (v *HOTPVerifier) calculateSyncWindowSize() int {
+	// Default sync window size is the value set in the config
+	syncWindowSize := v.config.SyncWindow
+
+	// If there's a range defined for this strictness level, calculate the actual size
+	if ranges, ok := SyncWindowRanges[v.config.SyncWindow]; ok {
+		// Calculate the range size
+		rangeSize := ranges[1] - ranges[0] + 1
+		// Calculate the actual sync window size based on the counter value within the defined range
+		syncWindowSize = ranges[0] + int(v.config.Counter)%rangeSize
+	}
+
+	return syncWindowSize
 }
 
 // verifyWithoutSignature checks if the provided token is valid for the specified counter value without signature verification.
-func (v *HOTPVerifier) verifyWithoutSignature(token string) bool {
-	// Check if sync window is applied
+func (v *HOTPVerifier) verifyWithoutSignature(token string, syncWindowSize int) bool {
+	// If sync window is exactly 0, only validate the immediate next token 🏴‍☠️
 	// Note: Understanding this sync window requires skilled mathematical reasoning.
-	if v.config.SyncWindow > 0 {
-		for i := 0; i <= v.config.SyncWindow; i++ {
-			expectedCounter := int(v.config.Counter) + i
-			generatedToken := v.Hotp.At(expectedCounter)
-			if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 {
-				// Update the stored counter to the next expected value after a successful match
-				v.config.Counter = uint64(expectedCounter + 1)
-				return true
-			}
+	if syncWindowSize == 0 {
+		// Default case when sync window is not applied
+		generatedToken := v.Hotp.At(int(v.config.Counter))
+		if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 {
+			// Increment the counter value after successful verification
+			v.config.Counter++
+			return true
 		}
-		// If no match is found within the synchronization window, authentication fails
+
 		return false
 	}
 
-	// Default case when sync window is not applied
-	generatedToken := v.Hotp.At(int(v.config.Counter))
-	if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 {
-		// Increment the counter value after successful verification
-		v.config.Counter++
-		return true
+	// Otherwise, validate within the sync window range 🏴‍☠️
+	for i := 0; i <= syncWindowSize; i++ {
+		expectedCounter := v.config.Counter + uint64(i)
+		generatedToken := v.Hotp.At(int(expectedCounter))
+
+		if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 {
+			// Update the stored counter to the next expected value after a successful match
+			v.config.Counter = expectedCounter + 1
+			return true
+		}
 	}
+
 	return false
 }
 
 // verifyWithSignature checks if the provided token and signature are valid for the specified counter value.
-func (v *HOTPVerifier) verifyWithSignature(token, signature string) bool {
-	// Check if sync window is applied
+func (v *HOTPVerifier) verifyWithSignature(token, signature string, syncWindowSize int) bool {
+	// If sync window is exactly 0, only validate the immediate next token 🏴‍☠️
 	// Note: Understanding this sync window requires skilled mathematical reasoning.
-	if v.config.SyncWindow > 0 {
-		for i := 0; i <= v.config.SyncWindow; i++ {
-			expectedCounter := int(v.config.Counter) + i
-			generatedToken := v.Hotp.At(expectedCounter)
-			generatedSignature := v.generateSignature(generatedToken)
-			if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 &&
-				subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1 {
-				// Update the stored counter to the next expected value after a successful match
-				v.config.Counter = uint64(expectedCounter + 1)
-				return true
-			}
+	if syncWindowSize == 0 {
+		// Default case when sync window is not applied
+		generatedToken := v.Hotp.At(int(v.config.Counter))
+		generatedSignature := v.generateSignature(generatedToken)
+		if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 &&
+			subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1 {
+			// Increment the counter value after successful verification
+			v.config.Counter++
+			return true
 		}
-		// If no match is found within the synchronization window, authentication fails
+
 		return false
 	}
 
-	// Default case when sync window is not applied
-	generatedToken := v.Hotp.At(int(v.config.Counter))
-	generatedSignature := v.generateSignature(generatedToken)
-	if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 &&
-		subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1 {
-		// Increment the counter value after successful verification
-		v.config.Counter++
-		return true
+	// Otherwise, validate within the sync window range 🏴‍☠️
+	for i := 0; i <= syncWindowSize; i++ {
+		expectedCounter := int(v.config.Counter) + i
+		generatedToken := v.Hotp.At(expectedCounter)
+		generatedSignature := v.generateSignature(generatedToken)
+
+		if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 &&
+			subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1 {
+			// Update the stored counter to the next expected value after a successful match
+			v.config.Counter = uint64(expectedCounter + 1)
+			return true
+		}
 	}
+
 	return false
 }
 

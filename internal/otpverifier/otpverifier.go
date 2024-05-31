@@ -106,6 +106,35 @@ const (
 	BLAKE3512 = "BLAKE3512"
 )
 
+const (
+	// NoneStrict represents no strictness for the synchronization window.
+	// It has a value of 0, meaning the synchronization window size is not enforced.
+	NoneStrict = iota
+
+	// HighStrict represents the highest level of strictness for the synchronization window.
+	// It has a value of 1, meaning the synchronization window size is fixed at 1.
+	HighStrict
+
+	// MediumStrict represents a medium level of strictness for the synchronization window.
+	// It has a value of 2, and the actual synchronization window size is determined by the corresponding range in SyncWindowRanges.
+	MediumStrict
+
+	// LowStrict represents a low level of strictness for the synchronization window.
+	// It has a value of 3, and the actual synchronization window size is determined by the corresponding range in SyncWindowRanges.
+	LowStrict
+)
+
+// SyncWindowRanges is a map that associates strictness levels with their corresponding ranges of synchronization window sizes.
+// The ranges are used to dynamically calculate the actual synchronization window size based on the counter value:
+//
+//   - For MediumStrict, the synchronization window size can be between 2 and 5.
+//   - For LowStrict, the synchronization window size can be between 5 and 10.
+//   - The HighStrict level does not have a range defined in SyncWindowRanges because it has a fixed synchronization window size of 1.
+var SyncWindowRanges = map[int][]int{
+	MediumStrict: {2, 5},
+	LowStrict:    {5, 10},
+}
+
 // TimeSource is a function type that returns the current time.
 type TimeSource func() time.Time
 
@@ -154,7 +183,7 @@ var DefaultConfig = Config{
 	Period:                  30,
 	UseSignature:            false,
 	TimeSource:              time.Now,
-	SyncWindow:              1,
+	SyncWindow:              HighStrict,
 	Counter:                 1,
 	URITemplate:             "otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s",
 	CustomURITemplateParams: nil,
