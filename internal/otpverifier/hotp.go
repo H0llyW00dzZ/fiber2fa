@@ -47,6 +47,14 @@ func NewHOTPVerifier(config ...Config) *HOTPVerifier {
 		c.URITemplate = DefaultConfig.URITemplate
 	}
 
+	// Set the synchronization window based on the strictness level
+	switch c.SyncWindow {
+	case MediumStrict, LowStrict:
+		if r, ok := SyncWindowRanges[c.SyncWindow]; ok {
+			c.SyncWindow = r[0] + int(c.Counter)%len(r)
+		}
+	}
+
 	hotp := gotp.NewHOTP(c.Secret, c.Digits, c.Hasher)
 	return &HOTPVerifier{
 		config: c,
@@ -68,23 +76,29 @@ func (v *HOTPVerifier) Verify(token string, signature ...string) bool {
 		panic("hotp: SyncWindow must be greater than or equal to zero")
 	}
 
+	// Set the synchronization window size based on the strictness level and counter value
+	syncWindowSize := v.config.SyncWindow
+	if r, ok := SyncWindowRanges[v.config.SyncWindow]; ok {
+		syncWindowSize = r[0] + int(v.config.Counter)%len(r)
+	}
+
 	if v.config.UseSignature {
 		if len(signature) == 0 {
 			panic("hotp: Signature is required but not provided")
 		}
 
-		return v.verifyWithSignature(token, signature[0])
+		return v.verifyWithSignature(token, signature[0], syncWindowSize)
 	}
 
-	return v.verifyWithoutSignature(token)
+	return v.verifyWithoutSignature(token, syncWindowSize)
 }
 
 // verifyWithoutSignature checks if the provided token is valid for the specified counter value without signature verification.
-func (v *HOTPVerifier) verifyWithoutSignature(token string) bool {
+func (v *HOTPVerifier) verifyWithoutSignature(token string, syncWindowSize int) bool {
 	// Check if sync window is applied
 	// Note: Understanding this sync window requires skilled mathematical reasoning.
-	if v.config.SyncWindow > 0 {
-		for i := 0; i <= v.config.SyncWindow; i++ {
+	if syncWindowSize > 0 {
+		for i := 0; i <= syncWindowSize; i++ {
 			expectedCounter := int(v.config.Counter) + i
 			generatedToken := v.Hotp.At(expectedCounter)
 			if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 {
@@ -108,11 +122,11 @@ func (v *HOTPVerifier) verifyWithoutSignature(token string) bool {
 }
 
 // verifyWithSignature checks if the provided token and signature are valid for the specified counter value.
-func (v *HOTPVerifier) verifyWithSignature(token, signature string) bool {
+func (v *HOTPVerifier) verifyWithSignature(token, signature string, syncWindowSize int) bool {
 	// Check if sync window is applied
 	// Note: Understanding this sync window requires skilled mathematical reasoning.
-	if v.config.SyncWindow > 0 {
-		for i := 0; i <= v.config.SyncWindow; i++ {
+	if syncWindowSize > 0 {
+		for i := 0; i <= syncWindowSize; i++ {
 			expectedCounter := int(v.config.Counter) + i
 			generatedToken := v.Hotp.At(expectedCounter)
 			generatedSignature := v.generateSignature(generatedToken)
