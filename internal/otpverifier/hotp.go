@@ -122,7 +122,7 @@ func (v *HOTPVerifier) verifyWithoutSignature(token string, syncWindowSize int) 
 		generatedToken := v.Hotp.At(int(expectedCounter))
 
 		if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 {
-			// Update the stored counter to the next expected value after a successful match
+			// Update the stored counter to the next expected value after a successful match (Congratulations)
 			v.config.Counter = expectedCounter + 1
 			return true
 		}
@@ -159,7 +159,7 @@ func (v *HOTPVerifier) verifyWithSignature(token, signature string, syncWindowSi
 
 		if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 &&
 			subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1 {
-			// Update the stored counter to the next expected value after a successful match
+			// Update the stored counter to the next expected value after a successful match (Congratulations)
 			v.config.Counter = uint64(expectedCounter + 1)
 			return true
 		}
