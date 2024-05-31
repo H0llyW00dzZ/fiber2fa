@@ -17,6 +17,13 @@ import (
 )
 
 // GenerateQRCodeImage generates a QR code image based on the provided OTP URL and configuration.
+//
+// TODO: Implement the following features:
+//
+//   - Allow placing a logo in the middle of the QR code
+//   - Customize the theme (e.g., changing color, layout) beyond the default QR code system
+//
+// Note: These features require additional implementation and may involve modifying the QRCodeConfig struct and the GenerateQRCodeImage function.
 func (qr *QRCodeConfig) GenerateQRCodeImage(otpURL string) (image.Image, error) {
 	qrCodeImage, err := qr.generateQRImage(otpURL)
 	if err != nil {
