@@ -102,7 +102,9 @@ func (v *HOTPVerifier) calculateSyncWindowSize() int {
 func (v *HOTPVerifier) verifyWithoutSignature(token string, syncWindowSize int) bool {
 	// If sync window is exactly 0, only validate the immediate next token 🏴‍☠️
 	// Note: Understanding this sync window requires skilled mathematical reasoning.
-	if syncWindowSize == 0 {
+	// Also note that this is still a basic implementation, and it is possible to implement another HOTP method
+	// Called "Rolling Slots" similar to gambling. However, it requires building own 2FA apps.
+	if syncWindowSize == NoneStrict {
 		// Default case when sync window is not applied
 		generatedToken := v.Hotp.At(int(v.config.Counter))
 		if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 {
@@ -133,7 +135,9 @@ func (v *HOTPVerifier) verifyWithoutSignature(token string, syncWindowSize int) 
 func (v *HOTPVerifier) verifyWithSignature(token, signature string, syncWindowSize int) bool {
 	// If sync window is exactly 0, only validate the immediate next token 🏴‍☠️
 	// Note: Understanding this sync window requires skilled mathematical reasoning.
-	if syncWindowSize == 0 {
+	// Also note that this is still a basic implementation, and it is possible to implement another HOTP method
+	// Called "Rolling Slots" similar to gambling. However, it requires building own 2FA apps.
+	if syncWindowSize == NoneStrict {
 		// Default case when sync window is not applied
 		generatedToken := v.Hotp.At(int(v.config.Counter))
 		generatedSignature := v.generateSignature(generatedToken)
