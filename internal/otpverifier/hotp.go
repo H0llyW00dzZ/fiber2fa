@@ -103,7 +103,7 @@ func (v *HOTPVerifier) verifyWithoutSignature(token string, syncWindowSize int) 
 	// If sync window is exactly 0, only validate the immediate next token 🏴‍☠️
 	// Note: Understanding this sync window requires skilled mathematical reasoning.
 	// Also note that this is still a basic implementation, and it is possible to implement another HOTP method
-	// Called "Rolling Slots" similar to gambling. However, it requires building own 2FA apps.
+	// Called "Rolling Slots" similar to gambling. However, it requires building own 2FA apps since most mobile app ecosystems are poor.
 	if syncWindowSize == NoneStrict {
 		// Default case when sync window is not applied
 		generatedToken := v.Hotp.At(int(v.config.Counter))
@@ -136,7 +136,7 @@ func (v *HOTPVerifier) verifyWithSignature(token, signature string, syncWindowSi
 	// If sync window is exactly 0, only validate the immediate next token 🏴‍☠️
 	// Note: Understanding this sync window requires skilled mathematical reasoning.
 	// Also note that this is still a basic implementation, and it is possible to implement another HOTP method
-	// Called "Rolling Slots" similar to gambling. However, it requires building own 2FA apps.
+	// Called "Rolling Slots" similar to gambling. However, it requires building own 2FA apps since most mobile app ecosystems are poor.
 	if syncWindowSize == NoneStrict {
 		// Default case when sync window is not applied
 		generatedToken := v.Hotp.At(int(v.config.Counter))
