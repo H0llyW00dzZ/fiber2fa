@@ -5,6 +5,7 @@
 package otpverifier_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier"
@@ -115,6 +116,21 @@ func BenchmarkHOTPVerify(b *testing.B) {
 				// Note: This now each token are different
 				token, signature := verifier.GenerateTokenWithSignature()
 				verifier.Verify(token, signature)
+			}
+		})
+	}
+}
+
+func BenchmarkGenerateSecureRandomCounter(b *testing.B) {
+	config := &otpverifier.Config{}
+
+	maxDigits := []int{6, 8, 30}
+
+	for _, digits := range maxDigits {
+		b.Run(fmt.Sprintf("MaxDigits_%d", digits), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				// Avg: 3 allocs/op it's cheap you poggers.
+				config.GenerateSecureRandomCounter(digits)
 			}
 		})
 	}
