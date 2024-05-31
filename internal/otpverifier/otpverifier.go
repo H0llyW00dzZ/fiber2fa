@@ -347,6 +347,8 @@ func (v *Config) GenerateSecureRandomCounter(maxDigits int) uint64 {
 }
 
 // cryptopowpow10 is a helper function that calculates the power of 10 for a given exponent.
+//
+// Reference: https://en.wikipedia.org/wiki/Exponentiation
 func (v *Config) cryptopowpow10(exponent int) uint64 {
 	result := uint64(1)
 	for i := 0; i < exponent; i++ {
