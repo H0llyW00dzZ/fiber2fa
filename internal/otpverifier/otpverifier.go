@@ -5,12 +5,14 @@
 package otpverifier
 
 import (
+	"crypto/rand"
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
 	"image"
 	"image/color"
+	"math/big"
 	"net/url"
 	"time"
 
@@ -315,4 +317,40 @@ func (v *Config) GetHasherByName(Hash string) *gotp.Hasher {
 		panic(fmt.Sprintf("Hash function %s is not supported", Hash))
 	}
 	return hasher
+}
+
+// GenerateSecureRandomCounter generates a random counter number for HOTP with a specified maximum number of digits.
+//
+// Note: The maximum value for maxDigits is 30. Setting maxDigits to a value greater than 30 may result in integer overflow and panic.
+func (v *Config) GenerateSecureRandomCounter(maxDigits int) uint64 {
+	if maxDigits <= 0 {
+		panic("GenerateSecureRandomCounter: maxDigits must be greater than 0")
+	}
+
+	// Check if maxDigits is within the safe range
+	const maxSafeDigits = 30 // Maximum number of digits that can be safely represented in uint64
+	if maxDigits > maxSafeDigits {
+		panic(fmt.Sprintf("GenerateSecureRandomCounter: maxDigits must be less than or equal to %d to avoid integer overflow", maxSafeDigits))
+	}
+
+	// Calculate the maximum possible value based on the number of digits
+	max := uint64(9*v.cryptopowpow10(maxDigits-1) + v.cryptopowpow10(maxDigits-1) - 1)
+
+	// Generate a random number between 0 and max using crypto/rand
+	nBig, err := rand.Int(rand.Reader, big.NewInt(int64(max+1)))
+	if err != nil {
+		panic(err)
+	}
+	n := nBig.Uint64()
+
+	return n
+}
+
+// cryptopowpow10 is a helper function that calculates the power of 10 for a given exponent.
+func (v *Config) cryptopowpow10(exponent int) uint64 {
+	result := uint64(1)
+	for i := 0; i < exponent; i++ {
+		result *= 10
+	}
+	return result
 }
