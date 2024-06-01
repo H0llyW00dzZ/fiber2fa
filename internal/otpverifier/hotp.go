@@ -26,6 +26,9 @@ type HOTPVerifier struct {
 // because by default, the counter starts at 0 and is hidden the token.
 // Also note that this is still a basic mathematical implementation about counter. More advanced mathematical concepts might be implemented
 // in the future, but not at this time due to the limitations of some mobile 2FA ecosystems (poor ecosystems).
+//
+// Additionally, using [otpverifier.Config.GenerateSecureRandomCounter] is recommended instead of starting from 1.
+// Let the client and server roll the counter for the sake of crypto 🎰 by using [otpverifier.Config.GenerateSecureRandomCounter].
 func NewHOTPVerifier(config ...Config) *HOTPVerifier {
 	c := DefaultConfig
 	if len(config) > 0 {
@@ -37,7 +40,8 @@ func NewHOTPVerifier(config ...Config) *HOTPVerifier {
 		c.Digits = DefaultConfig.Digits
 	}
 	if c.Counter == 0 {
-		c.Digits = int(DefaultConfig.Counter)
+		// Generate a secure random counter value if not provided
+		c.Counter = c.GenerateSecureRandomCounter(c.Digits)
 	}
 	if c.Hash != "" {
 		// If HashName is provided, use it to get the corresponding Hasher
