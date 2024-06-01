@@ -135,7 +135,7 @@ const (
 	// CounterMismatchThreshold3x represents a counter mismatch threshold of 3.
 	// If the number of counter mismatches exceeds this threshold,
 	// the sync window size will be adjusted to the value defined in the verifier's configuration.
-	CounterMismatchThreshold3x
+	CounterMismatchThreshold3x = iota + 2
 
 	// CounterMismatchThreshold5x represents a counter mismatch threshold of 5.
 	// If the number of counter mismatches exceeds this threshold,
