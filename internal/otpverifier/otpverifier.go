@@ -186,7 +186,6 @@ var DefaultConfig = Config{
 	UseSignature:            false,
 	TimeSource:              time.Now,
 	SyncWindow:              HighStrict,
-	Counter:                 1,
 	URITemplate:             "otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s",
 	CustomURITemplateParams: nil,
 }
