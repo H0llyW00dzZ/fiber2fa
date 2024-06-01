@@ -288,6 +288,8 @@ func (v *HOTPVerifier) isRecentCountersContinuous() bool {
 	// - One-Time Password (OTP) systems
 	// - Virtual slot machines built with cryptographic principles
 	// - Other cryptographic implementations that rely on continuous counter sequences
+	//   not only for security purposes (literally boring cryptographic used for security purposes) but also for ensuring the integrity and consistency
+	//   of the cryptographic operations at a fundamental level.
 	v.recentCounters.Do(func(c any) {
 		if c != nil {
 			counter := c.(uint64)
