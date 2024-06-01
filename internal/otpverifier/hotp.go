@@ -10,6 +10,7 @@ import (
 	"crypto/subtle"
 	"encoding/base32"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/xlzd/gotp"
@@ -17,9 +18,13 @@ import (
 
 // HOTPVerifier is an HOTP verifier that implements the OTPVerifier interface.
 type HOTPVerifier struct {
-	config         Config
-	Hotp           *gotp.HOTP
-	recentCounters *ring.Ring
+	config            Config
+	Hotp              *gotp.HOTP
+	recentCounters    *ring.Ring
+	m                 sync.Mutex // Mutex to protect concurrent access to syncwindow
+	counterMismatches int
+	lastResyncTime    time.Time
+	resyncInterval    time.Duration
 }
 
 // NewHOTPVerifier creates a new HOTPVerifier with the given configuration.
@@ -45,6 +50,7 @@ func NewHOTPVerifier(config ...Config) *HOTPVerifier {
 	if c.Counter == 0 {
 		// Generate a secure random counter value if not provided
 		c.Counter = c.GenerateSecureRandomCounter(c.Digits)
+		c.CounterMismatch = DefaultConfig.CounterMismatch
 	}
 	if c.Hash != "" {
 		// If HashName is provided, use it to get the corresponding Hasher
@@ -80,6 +86,7 @@ func NewHOTPVerifier(config ...Config) *HOTPVerifier {
 		config:         c,
 		Hotp:           hotp,
 		recentCounters: recentCounters, // Assign the ring, which may be nil or an actual ring
+		resyncInterval: c.ResyncWindowDelay,
 	}
 }
 
@@ -151,9 +158,8 @@ func (v *HOTPVerifier) verifyWithoutSignature(token string, syncWindowSize int) 
 		// Update the stored counter to the next expected value after a successful match (Congratulations)
 		if v.isTokenValid(token, expectedCounter) {
 			v.updateAfterVerification(expectedCounter)
-			if v.isRecentCountersContinuous() {
-			} else {
-				v.deferResynchronization(expectedCounter + 1)
+			if !v.isRecentCountersContinuous() {
+				v.deferResynchronization(expectedCounter)
 			}
 			return true
 		}
@@ -188,9 +194,8 @@ func (v *HOTPVerifier) verifyWithSignature(token, signature string, syncWindowSi
 		// Update the stored counter to the next expected value after a successful match (Congratulations)
 		if v.isTokenValid(token, expectedCounter) && v.isSignatureValid(token, signature) {
 			v.updateAfterVerification(expectedCounter)
-			if v.isRecentCountersContinuous() {
-			} else {
-				v.deferResynchronization(expectedCounter + 1)
+			if !v.isRecentCountersContinuous() {
+				v.deferResynchronization(expectedCounter)
 			}
 			return true
 		}
@@ -293,9 +298,53 @@ func (v *HOTPVerifier) isRecentCountersContinuous() bool {
 }
 
 // deferResynchronization schedules an automatic resynchronization attempt after the predefined delay.
-func (v *HOTPVerifier) deferResynchronization(counter uint64) {
-	time.AfterFunc(v.config.ResyncWindowDelay, func() {
-		// Locks and other checks should be applied as necessary
-		v.ResetSyncWindow(int(counter))
-	})
+func (v *HOTPVerifier) deferResynchronization(matchedCounter uint64) {
+	go func() {
+		// Check if enough time has passed since the last resynchronization
+		v.m.Lock()
+		if time.Since(v.lastResyncTime) < v.resyncInterval {
+			v.m.Unlock()
+			return
+		}
+		v.m.Unlock()
+
+		// Sleep for the ResyncWindowDelay duration
+		time.Sleep(v.config.ResyncWindowDelay)
+
+		v.m.Lock()
+		defer v.m.Unlock()
+
+		// Set the server's counter to the matched counter value plus 1
+		v.SetCounter(matchedCounter + 1)
+
+		// Update the last resynchronization time
+		v.lastResyncTime = time.Now()
+
+		// Adjust the sync window
+		v.AdjustSyncWindow(v.config.CounterMismatch)
+	}()
+}
+
+// AdjustSyncWindow dynamically adjusts the size of the synchronization window
+// based on the frequency of counter mismatches between the server and the client.
+// If the number of counter mismatches exceeds a defined threshold, the sync window size
+// is doubled to allow for a larger tolerance for counter desynchronization.
+// The adjusted sync window size is limited to a maximum value defined by the LowStrict constant.
+func (v *HOTPVerifier) AdjustSyncWindow(threshold int) {
+	// Increment the counter mismatch count
+	v.counterMismatches++
+
+	// Check if the counter mismatch count exceeds the selected threshold
+	if v.counterMismatches > threshold {
+		// Set the sync window size to the value defined in the verifier's configuration
+		newSyncWindow := v.calculateSyncWindowSize()
+		// Update the sync window size
+		// Set the new sync window size in the verifier's configuration.
+		v.config.SyncWindow = newSyncWindow
+
+		// Reset the counter mismatch count
+		// After adjusting the sync window, reset the mismatch count
+		// to allow for future adjustments if needed.
+		v.counterMismatches = 0
+	}
 }
