@@ -63,7 +63,8 @@
 //   - Period: The time step size in seconds for TOTP. Default is 30 seconds.
 //   - UseSignature: Determines whether to generate and verify signatures. Default is false.
 //   - TimeSource: The time source function used for TOTP. Default is [time.Now].
-//   - Counter: The initial counter value for HOTP. Default is 0.
+//   - Counter: The initial counter value for HOTP. Default is to use [otpverifier.Config.GenerateSecureRandomCounter]
+//     with the default number of digits specified in [otpverifier.DefaultConfig.Digits].
 //   - SyncWindow: The number of time steps (for TOTP) or counter values (for HOTP) to check before and after the current value when verifying OTPs.
 //   - URITemplate: The URI template used for generating OTP URLs. Default is "otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s".
 //   - CustomURITemplateParams: A map of custom parameters to include in the OTP URL. Default is nil.
