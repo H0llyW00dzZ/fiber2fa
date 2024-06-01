@@ -140,7 +140,7 @@ const (
 	// CounterMismatchThreshold5x represents a counter mismatch threshold of 5.
 	// If the number of counter mismatches exceeds this threshold,
 	// the sync window size will be adjusted to the value defined in the verifier's configuration.
-	CounterMismatchThreshold5x
+	CounterMismatchThreshold5x = iota + 3
 )
 
 // SyncWindowRanges is a map that associates strictness levels with their corresponding ranges of synchronization window sizes.
