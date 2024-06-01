@@ -65,7 +65,17 @@
 //   - TimeSource: The time source function used for TOTP. Default is [time.Now].
 //   - Counter: The initial counter value for HOTP. Default is to use [otpverifier.Config.GenerateSecureRandomCounter]
 //     with the default number of digits specified in [otpverifier.DefaultConfig.Digits].
+//   - CounterMismatch: The counter mismatch threshold for adjusting the synchronization window size. Available options are:
+//   - [otpverifier.CounterMismatchThreshold1x]: Adjust the sync window size if the counter mismatch exceeds 1.
+//   - [otpverifier.CounterMismatchThreshold3x]: Adjust the sync window size if the counter mismatch exceeds 3.
+//   - [otpverifier.CounterMismatchThreshold5x]: Adjust the sync window size if the counter mismatch exceeds 5.
 //   - SyncWindow: The number of time steps (for TOTP) or counter values (for HOTP) to check before and after the current value when verifying OTPs.
+//     The synchronization window size can be adjusted based on the counter mismatch threshold. Available options are:
+//   - [otpverifier.NoneStrict]: No strictness, the synchronization window size is not enforced.
+//   - [otpverifier.HighStrict]: Highest strictness, the synchronization window size is fixed at 1.
+//   - [otpverifier.MediumStrict]: Medium strictness, the synchronization window size is determined by the corresponding range in [otpverifier.SyncWindowRanges].
+//   - [otpverifier.LowStrict]: Low strictness, the synchronization window size is determined by the corresponding range in [otpverifier.SyncWindowRanges].
+//   - ResyncWindowDelay: The delay duration for resynchronizing the synchronization window. Default is 30 minutes.
 //   - URITemplate: The URI template used for generating OTP URLs. Default is "otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s".
 //   - CustomURITemplateParams: A map of custom parameters to include in the OTP URL. Default is nil.
 //   - Hash: The name of the hashing algorithm to use. This field is required. List values are:
