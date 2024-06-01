@@ -327,9 +327,6 @@ func (v *HOTPVerifier) deferResynchronization(matchedCounter uint64) {
 
 // AdjustSyncWindow dynamically adjusts the size of the synchronization window
 // based on the frequency of counter mismatches between the server and the client.
-// If the number of counter mismatches exceeds a defined threshold, the sync window size
-// is doubled to allow for a larger tolerance for counter desynchronization.
-// The adjusted sync window size is limited to a maximum value defined by the LowStrict constant.
 func (v *HOTPVerifier) AdjustSyncWindow(threshold int) {
 	// Increment the counter mismatch count
 	v.counterMismatches++
