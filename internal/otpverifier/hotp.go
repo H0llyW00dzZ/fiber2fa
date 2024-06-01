@@ -284,7 +284,11 @@ func (v *HOTPVerifier) isRecentCountersContinuous() bool {
 		prevCounter  uint64
 		isContinuous = true // assume true until proven otherwise
 	)
-	v.recentCounters.Do(func(c interface{}) {
+	// Note: This helper function is particularly useful in cryptography-related applications, such as:
+	// - One-Time Password (OTP) systems
+	// - Virtual slot machines built with cryptographic principles
+	// - Other cryptographic implementations that rely on continuous counter sequences
+	v.recentCounters.Do(func(c any) {
 		if c != nil {
 			counter := c.(uint64)
 			if prevCounter != 0 && counter != prevCounter+1 {
