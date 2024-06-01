@@ -69,8 +69,6 @@ func NewHOTPVerifier(config ...Config) *HOTPVerifier {
 		// Create the ring with the determined size
 		recentCounters = ring.New(recentCountersSize)
 
-		// ResyncDelay defines the delay before attempting automatic resynchronization when a counter is out of sync.
-		c.ResyncWindowDelay = DefaultConfig.ResyncWindowDelay // Defer resynchronization for 30 minutes
 	}
 
 	hotp := gotp.NewHOTP(c.Secret, c.Digits, c.Hasher)
