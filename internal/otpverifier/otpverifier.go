@@ -126,6 +126,23 @@ const (
 	LowStrict
 )
 
+const (
+	// CounterMismatchThreshold1x represents a counter mismatch threshold of 1.
+	// If the number of counter mismatches exceeds this threshold,
+	// the sync window size will be adjusted to the value defined in the verifier's configuration.
+	CounterMismatchThreshold1x = iota + 1
+
+	// CounterMismatchThreshold3x represents a counter mismatch threshold of 3.
+	// If the number of counter mismatches exceeds this threshold,
+	// the sync window size will be adjusted to the value defined in the verifier's configuration.
+	CounterMismatchThreshold3x
+
+	// CounterMismatchThreshold5x represents a counter mismatch threshold of 5.
+	// If the number of counter mismatches exceeds this threshold,
+	// the sync window size will be adjusted to the value defined in the verifier's configuration.
+	CounterMismatchThreshold5x
+)
+
 // SyncWindowRanges is a map that associates strictness levels with their corresponding ranges of synchronization window sizes.
 // The ranges are used to dynamically calculate the actual synchronization window size based on the counter value:
 //
@@ -158,6 +175,7 @@ type Config struct {
 	UseSignature            bool
 	TimeSource              TimeSource
 	Counter                 uint64
+	CounterMismatch         int
 	Hasher                  *gotp.Hasher
 	SyncWindow              int
 	ResyncWindowDelay       time.Duration
@@ -188,6 +206,7 @@ var DefaultConfig = Config{
 	TimeSource:              time.Now,
 	SyncWindow:              HighStrict,
 	ResyncWindowDelay:       30 * time.Minute,
+	CounterMismatch:         CounterMismatchThreshold3x,
 	URITemplate:             "otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s",
 	CustomURITemplateParams: nil,
 }
