@@ -67,6 +67,10 @@ func NewHOTPVerifier(config ...Config) *HOTPVerifier {
 		}
 
 		// Create the ring with the determined size
+		//
+		// Note: This is a circular HMAC-based one-time password (HOTP) implementation.
+		// There is no limit until the client or server stops. If neither
+		// of them stops, it keeps rolling the counter for the sake of crypto 🎰
 		recentCounters = ring.New(recentCountersSize)
 
 	}
