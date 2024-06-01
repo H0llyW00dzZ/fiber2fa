@@ -776,7 +776,7 @@ func TestHOTPVerifier_VerifySyncWindow(t *testing.T) {
 		currentToken := verifier.Hotp.At(int(initialCounter))
 
 		// Verify this token should pass
-		if !verifier.Verify(currentToken, "") {
+		if !verifier.Verify(currentToken) {
 			t.Errorf("Current token did not verify but should have (hash function: %s)", hashFunc)
 		}
 
@@ -784,7 +784,7 @@ func TestHOTPVerifier_VerifySyncWindow(t *testing.T) {
 		withinWindowToken := verifier.Hotp.At(int(initialCounter) + otpverifier.HighStrict)
 
 		// Verify this token should also pass
-		if !verifier.Verify(withinWindowToken, "") {
+		if !verifier.Verify(withinWindowToken) {
 			t.Errorf("Token within sync window did not verify but should have (hash function: %s)", hashFunc)
 		}
 
@@ -797,7 +797,7 @@ func TestHOTPVerifier_VerifySyncWindow(t *testing.T) {
 		outsideWindowToken := verifier.Hotp.At(int(initialCounter) + otpverifier.HighStrict + 3)
 
 		// Verify this token should fail
-		if verifier.Verify(outsideWindowToken, "") {
+		if verifier.Verify(outsideWindowToken) {
 			t.Errorf("Token outside sync window verified but should not have (hash function: %s)", hashFunc)
 		}
 	}

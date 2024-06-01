@@ -160,6 +160,7 @@ type Config struct {
 	Counter                 uint64
 	Hasher                  *gotp.Hasher
 	SyncWindow              int
+	ResyncWindowDelay       time.Duration
 	URITemplate             string
 	CustomURITemplateParams map[string]string
 	Hash                    string
@@ -186,6 +187,7 @@ var DefaultConfig = Config{
 	UseSignature:            false,
 	TimeSource:              time.Now,
 	SyncWindow:              HighStrict,
+	ResyncWindowDelay:       30 * time.Minute,
 	URITemplate:             "otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s",
 	CustomURITemplateParams: nil,
 }
