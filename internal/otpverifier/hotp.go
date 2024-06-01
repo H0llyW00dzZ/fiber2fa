@@ -5,18 +5,21 @@
 package otpverifier
 
 import (
+	"container/ring"
 	"crypto/hmac"
 	"crypto/subtle"
 	"encoding/base32"
 	"fmt"
+	"time"
 
 	"github.com/xlzd/gotp"
 )
 
 // HOTPVerifier is an HOTP verifier that implements the OTPVerifier interface.
 type HOTPVerifier struct {
-	config Config
-	Hotp   *gotp.HOTP
+	config         Config
+	Hotp           *gotp.HOTP
+	recentCounters *ring.Ring
 }
 
 // NewHOTPVerifier creates a new HOTPVerifier with the given configuration.
@@ -51,10 +54,28 @@ func NewHOTPVerifier(config ...Config) *HOTPVerifier {
 		c.URITemplate = DefaultConfig.URITemplate
 	}
 
+	// Initialize recentCounters to nil by default. It will only be created when necessary.
+	var recentCounters *ring.Ring = nil
+
+	// For NoneStrict, don't create a recentCounters ring at all.
+	// For HighStrict and above, use a ring buffer of size 1.
+	// For MediumStrict and LowStrict, use the upper bound of the range as the size.
+	if c.SyncWindow > NoneStrict { // Check if SyncWindow is greater than NoneStrict
+		recentCountersSize := 1 // Default size for HighStrict
+		if syncRanges, ok := SyncWindowRanges[c.SyncWindow]; ok {
+			recentCountersSize = syncRanges[1] // Use the upper bound of the sync range
+		}
+
+		// Create the ring with the determined size
+		recentCounters = ring.New(recentCountersSize)
+
+	}
+
 	hotp := gotp.NewHOTP(c.Secret, c.Digits, c.Hasher)
 	return &HOTPVerifier{
-		config: c,
-		Hotp:   hotp,
+		config:         c,
+		Hotp:           hotp,
+		recentCounters: recentCounters, // Assign the ring, which may be nil or an actual ring
 	}
 }
 
@@ -123,11 +144,13 @@ func (v *HOTPVerifier) verifyWithoutSignature(token string, syncWindowSize int) 
 	// Otherwise, validate within the sync window range 🏴‍☠️
 	for i := 0; i <= syncWindowSize; i++ {
 		expectedCounter := v.config.Counter + uint64(i)
-		generatedToken := v.Hotp.At(int(expectedCounter))
-
-		if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 {
-			// Update the stored counter to the next expected value after a successful match (Congratulations)
-			v.config.Counter = expectedCounter + 1
+		// Update the stored counter to the next expected value after a successful match (Congratulations)
+		if v.isTokenValid(token, expectedCounter) {
+			v.updateAfterVerification(expectedCounter)
+			if v.isRecentCountersContinuous() {
+			} else {
+				v.deferResynchronization(expectedCounter + 1)
+			}
 			return true
 		}
 	}
@@ -157,19 +180,40 @@ func (v *HOTPVerifier) verifyWithSignature(token, signature string, syncWindowSi
 
 	// Otherwise, validate within the sync window range 🏴‍☠️
 	for i := 0; i <= syncWindowSize; i++ {
-		expectedCounter := int(v.config.Counter) + i
-		generatedToken := v.Hotp.At(expectedCounter)
-		generatedSignature := v.generateSignature(generatedToken)
-
-		if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 &&
-			subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1 {
-			// Update the stored counter to the next expected value after a successful match (Congratulations)
-			v.config.Counter = uint64(expectedCounter + 1)
+		expectedCounter := v.config.Counter + uint64(i)
+		// Update the stored counter to the next expected value after a successful match (Congratulations)
+		if v.isTokenValid(token, expectedCounter) && v.isSignatureValid(token, signature) {
+			v.updateAfterVerification(expectedCounter)
+			if v.isRecentCountersContinuous() {
+			} else {
+				v.deferResynchronization(expectedCounter + 1)
+			}
 			return true
 		}
 	}
 
 	return false
+}
+
+// isTokenValid checks if the provided token is valid for the given counter value.
+func (v *HOTPVerifier) isTokenValid(token string, counter uint64) bool {
+	generatedToken := v.Hotp.At(int(counter))
+	return subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1
+}
+
+// isSignatureValid checks if the provided signature is valid for the given token.
+func (v *HOTPVerifier) isSignatureValid(token, signature string) bool {
+	generatedSignature := v.generateSignature(token)
+	return subtle.ConstantTimeCompare([]byte(signature), []byte(generatedSignature)) == 1
+}
+
+// updateAfterVerification updates the counter and recent counters after a successful verification.
+func (v *HOTPVerifier) updateAfterVerification(counter uint64) {
+	v.config.Counter = counter + 1
+	if v.recentCounters != nil {
+		v.recentCounters.Value = counter
+		v.recentCounters = v.recentCounters.Next()
+	}
 }
 
 // GenerateToken generates a token for the current counter value.
@@ -222,4 +266,32 @@ func (v *HOTPVerifier) ResetSyncWindow(newSyncWindow ...int) {
 // GenerateOTPURL creates the URL for the QR code based on the provided URI template.
 func (v *HOTPVerifier) GenerateOTPURL(issuer, accountName string) string {
 	return v.config.generateOTPURL(issuer, accountName)
+}
+
+// isRecentCountersContinuous checks if the stored recent counters form a continuous sequence.
+// This helps determine if automatic resynchronization is possible.
+func (v *HOTPVerifier) isRecentCountersContinuous() bool {
+	var (
+		prevCounter  uint64
+		isContinuous = true // assume true until proven otherwise
+	)
+	v.recentCounters.Do(func(c interface{}) {
+		if c != nil {
+			counter := c.(uint64)
+			if prevCounter != 0 && counter != prevCounter+1 {
+				isContinuous = false // sequence is broken
+				return
+			}
+			prevCounter = counter
+		}
+	})
+	return isContinuous
+}
+
+// deferResynchronization schedules an automatic resynchronization attempt after the predefined delay.
+func (v *HOTPVerifier) deferResynchronization(counter uint64) {
+	time.AfterFunc(v.config.ResyncWindowDelay, func() {
+		// Locks and other checks should be applied as necessary
+		v.ResetSyncWindow(int(counter))
+	})
 }
