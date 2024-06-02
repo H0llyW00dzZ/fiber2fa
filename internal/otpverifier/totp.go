@@ -53,7 +53,10 @@ func NewTOTPVerifier(config ...Config) *TOTPVerifier {
 		config: c,
 		totp:   totp,
 		// Allocates 11 to 15 allocs/op without signature (depends on the hash function), which is relatively inexpensive for this TOTP synchronization window.
-		// Without implementing a synchronization window similar to HOTP, it can lead to high vulnerability
+		// Without implementing a synchronization window similar to HOTP, it can lead to high vulnerability.
+		//
+		// TODO: It might be possible to improve this by using a helper function called "ring ring cryptographic".
+		// However, it is not the most important aspect for now because the result might be the same, and the allocations will depend on the hash function.
 		UsedTokens: make(map[int64]string),
 	}
 
