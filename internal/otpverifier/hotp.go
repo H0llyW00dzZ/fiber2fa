@@ -287,6 +287,7 @@ func (v *HOTPVerifier) isRecentCountersContinuous() bool {
 	// Note: This helper function is particularly useful in cryptography-related applications, such as:
 	// - One-Time Password (OTP) systems
 	// - Virtual slot machines built with cryptographic principles
+	// - Rotating private keys or public keys that might be used for security purposes
 	// - Other cryptographic implementations that rely on continuous counter sequences
 	//   not only for security purposes (literally boring cryptographic used for security purposes) but also for ensuring the integrity and consistency
 	//   of the cryptographic operations at a fundamental level.
