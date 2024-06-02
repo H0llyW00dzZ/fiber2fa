@@ -136,7 +136,8 @@
 //   - For HOTP, consider starting the counter from a well-known value (e.g., 1) and incrementing it consistently on both
 //     the server and the client side. Alternatively, use [otpverifier.Config.GenerateSecureRandomCounter] to generate a
 //     secure random counter value.
-//   - Implement proper time synchronization mechanisms to minimize time-related issues with TOTP.
+//   - Set the correct time synchronization to ensure that the server and client (e.g., mobile devices or other devices)
+//     have the same time reference. This minimizes time-related issues with TOTP and ensures accurate token verification.
 //   - If using less common hashing algorithms or advanced features, consider building custom 2FA mobile apps to ensure
 //     full compatibility with the package.
 //
