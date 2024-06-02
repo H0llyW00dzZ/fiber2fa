@@ -334,9 +334,11 @@ func (v *HOTPVerifier) deferResynchronization(matchedCounter uint64) {
 // AdjustSyncWindow dynamically adjusts the size of the synchronization window
 // based on the frequency of counter mismatches between the server and the client.
 //
-// Note: This is a long-term adjustment. For example, in the year 2024 (now), if the server's counter is far behind
+// Note: This is a long-term adjustment bound to real-time on Earth. For example, in the year 2024 (now), if the server's counter is far behind
 // (e.g., the client has already reached a counter value of 1 billion), it may take until the year 3024 for the
 // server and client to be fully synchronized again. The adjustment process is gradual and occurs over an extended period.
+// This approach ensures a smooth and secure synchronization process, preventing sudden and drastic changes to the sync window size.
+// It allows the system to adapt to counter mismatches while maintaining the integrity and security of the HOTP verification process.
 func (v *HOTPVerifier) AdjustSyncWindow(threshold int) {
 	// Increment the counter mismatch count
 	v.counterMismatches++
