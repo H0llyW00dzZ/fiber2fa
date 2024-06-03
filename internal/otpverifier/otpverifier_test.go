@@ -801,7 +801,7 @@ func TestHOTPVerifier_BuildQRCodePanic(t *testing.T) {
 		ForegroundColor: color.Black,
 	}
 
-	// Expect a panic when calling Verify with a maximum digits
+	// Expect a panic when calling BuildQRCode with a maximum digits
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("Expected Verify to panic with a maximum digits, but it didn't")
