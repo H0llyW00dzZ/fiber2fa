@@ -59,6 +59,9 @@ func (v *HOTPVerifier) SaveQRCodeImage(issuer, accountName, filename string, con
 
 // BuildQRCode generates a QR code image for the OTP configuration.
 func (v *HOTPVerifier) BuildQRCode(issuer, accountName string, config QRCodeConfig) ([]byte, error) {
+	if v.config.Digits > 8 {
+		panic("BuildQRCode: maximum digits are 8 for HOTP")
+	}
 	// Ensure the configuration has default values where needed
 	config = ensureDefaultConfig(config)
 
