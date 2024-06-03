@@ -149,6 +149,11 @@ const (
 //   - For MediumStrict, the synchronization window size can be between 2 and 5.
 //   - For LowStrict, the synchronization window size can be between 5 and 10.
 //   - The HighStrict level does not have a range defined in SyncWindowRanges because it has a fixed synchronization window size of 1.
+//
+// Also note that there are some considerations to keep in the mind:
+//
+//   - Security vs. Convenience Trade-off: Increasing the sync window size makes the system more user-friendly since it's less likely to reject valid tokens due to minor synchronization issues.
+//     However, a larger window also increases the period during which an attacker can use a stolen OTP to gain unauthorized access.
 var SyncWindowRanges = map[int][]int{
 	MediumStrict: {2, 5},
 	LowStrict:    {5, 10},
