@@ -144,4 +144,41 @@
 //
 // By following these guidelines and being aware of the potential limitations, it is possible to maximize the compatibility
 // and support for various devices and 2FA apps when using this package.
+//
+// # Synchronization and Resynchronization for HOTP
+//
+// This package provides standard basic mathematical synchronization and resynchronization mechanisms for HOTP (HMAC-based One-Time Password) to achieve a perfect balance between server, client, security, and system.
+// The synchronization and resynchronization features are designed to handle scenarios where the server and client counters may become out of sync.
+//
+//  1. Synchronization
+//
+// Synchronization in HOTP refers to the process of ensuring that the server and client counters are in sync. The package uses a synchronization window ([otpverifier.SyncWindow]) to allow for a certain degree of tolerance when verifying HOTP tokens.
+// The synchronization window determines the number of counter values to check before and after the current server counter value.
+//
+// The synchronization window size can be configured using the [otpverifier.SyncWindow] field in the [otpverifier.Config] struct. The available options are:
+//
+//   - [otpverifier.NoneStrict]: No strictness, the synchronization window size is not enforced.
+//   - [otpverifier.HighStrict]: Highest strictness, the synchronization window size is fixed at 1.
+//   - [otpverifier.MediumStrict]: Medium strictness, the synchronization window size is determined by the corresponding range in [otpverifier.SyncWindowRanges].
+//   - [otpverifier.LowStrict]: Low strictness, the synchronization window size is determined by the corresponding range in [otpverifier.SyncWindowRanges].
+//
+// The [otpverifier.SyncWindowRanges] map defines the ranges of synchronization window sizes for different strictness levels. For example, [otpverifier.MediumStrict] corresponds to a range of 2 to 5, while [otpverifier.LowStrict] corresponds to a range of 5 to 10.
+//
+// During the HOTP token verification process, the package checks the provided token against the server counter value and the counter values within the synchronization window. If a match is found, the token is considered valid, and the server counter is updated to the next expected value.
+//
+//  2. Resynchronization
+//
+// Resynchronization in HOTP is the process of automatically adjusting the server counter value when it becomes significantly out of sync with the client counter. The package implements a resynchronization mechanism based on the number of counter mismatches.
+//
+// The resynchronization behavior can be configured using the [otpverifier.CounterMismatch] field in the [otpverifier.Config] struct. The available options are:
+//
+//   - [otpverifier.CounterMismatchThreshold1x]: Adjust the synchronization window size if the counter mismatch exceeds 1.
+//   - [otpverifier.CounterMismatchThreshold3x]: Adjust the synchronization window size if the counter mismatch exceeds 3.
+//   - [otpverifier.CounterMismatchThreshold5x]: Adjust the synchronization window size if the counter mismatch exceeds 5.
+//
+// When the number of counter mismatches exceeds the configured threshold, the package automatically adjusts the synchronization window size based on the [otpverifier.SyncWindow] configuration. This adjustment helps to accommodate larger discrepancies between the server and client counters.
+//
+// The resynchronization process is triggered after a specified delay ([otpverifier.ResyncWindowDelay]) to prevent excessive adjustments. The default delay is 30 minutes, but it can be customized in the [otpverifier.Config] struct.
+//
+// By providing synchronization and resynchronization mechanisms, this package aims to maintain a balanced and secure HOTP implementation that can handle various scenarios of counter mismatches between the server and client.
 package otpverifier
