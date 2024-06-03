@@ -634,6 +634,45 @@ func TestTOTPVerifier_BuildQRCodeWithCustomParams(t *testing.T) {
 	}
 }
 
+func TestTOTPVerifier_BuildQRCodePanic(t *testing.T) {
+	secret := gotp.RandomSecret(16)
+	config := otpverifier.Config{
+		Secret: secret,
+		Digits: 10,
+		Hash:   otpverifier.SHA256,
+	}
+
+	verifier := otpverifier.NewTOTPVerifier(config)
+
+	issuer := "TestIssuer"
+	accountName := "TestAccount"
+
+	// Create a custom QR code configuration
+	qrCodeConfig := otpverifier.QRCodeConfig{
+		Level:           qrcode.Medium,
+		Size:            256,
+		DisableBorder:   true,
+		TopText:         "Scan Me",
+		BottomText:      "OTP QR Code",
+		ForegroundColor: color.Black,
+	}
+
+	// Expect a panic when calling BuildQRCode with a maximum digits
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected Verify to panic with a maximum digits, but it didn't")
+		} else {
+			expectedPanicMessage := "BuildQRCode: maximum digits are 8 for TOTP"
+			if r != expectedPanicMessage {
+				t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+			}
+		}
+	}()
+
+	// Call BuildQRCode, which should panic
+	verifier.BuildQRCode(issuer, accountName, qrCodeConfig)
+}
+
 func TestHOTPVerifier_BuildQRCode(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	config := otpverifier.Config{
