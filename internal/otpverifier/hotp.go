@@ -78,7 +78,11 @@ func NewHOTPVerifier(config ...Config) *HOTPVerifier {
 		// There is no limit until the client or server stops. If neither
 		// of them stops, it keeps rolling the counter for the sake of crypto 🎰
 		recentCounters = ring.New(recentCountersSize)
-		c.ResyncWindowDelay = DefaultConfig.ResyncWindowDelay
+
+		// This should be correct.
+		if c.ResyncWindowDelay == 0 {
+			c.ResyncWindowDelay = DefaultConfig.ResyncWindowDelay
+		}
 
 	}
 
