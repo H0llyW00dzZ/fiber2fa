@@ -49,6 +49,30 @@
 //	// Verify the token and signature
 //	isValid := hotpVerifier.Verify(token, signature)
 //
+// Example usage with custom time zone (Antarctica):
+//
+//	// Custom time source function for Antarctica time zone
+//	antarcticaTimeSource := func() time.Time {
+//		location, _ := time.LoadLocation("Antarctica/South_Pole")
+//		return time.Now().In(location)
+//	}
+//
+//	// Create a configuration for TOTP with custom time source
+//	totpConfig := otpverifier.Config{
+//		Secret:       "your-secret-key",
+//		UseSignature: true,
+//		TimeSource:   antarcticaTimeSource,
+//	}
+//
+//	// Create a TOTP verifier using the factory function
+//	totpVerifier := otpverifier.OTPFactory(totpConfig)
+//
+//	// Generate a token and signature using Antarctica time zone
+//	token, signature := totpVerifier.GenerateToken()
+//
+//	// Verify the token and signature using Antarctica time zone
+//	isValid := totpVerifier.Verify(token, signature)
+//
 // The package uses the [github.com/xlzd/gotp] library for generating and verifying OTPs,
 // and the [crypto/hmac], [crypto/sha256], [crypto/sha512], [github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash/blake2botp], and
 // [github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash/blake3otp] packages for generating and verifying signatures
