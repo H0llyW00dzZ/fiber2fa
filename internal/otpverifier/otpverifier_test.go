@@ -126,8 +126,9 @@ func TestDefaultConfigTOTPVerifier_Verify(t *testing.T) {
 		// Create a TOTPVerifier with the mocked time source, UseSignature set to true, and the specified hash function
 		t.Run(fmt.Sprintf("HashFunc=%s", hashFunc), func(t *testing.T) {
 			config := otpverifier.Config{
-				Secret: secret,
-				Hash:   hashFunc,
+				Secret:     secret,
+				Hash:       hashFunc,
+				TimeSource: time.Now, // this required now, since it support customize time-zone.
 			}
 			verifier := otpverifier.NewTOTPVerifier(config)
 
