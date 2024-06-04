@@ -56,7 +56,8 @@ func NewTOTPVerifier(config ...Config) *TOTPVerifier {
 		// Without implementing a synchronization window similar to HOTP, it can lead to high vulnerability.
 		//
 		// TODO: It might be possible to improve this by using a helper function called "ring ring cryptographic".
-		// However, it is not the most important aspect for now because the result might be the same, and the allocations will depend on the hash function.
+		// However, it is not the most important aspect for now because the result might be the same, and the allocations will depend on the hash function
+		// (which previously was targeting to zero allocation however it's not possible since OTP Cryptographic are one-way ticket related to hash function).
 		UsedTokens: make(map[int64]string),
 	}
 
