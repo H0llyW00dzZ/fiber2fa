@@ -1,7 +1,7 @@
 # Fiber 2FA Middleware
 [![Go Version](https://img.shields.io/badge/1.22.3-gray?style=flat&logo=go&logoWidth=15)](https://github.com/H0llyW00dzZ/fiber2fa/blob/master/go.mod#L3blob/master/go.mod#L3) [![Go Reference](https://pkg.go.dev/badge/github.com/H0llyW00dzZ/fiber2fa.svg)](https://pkg.go.dev/github.com/H0llyW00dzZ/fiber2fa) [![Go Report Card](https://goreportcard.com/badge/github.com/H0llyW00dzZ/fiber2fa)](https://goreportcard.com/report/github.com/H0llyW00dzZ/fiber2fa)
 
-This is a custom 2FA (Two-Factor Authentication) middleware for the Fiber web framework. It provides a secure and easy-to-use solution for implementing 2FA in Fiber applications. The middleware supports TOTP (Time-based One-Time Password) authentication and offers customizable configuration options.
+This is a custom 2FA (Two-Factor Authentication) middleware for the Fiber web framework. It provides a secure and easy-to-use solution for implementing 2FA in Fiber applications. The middleware supports both HOTP (HMAC-based One-Time Password) and TOTP (Time-based One-Time Password) authentication and offers customizable configuration options.
 
 > [!WARNING]
 > This 2FA middleware is still a work in progress and may not be stable for use in production environments (e.g., QR Code Builder), since it is rewritten from scratch with some improvements. Use it with caution and thoroughly test it before deploying to production. It is recommended to use it locally for testing purposes.
@@ -9,16 +9,36 @@ This is a custom 2FA (Two-Factor Authentication) middleware for the Fiber web fr
 
 > [!NOTE]
 > This 2FA project was inspired by some QR code systems in my country (e.g., https://qris.id/). However, it is built in a modern way and purely written in Go (which is more secure and can leverage the system easily), rather than the traditional way (where it is written in PHP).
-> More QR code system projects might be implemented in the future (e.g., payment systems through banking smiliar https://qris.id/).
+> More QR code system projects might be implemented in the future (e.g., payment systems through banking similar to https://qris.id/).
 
 ## Features
 
 The middleware provides the following features:
 
+### HOTP Authentication (Currently implemented internally)
+- Generation and verification of HOTP tokens
+- Customizable token length and counter synchronization
+- Automatic generation of random secrets if not provided
+- Support for various hash algorithms (SHA1, SHA256, SHA512, BLAKE2b, BLAKE3)
+- Configurable synchronization window for handling counter desynchronization
+- Automatic counter resynchronization based on predefined thresholds
+- Dynamic adjustment of synchronization window size based on counter mismatch frequency
+
+> [!NOTE]
+> Some HOTP implementations here follow the standards defined in [RFC 4226](https://tools.ietf.org/html/rfc4226). However, they are built on top of modern & advanced cryptographic knowledge and best practices, rather than using outdated or traditional approaches. This is because `Go` is considered one of the best programming languages for `cryptographic` implementations, compared to `C` or `C++`.
+
 ### TOTP Authentication
 - Generation and verification of TOTP tokens
 - Customizable token length and time step size
 - Automatic generation of random secrets if not provided
+- Support for various hash algorithms (SHA1, SHA256, SHA512, BLAKE2b, BLAKE3)
+- Configurable synchronization window for handling time drift
+- Automatic token expiration and cleanup
+
+> [!NOTE]
+> Some TOTP implementations here adhere to the standards defined in [RFC 6238](https://tools.ietf.org/html/rfc6238). However, they are built on top of modern & advanced cryptographic knowledge and best practices, rather than relying on outdated or traditional methods. This is because `Go` is considered one of the best programming languages for `cryptographic` implementations, compared to `C` or `C++`.
+
+The notes effectively communicate that the HOTP and TOTP implementations follow the respective RFCs while leveraging modern and advanced cryptographic knowledge and best practices. The emphasis on Go's suitability for cryptographic implementations compared to C or C++ is also clearly stated.
 
 ### Flexible Storage
 - Support for various storage providers (e.g., in-memory, MongoDB, MySQL, PostgreSQL, Redis, SQLite3)
@@ -45,10 +65,7 @@ The middleware provides the following features:
 - Customizable QR code path template
 - Support for custom QR code images
 - Customizable QR code content template
-
-### QR Code Encoding
-- Configurable QR code recovery level
-- Customizable QR code image size
+- Configurable QR code recovery level and image size
 
 ### Customizable Token Lookup
 - Flexible token lookup from various sources (header, query, form, param, cookie)
