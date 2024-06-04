@@ -86,7 +86,7 @@
 //   - Digits: The number of digits in the generated OTP. Default is 6.
 //   - Period: The time step size in seconds for TOTP. Default is 30 seconds.
 //   - UseSignature: Determines whether to generate and verify signatures. Default is false.
-//   - TimeSource: The time source function used for TOTP. This field is required.
+//   - TimeSource: The time source function used for TOTP. This field is required. The time source function should return
 //   - Counter: The initial counter value for HOTP. Default is to use [otpverifier.Config.GenerateSecureRandomCounter]
 //     with the default number of digits specified in [otpverifier.DefaultConfig.Digits].
 //   - CounterMismatch: The counter mismatch threshold for adjusting the synchronization window size. Available options are:
@@ -227,9 +227,9 @@
 //
 //  2. Time Source and Period
 //
-// The synchronization mechanism in TOTP relies on a synchronized time source between the server and client. The package allows you to specify a custom time source function ([otpverifier.Config.TimeSource]) to ensure accurate time synchronization.
+// The synchronization mechanism in TOTP relies on a synchronized time source between the server and client. The package requires you to specify a time source function ([otpverifier.Config.TimeSource]) to ensure accurate time synchronization.
 //
-// The time source function should return the current time in the desired location or time zone. By default, the package uses the [time.Now] function as the time source, which returns the current time in the local time zone.
+// The time source function should return the current time in the desired location or time zone. It is the responsibility of the user to provide a suitable time source function that meets their specific requirements.
 //
 // In addition to the time source, the TOTP verification process also depends on the time step size, known as the period ([otpverifier.Config.Period]). The period determines the duration of each time step in seconds. The default period is 30 seconds, as specified in the TOTP standard (RFC 6238).
 //
