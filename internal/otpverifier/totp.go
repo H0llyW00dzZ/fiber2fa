@@ -34,16 +34,31 @@ func NewTOTPVerifier(config ...Config) *TOTPVerifier {
 	if c.Digits == 0 {
 		c.Digits = DefaultConfig.Digits
 	}
+
 	if c.Period == 0 {
 		c.Period = DefaultConfig.Period
 	}
-	if c.TimeSource == nil {
+
+	// Bound SyncWindow to TimeSource
+	// Note: There is no RFC related to this, so understanding this requires skilled math and time-related knowledge
+	// regarding the degree of time drift or synchronization window between the client (e.g., a user's device) and the server (where the TOTP verification takes place).
+	// For example, let's say the current time step is 100 and SyncWindow is set to 1. In this case,
+	// the server will accept tokens from time steps 99 (current - 1), 100 (current),
+	// and 101 (current + 1). If the client's clock is running slightly behind or ahead,
+	// the token generated on the client side will still be considered valid if it falls within this window.
+	// It's also worth noting that the SyncWindow parameter is not part of the core TOTP algorithm but rather an extension to improve usability.
+	// The RFC 6238 (TOTP specification) does not define a specific synchronization window, but it is a common practice to implement it in TOTP systems to accommodate
+	// for real-world scenarios where perfect clock synchronization is not always possible.
+	if c.TimeSource == nil && c.SyncWindow != 0 {
 		c.TimeSource = DefaultConfig.TimeSource
+		c.SyncWindow = DefaultConfig.SyncWindow
 	}
+
 	if c.Hash != "" {
 		// If HashName is provided, use it to get the corresponding Hasher
 		c.Hasher = c.GetHasherByName(c.Hash)
 	}
+
 	if c.URITemplate == "" {
 		c.URITemplate = DefaultConfig.URITemplate
 	}

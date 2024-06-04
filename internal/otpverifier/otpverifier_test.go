@@ -179,11 +179,10 @@ func TestTOTPVerifier_PeriodicCleanup(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	period := 10 // Set the token validity period to 10 seconds
 	config := otpverifier.Config{
-		Secret:     secret,
-		Period:     period,
-		SyncWindow: 1,
-		Digits:     6,
-		Hash:       otpverifier.SHA256,
+		Secret: secret,
+		Period: period,
+		Digits: 6,
+		Hash:   otpverifier.SHA256,
 	}
 
 	verifier := otpverifier.NewTOTPVerifier(config)
