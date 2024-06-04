@@ -214,6 +214,9 @@ func (v *TOTPVerifier) CleanUpExpiredTokens() {
 
 	for usedTimeStep := range v.UsedTokens {
 		if usedTimeStep < currentTimeStep-int64(v.config.SyncWindow) {
+			// Note: Never use "clear" on this to minimize the memory footprint, because it can lead to high vulnerability
+			// where a used token is still considered valid due to the period.
+			// Use "delete" to remove individual entries, which is a better way.
 			delete(v.UsedTokens, usedTimeStep)
 		}
 	}
