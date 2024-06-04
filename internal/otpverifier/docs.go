@@ -86,7 +86,7 @@
 //   - Digits: The number of digits in the generated OTP. Default is 6.
 //   - Period: The time step size in seconds for TOTP. Default is 30 seconds.
 //   - UseSignature: Determines whether to generate and verify signatures. Default is false.
-//   - TimeSource: The time source function used for TOTP. Default is [time.Now].
+//   - TimeSource: The time source function used for TOTP. This field is required.
 //   - Counter: The initial counter value for HOTP. Default is to use [otpverifier.Config.GenerateSecureRandomCounter]
 //     with the default number of digits specified in [otpverifier.DefaultConfig.Digits].
 //   - CounterMismatch: The counter mismatch threshold for adjusting the synchronization window size. Available options are:
