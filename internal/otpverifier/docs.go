@@ -205,4 +205,39 @@
 // The resynchronization process is triggered after a specified delay ([otpverifier.ResyncWindowDelay]) to prevent excessive adjustments. The default delay is 30 minutes, but it can be customized in the [otpverifier.Config] struct.
 //
 // By providing synchronization and resynchronization mechanisms, this package aims to maintain a balanced and secure HOTP implementation that can handle various scenarios of counter mismatches between the server and client.
+//
+// # Synchronization for TOTP
+//
+// This package provides a synchronization mechanism for TOTP (Time-based One-Time Password) to handle scenarios where the server and client clocks may be slightly out of sync.
+// The synchronization feature is designed to accommodate minor time differences while maintaining the security of the TOTP verification process.
+//
+//  1. Synchronization Window
+//
+// Synchronization in TOTP refers to the process of allowing a certain degree of tolerance when verifying TOTP tokens. The package uses a synchronization window ([otpverifier.SyncWindow]) to account for small time differences between the server and client clocks.
+//
+// The synchronization window determines the number of time steps before and after the current time step to consider when verifying a TOTP token. It allows for a token to be valid within a specific range of time steps, rather than requiring an exact match.
+//
+// The synchronization window size can be configured using the [otpverifier.SyncWindow] field in the [otpverifier.Config] struct. It accepts an integer value representing the number of time steps to include in the synchronization window.
+//
+// For example, if the synchronization window size is set to 1, the package will consider tokens valid within a range of ±1 time step from the current time step. If the synchronization window size is set to 2, the range will be ±2 time steps, and so on.
+//
+// The appropriate synchronization window size depends on the specific requirements of your application and the expected time drift between the server and client clocks. A larger synchronization window allows for greater tolerance but may also increase the window of opportunity for token reuse.
+//
+// It's important to strike a balance between usability and security when determining the synchronization window size. A smaller window size provides stricter security but may lead to more frequent token rejections due to clock drift. Conversely, a larger window size accommodates more significant time differences but may weaken the security guarantees.
+//
+//  2. Time Source and Period
+//
+// The synchronization mechanism in TOTP relies on a synchronized time source between the server and client. The package allows you to specify a custom time source function ([otpverifier.Config.TimeSource]) to ensure accurate time synchronization.
+//
+// The time source function should return the current time in the desired location or time zone. By default, the package uses the [time.Now] function as the time source, which returns the current time in the local time zone.
+//
+// In addition to the time source, the TOTP verification process also depends on the time step size, known as the period ([otpverifier.Config.Period]). The period determines the duration of each time step in seconds. The default period is 30 seconds, as specified in the TOTP standard (RFC 6238).
+//
+// It's important to note that the synchronization window and the period are closely related. The synchronization window size is expressed in terms of the number of time steps, while the period determines the actual duration of each time step.
+//
+// For example, if the period is set to 30 seconds and the synchronization window size is set to 1, the package will consider tokens valid within a range of ±30 seconds from the current time.
+//
+// By providing a synchronization mechanism for TOTP, this package aims to accommodate minor time differences between the server and client clocks while maintaining the security and integrity of the TOTP verification process. It allows for a configurable degree of tolerance, ensuring that valid tokens are accepted even in the presence of slight time discrepancies.
+//
+// Note: The synchronization mechanism for TOTP is not explicitly defined in the TOTP standard (RFC 6238). It is an additional feature provided by this package to enhance the usability and reliability of TOTP implementations. The effectiveness of the synchronization depends on the accuracy of the time source and the appropriate configuration of the synchronization window and period.
 package otpverifier
