@@ -48,7 +48,7 @@ func NewTOTPVerifier(config ...Config) *TOTPVerifier {
 	// the token generated on the client side will still be considered valid if it falls within this window.
 	// It's also worth noting that the SyncWindow parameter is not part of the core TOTP algorithm but rather an extension to improve usability.
 	// The RFC 6238 (TOTP specification) does not define a specific synchronization window, but it is a common practice to implement it in TOTP systems to accommodate
-	// for real-world scenarios where perfect clock synchronization is not always possible (e.g, traveling (in airplane), living in antartica, IIS-NASA).
+	// for real-world scenarios where perfect clock synchronization is not always possible (e.g, traveling (in airplane), living in antartica, ISS-NASA).
 	if c.TimeSource == nil && c.SyncWindow != 0 {
 		c.TimeSource = DefaultConfig.TimeSource
 		c.SyncWindow = DefaultConfig.SyncWindow
