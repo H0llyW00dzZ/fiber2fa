@@ -7,6 +7,7 @@ package otpverifier_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier"
 	"github.com/xlzd/gotp"
@@ -34,8 +35,9 @@ func BenchmarkTOTPVerify(b *testing.B) {
 	for _, hashFunc := range hashFunctions {
 		b.Run(hashFunc, func(b *testing.B) {
 			config := otpverifier.Config{
-				Secret: secret,
-				Hash:   hashFunc,
+				Secret:     secret,
+				Hash:       hashFunc,
+				TimeSource: time.Now,
 			}
 			verifier := otpverifier.NewTOTPVerifier(config)
 
@@ -52,6 +54,7 @@ func BenchmarkTOTPVerify(b *testing.B) {
 				Secret:       secret,
 				SyncWindow:   1,
 				Hash:         hashFunc,
+				TimeSource:   time.Now,
 				UseSignature: true,
 			}
 			verifier := otpverifier.NewTOTPVerifier(config)
@@ -129,7 +132,15 @@ func BenchmarkGenerateSecureRandomCounter(b *testing.B) {
 	for _, digits := range maxDigits {
 		b.Run(fmt.Sprintf("MaxDigits_%d", digits), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				// Avg: 3 allocs/op it's cheap you poggers.
+				// goos: windows
+				// goarch: amd64
+				// pkg: github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier
+				// cpu: AMD Ryzen 9 3900X 12-Core Processor
+				// BenchmarkGenerateSecureRandomCounter/MaxDigits_6-24         	 8469748	       142.5 ns/op	       8 B/op	       1 allocs/op
+				// BenchmarkGenerateSecureRandomCounter/MaxDigits_8-24         	 8226728	       143.9 ns/op	       8 B/op	       1 allocs/op
+				// BenchmarkGenerateSecureRandomCounter/MaxDigits_30-24        	 6852162	       174.9 ns/op	       8 B/op	       1 allocs/op
+				//
+				// Note: 1 allocs/op it's cheap you poggers.
 				config.GenerateSecureRandomCounter(digits)
 			}
 		})

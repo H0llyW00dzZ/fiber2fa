@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"math/big"
 	"net/url"
 	"time"
 
@@ -361,14 +360,25 @@ func (v *Config) GenerateSecureRandomCounter(maxDigits int) uint64 {
 	}
 
 	// Calculate the maximum possible value based on the number of digits
-	max := uint64(9*v.cryptopowpow10(maxDigits-1) + v.cryptopowpow10(maxDigits-1) - 1)
+	var max uint64 = 9*v.cryptopowpow10(maxDigits-1) + v.cryptopowpow10(maxDigits-1) - 1
 
-	// Generate a random number between 0 and max using crypto/rand
-	nBig, err := rand.Int(rand.Reader, big.NewInt(int64(max+1)))
+	// Create a fixed-size byte array to store the random bytes
+	var randomBytes [8]byte
+
+	// Generate random bytes using crypto/rand
+	_, err := rand.Read(randomBytes[:])
 	if err != nil {
 		panic(err)
 	}
-	n := nBig.Uint64()
+
+	// Convert the random bytes to a uint64 value
+	var n uint64
+	for i := 0; i < 8; i++ {
+		n = (n << 8) | uint64(randomBytes[i])
+	}
+
+	// Ensure the generated number is within the desired range
+	n = n % (max + 1)
 
 	return n
 }
@@ -377,7 +387,7 @@ func (v *Config) GenerateSecureRandomCounter(maxDigits int) uint64 {
 //
 // Reference: https://en.wikipedia.org/wiki/Exponentiation
 func (v *Config) cryptopowpow10(exponent int) uint64 {
-	result := uint64(1)
+	var result uint64 = 1
 	for i := 0; i < exponent; i++ {
 		result *= 10
 	}
