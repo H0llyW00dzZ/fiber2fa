@@ -19,7 +19,7 @@ import (
 type TOTPVerifier struct {
 	config     Config
 	totp       *gotp.TOTP
-	UsedTokens map[int64]string
+	UsedTokens *sync.Map
 	m          sync.Mutex // Mutex to protect concurrent access to usedTokens
 }
 
@@ -69,7 +69,7 @@ func NewTOTPVerifier(config ...Config) *TOTPVerifier {
 		totp:   totp,
 		// Allocates 11 to 15 allocs/op without signature (depends on the hash function), which is relatively inexpensive for this TOTP synchronization window.
 		// Without implementing a synchronization window similar to HOTP, it can lead to high vulnerability.
-		UsedTokens: make(map[int64]string),
+		UsedTokens: &sync.Map{},
 	}
 
 	// Start the periodic cleanup goroutine
@@ -115,12 +115,9 @@ func (v *TOTPVerifier) verifyWithoutSignature(token string) bool {
 		expectedTimeStep := currentTimeStep + int64(offset)
 		expectedTimestamp := expectedTimeStep * int64(v.config.Period)
 
-		v.m.Lock()
-		if _, found := v.UsedTokens[expectedTimeStep]; found {
-			v.m.Unlock()
+		if _, found := v.UsedTokens.Load(expectedTimeStep); found {
 			continue // Skip this step as the token has already been used
 		}
-		v.m.Unlock()
 
 		// Verify the token for this time step
 		// This should be safe now because a synchronization window similar to HOTP is implemented.
@@ -129,9 +126,7 @@ func (v *TOTPVerifier) verifyWithoutSignature(token string) bool {
 		// where a used token is still considered valid due to the period.
 		generatedToken := v.totp.At(expectedTimestamp)
 		if subtle.ConstantTimeCompare([]byte(token), []byte(generatedToken)) == 1 {
-			v.m.Lock()
-			v.UsedTokens[expectedTimeStep] = token // Record the token as used
-			v.m.Unlock()
+			v.UsedTokens.Store(expectedTimeStep, token) // Record the token as used
 			return true
 		}
 	}
@@ -153,12 +148,9 @@ func (v *TOTPVerifier) verifyWithSignature(token, signature string) bool {
 		expectedTimeStep := currentTimeStep + int64(offset)
 		expectedTimestamp := expectedTimeStep * int64(v.config.Period)
 
-		v.m.Lock()
-		if _, found := v.UsedTokens[expectedTimeStep]; found {
-			v.m.Unlock()
+		if _, found := v.UsedTokens.Load(expectedTimeStep); found {
 			continue // Skip this step as the token has already been used
 		}
-		v.m.Unlock()
 
 		// Verify the token for this time step
 		// This should be safe now because a synchronization window similar to HOTP is implemented.
@@ -174,7 +166,7 @@ func (v *TOTPVerifier) verifyWithSignature(token, signature string) bool {
 			}
 
 			v.m.Lock()
-			v.UsedTokens[expectedTimeStep] = token // Record the token as used
+			v.UsedTokens.Store(expectedTimeStep, token) // Record the token as used
 			v.m.Unlock()
 			return true
 		}
@@ -215,9 +207,7 @@ func (v *TOTPVerifier) startPeriodicCleanup() {
 	defer cleanupTicker.Stop()
 
 	for range cleanupTicker.C {
-		if len(v.UsedTokens) > 0 {
-			v.CleanUpExpiredTokens()
-		}
+		v.CleanUpExpiredTokens()
 	}
 }
 
@@ -226,15 +216,14 @@ func (v *TOTPVerifier) CleanUpExpiredTokens() {
 	currentTimestamp := v.config.TimeSource().Unix()
 	currentTimeStep := currentTimestamp / int64(v.config.Period)
 
-	v.m.Lock()
-	defer v.m.Unlock()
-
-	for usedTimeStep := range v.UsedTokens {
+	v.UsedTokens.Range(func(key, value any) bool {
+		usedTimeStep := key.(int64)
 		if usedTimeStep < currentTimeStep-int64(v.config.SyncWindow) {
 			// Note: Never use "clear" on this to minimize the memory footprint, because it can lead to high vulnerability
 			// where a used token is still considered valid due to the period.
 			// Use "delete" to remove individual entries, which is a better way.
-			delete(v.UsedTokens, usedTimeStep)
+			v.UsedTokens.Delete(usedTimeStep)
 		}
-	}
+		return true
+	})
 }

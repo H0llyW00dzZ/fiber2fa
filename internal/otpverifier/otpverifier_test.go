@@ -202,8 +202,14 @@ func TestTOTPVerifier_PeriodicCleanup(t *testing.T) {
 	verifier.Verify(token2)
 
 	// Verify expired tokens are removed
-	if len(verifier.UsedTokens) != 1 {
-		t.Errorf("Expected 1 used token after periodic cleanup, but got %d", len(verifier.UsedTokens))
+	var usedTokensCount int
+	verifier.UsedTokens.Range(func(key, value any) bool {
+		usedTokensCount++
+		return true
+	})
+
+	if usedTokensCount != 1 {
+		t.Errorf("Expected 1 used token after periodic cleanup, but got %d", usedTokensCount)
 	}
 }
 
