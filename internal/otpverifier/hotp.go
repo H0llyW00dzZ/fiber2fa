@@ -311,6 +311,8 @@ func (v *HOTPVerifier) isRecentCountersContinuous() bool {
 
 // deferResynchronization schedules an automatic resynchronization attempt after the predefined delay.
 func (v *HOTPVerifier) deferResynchronization(matchedCounter uint64) {
+	// TODO: Improve this to use a sync map. However, it is not important for now because the logic for HOTP is more challenging
+	//       (e.g., expensive allocations) compared to TOTP. Refactoring this can be considered in the future if needed.
 	go func() {
 		// Check if enough time has passed since the last resynchronization
 		v.m.Lock()
