@@ -107,7 +107,10 @@ func (v *TOTPVerifier) verifyWithoutSignature(token string) bool {
 	currentTimestamp := v.config.TimeSource().Unix()
 	currentTimeStep := currentTimestamp / int64(v.config.Period)
 
-	// Check the syncWindow periods before and after the current time step
+	// Check the SyncWindow periods before and after the current time step
+	// Note: This offset SyncWindow (not a skew, wtf is skew) is not always non-negative.
+	// Sometimes it can be negative (depending on the time zone) when customizing the SyncWindow (e.g., 1, 2, 3).
+	// This is safe because it uses the crypto/subtle package for constant-time comparisons.
 	for offset := -v.config.SyncWindow; offset <= v.config.SyncWindow; offset++ {
 		expectedTimeStep := currentTimeStep + int64(offset)
 		expectedTimestamp := expectedTimeStep * int64(v.config.Period)
@@ -142,7 +145,10 @@ func (v *TOTPVerifier) verifyWithSignature(token, signature string) bool {
 	currentTimestamp := v.config.TimeSource().Unix()
 	currentTimeStep := currentTimestamp / int64(v.config.Period)
 
-	// Check the syncWindow periods before and after the current time step
+	// Check the SyncWindow periods before and after the current time step
+	// Note: This offset SyncWindow (not a skew, wtf is skew) is not always non-negative.
+	// Sometimes it can be negative (depending on the time zone) when customizing the SyncWindow (e.g., 1, 2, 3).
+	// This is safe because it uses the crypto/subtle package for constant-time comparisons.
 	for offset := -v.config.SyncWindow; offset <= v.config.SyncWindow; offset++ {
 		expectedTimeStep := currentTimeStep + int64(offset)
 		expectedTimestamp := expectedTimeStep * int64(v.config.Period)
