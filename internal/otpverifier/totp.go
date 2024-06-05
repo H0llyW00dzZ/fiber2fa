@@ -165,9 +165,7 @@ func (v *TOTPVerifier) verifyWithSignature(token, signature string) bool {
 				}
 			}
 
-			v.m.Lock()
 			v.UsedTokens.Store(expectedTimeStep, token) // Record the token as used
-			v.m.Unlock()
 			return true
 		}
 	}
