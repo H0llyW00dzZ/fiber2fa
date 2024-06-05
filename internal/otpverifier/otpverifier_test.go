@@ -194,7 +194,7 @@ func TestTOTPVerifier_PeriodicCleanup(t *testing.T) {
 	token1 := verifier.GenerateToken()
 	verifier.Verify(token1)
 
-	// Wait for periodic cleanup to occur (less than the token validity period)
+	// Wait Assistant garbage collector for periodic cleanup to occur (less than the token validity period)
 	time.Sleep(time.Duration(period*3/4) * time.Second)
 
 	// Simulate used tokens
