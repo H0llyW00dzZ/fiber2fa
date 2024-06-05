@@ -128,7 +128,8 @@ func TestDefaultConfigTOTPVerifier_Verify(t *testing.T) {
 			config := otpverifier.Config{
 				Secret:     secret,
 				Hash:       hashFunc,
-				TimeSource: time.Now, // this required now, since it support customize time-zone.
+				SyncWindow: -1,
+				TimeSource: nil,
 			}
 			verifier := otpverifier.NewTOTPVerifier(config)
 
@@ -180,10 +181,11 @@ func TestTOTPVerifier_PeriodicCleanup(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	period := 10 // Set the token validity period to 10 seconds
 	config := otpverifier.Config{
-		Secret: secret,
-		Period: period,
-		Digits: 6,
-		Hash:   otpverifier.SHA256,
+		Secret:     secret,
+		Period:     period,
+		Digits:     6,
+		Hash:       otpverifier.SHA256,
+		TimeSource: time.Now,
 	}
 
 	verifier := otpverifier.NewTOTPVerifier(config)
@@ -194,6 +196,10 @@ func TestTOTPVerifier_PeriodicCleanup(t *testing.T) {
 
 	// Wait for periodic cleanup to occur (less than the token validity period)
 	time.Sleep(time.Duration(period*3/4) * time.Second)
+
+	// Simulate used tokens
+	token2 := verifier.GenerateToken()
+	verifier.Verify(token2)
 
 	// Verify expired tokens are removed
 	if len(verifier.UsedTokens) != 1 {
@@ -491,8 +497,9 @@ func TestOTPFactory(t *testing.T) {
 	for _, hashFunc := range hashFunctions {
 		// Test creating a TOTPVerifier
 		totpConfig := otpverifier.Config{
-			Secret: secret,
-			Hasher: otpverifier.Hashers[hashFunc],
+			Secret:     secret,
+			TimeSource: time.Now,
+			Hasher:     otpverifier.Hashers[hashFunc],
 		}
 		totpVerifier := otpverifier.OTPFactory(totpConfig)
 		if reflect.TypeOf(totpVerifier) != reflect.TypeOf(&otpverifier.TOTPVerifier{}) {
@@ -537,8 +544,9 @@ func TestOTPFactory(t *testing.T) {
 func TestTOTPVerifier_BuildQRCode(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	config := otpverifier.Config{
-		Secret: secret,
-		Hash:   otpverifier.BLAKE2b512,
+		Secret:     secret,
+		Hash:       otpverifier.BLAKE2b512,
+		TimeSource: time.Now,
 	}
 	verifier := otpverifier.NewTOTPVerifier(config)
 
@@ -573,8 +581,9 @@ func TestTOTPVerifier_BuildQRCode(t *testing.T) {
 func TestTOTPVerifier_SaveQRCodeImage(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	config := otpverifier.Config{
-		Secret: secret,
-		Hash:   otpverifier.BLAKE2b512,
+		Secret:     secret,
+		Hash:       otpverifier.BLAKE2b512,
+		TimeSource: time.Now,
 	}
 	verifier := otpverifier.NewTOTPVerifier(config)
 
@@ -598,8 +607,9 @@ func TestTOTPVerifier_SaveQRCodeImage(t *testing.T) {
 func TestTOTPVerifier_BuildQRCodeWithCustomParams(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	config := otpverifier.Config{
-		Secret: secret,
-		Hash:   otpverifier.BLAKE2b512,
+		Secret:     secret,
+		Hash:       otpverifier.BLAKE2b512,
+		TimeSource: time.Now,
 		CustomURITemplateParams: map[string]string{
 			"foo": "bar",
 		},
@@ -637,9 +647,10 @@ func TestTOTPVerifier_BuildQRCodeWithCustomParams(t *testing.T) {
 func TestTOTPVerifier_BuildQRCodePanic(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	config := otpverifier.Config{
-		Secret: secret,
-		Digits: 10,
-		Hash:   otpverifier.SHA256,
+		Secret:     secret,
+		Digits:     10,
+		Hash:       otpverifier.SHA256,
+		TimeSource: time.Now,
 	}
 
 	verifier := otpverifier.NewTOTPVerifier(config)
@@ -1272,6 +1283,7 @@ func TestTOTPVerifier_VerifyPanic(t *testing.T) {
 		Secret:       secret,
 		SyncWindow:   -1,
 		UseSignature: true,
+		TimeSource:   time.Now,
 		Hash:         otpverifier.SHA256,
 	}
 
@@ -1337,6 +1349,7 @@ func TestTOTPVerifier_VerifyMissingSignature(t *testing.T) {
 	config := otpverifier.Config{
 		Secret:       secret,
 		UseSignature: true,
+		TimeSource:   time.Now,
 		Hash:         otpverifier.SHA256,
 	}
 
@@ -1364,6 +1377,7 @@ func TestTOTPVerifier_VerifySignatureMismatch(t *testing.T) {
 	config := otpverifier.Config{
 		Secret:       secret,
 		UseSignature: true,
+		TimeSource:   time.Now,
 		Hash:         otpverifier.SHA256,
 	}
 
