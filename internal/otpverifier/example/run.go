@@ -23,13 +23,20 @@ import (
 )
 
 func main() {
+
+	// Custom time source function for Antarctica time zone
+	customTimeSource := func() time.Time {
+		location, _ := time.LoadLocation("Antarctica/South_Pole")
+		return time.Now().UTC().In(location)
+	}
+
 	// Create a new TOTP verifier with the desired configuration
 	verifier := otpverifier.NewTOTPVerifier(otpverifier.Config{
 		Secret:       gotp.RandomSecret(16),
 		Digits:       6,
 		UseSignature: false,
 		Period:       30,
-		TimeSource:   time.Now, // Support Custom Timezone
+		TimeSource:   customTimeSource, // Support Custom Timezone
 		// Set to SHA512 as example since Some 2FA Mobile Apps might not supported (Poor Ecosystems) using Hash BLAKE2b,
 		Hash: otpverifier.SHA512,
 	})
