@@ -20,7 +20,6 @@ type TOTPVerifier struct {
 	config     Config
 	totp       *gotp.TOTP
 	UsedTokens *sync.Map
-	m          sync.Mutex // Mutex to protect concurrent access to usedTokens
 }
 
 // NewTOTPVerifier creates a new TOTPVerifier with the given configuration.
