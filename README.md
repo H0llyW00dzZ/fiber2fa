@@ -79,6 +79,9 @@ The notes effectively communicate that the HOTP and TOTP implementations follow 
 - Customizable error handling for unauthorized and internal server errors
 - Support for various response formats (plain text, JSON, XML)
 
+### Built-in 64-bit Integer
+- Most bits and Unix timestamps are built using 64-bit integers, capable of representing dates billions of years into the future.
+
 More features and validation capabilities will be added in the future to enhance the middleware's functionality and cater to a wider range of validation scenarios.
 
 ## Benchmark
