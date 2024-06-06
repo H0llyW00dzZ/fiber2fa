@@ -167,7 +167,7 @@
 //     secure random counter value.
 //   - Set the correct time synchronization to ensure that the server and client (e.g., mobile devices or other devices)
 //     have the same time reference. This minimizes time-related issues with TOTP and ensures accurate token verification.
-//     It is important to use Unix time (POSIX time/Epoch time) for time synchronization to maintain compatibility and avoid issues related to time zones and daylight saving time.
+//     It is important to use Unix time (POSIX time/Epoch time) with a 64-bit integer for time synchronization to maintain compatibility and avoid issues related to time zones and daylight saving time.
 //   - If using less common hashing algorithms or advanced features, consider building custom 2FA mobile apps to ensure
 //     full compatibility with the package.
 //
