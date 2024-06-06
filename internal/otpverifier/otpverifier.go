@@ -332,12 +332,33 @@ func OTPFactory(config Config) OTPVerifier {
 	return NewTOTPVerifier(config)
 }
 
-// GetHasherByName returns a pointer to a gotp.Hasher based on the given hash function name.
-// It panics if the hash function name is not supported or if the hash function name is empty.
+// GetHasherByName returns a pointer to a [gotp.Hasher] based on the given hash function name.
+// It panics if the hash function name is empty or not supported.
+//
+// The supported hash function names are:
+//   - [SHA1]
+//   - [SHA224]
+//   - [SHA256]
+//   - [SHA384]
+//   - [SHA512]
+//   - [SHA512S224]
+//   - [SHA512S256]
+//   - [BLAKE2b256]
+//   - [BLAKE2b384]
+//   - [BLAKE2b512]
+//   - [BLAKE3256]
+//   - [BLAKE3384]
+//   - [BLAKE3512]
+//
+// Note: The hash function name is case-sensitive.
 func (v *Config) GetHasherByName(Hash string) *gotp.Hasher {
+	if Hash == "" {
+		panic("GetHasherByName: hash function name cannot be empty")
+	}
+
 	hasher, exists := Hashers[Hash]
 	if !exists {
-		panic(fmt.Sprintf("Hash function %s is not supported", Hash))
+		panic(fmt.Sprintf("GetHasherByName: hash function %s is not supported", Hash))
 	}
 	return hasher
 }

@@ -1271,13 +1271,28 @@ func TestGetHasherByName(t *testing.T) {
 			if r := recover(); r == nil {
 				t.Errorf("GetHasherByName() did not panic with unsupported hash function")
 			} else {
-				expected := "Hash function NotAHash is not supported"
+				expected := "GetHasherByName: hash function NotAHash is not supported"
 				if r != expected {
 					t.Errorf("GetHasherByName() panic = %v, want %v", r, expected)
 				}
 			}
 		}()
 		config.GetHasherByName("NotAHash")
+	})
+
+	// Test case for empty hash function name
+	t.Run("EmptyHash", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("GetHasherByName() did not panic with empty hash function name")
+			} else {
+				expected := "GetHasherByName: hash function name cannot be empty"
+				if r != expected {
+					t.Errorf("GetHasherByName() panic = %v, want %v", r, expected)
+				}
+			}
+		}()
+		config.GetHasherByName("")
 	})
 }
 
