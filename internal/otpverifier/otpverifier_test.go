@@ -361,7 +361,9 @@ func TestDefaultConfigHOTPVerifier_Verify(t *testing.T) {
 }
 
 func TestGenerateSecureRandomCounter(t *testing.T) {
-	config := &otpverifier.Config{}
+	config := otpverifier.Config{
+		Crypto: otpverifier.DefaultConfig.Crypto,
+	}
 
 	// Test case 1: maxDigits is 0
 	func() {
