@@ -42,10 +42,8 @@ func New(config ...Config) fiber.Handler {
 	}
 
 	// Set default values for JSONMarshal and JSONUnmarshal if not provided
-	if cfg.JSONMarshal == nil {
+	if cfg.JSONMarshal == nil && cfg.JSONUnmarshal == nil {
 		cfg.JSONMarshal = json.Marshal
-	}
-	if cfg.JSONUnmarshal == nil {
 		cfg.JSONUnmarshal = json.Unmarshal
 	}
 

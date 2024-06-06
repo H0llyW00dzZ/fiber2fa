@@ -2,6 +2,8 @@
 //
 // License: BSD 3-Clause License
 
+// Note: The tests here are outdated and won't work. It will crash because the focus is still on improving the internal implementation.
+
 package twofa_test
 
 import (
