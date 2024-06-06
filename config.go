@@ -49,7 +49,7 @@ type Config struct {
 
 	// TimeSource is the time source used for generating TOTP tokens.
 	//
-	// Optional. Default: otp.DefaultConfig.TimeSource
+	// Optional. Default: otp.DefaultConfig.TOTPTime()
 	TimeSource otp.TimeSource
 
 	// SyncWindow is the number of time steps to check before and after the current time step when verifying TOTP tokens.
