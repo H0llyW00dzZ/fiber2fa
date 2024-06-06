@@ -101,7 +101,7 @@
 //   - [otpverifier.LowStrict]: Low strictness, the synchronization window size is determined by the corresponding range in [otpverifier.SyncWindowRanges].
 //   - ResyncWindowDelay: The delay duration for resynchronizing the synchronization window. Default is 30 minutes.
 //   - URITemplate: The URI template used for generating OTP URLs. Default is "otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s".
-//   - CustomURITemplateParams: A map of custom parameters to include in the OTP URL. Default is nil.
+//   - CustomURITemplateParams (Advanced Cryptographic OTP Use Cases, e.g., Customize Character Set instead of numbers in client device, callback to the server, etc.): A map of custom parameters to include in the OTP URL. Default is nil.
 //   - Hash: The name of the hashing algorithm to use. This field is required. List values are:
 //   - [SHA1]
 //   - [SHA224]
