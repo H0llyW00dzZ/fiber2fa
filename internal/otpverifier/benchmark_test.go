@@ -125,7 +125,9 @@ func BenchmarkHOTPVerify(b *testing.B) {
 }
 
 func BenchmarkGenerateSecureRandomCounter(b *testing.B) {
-	config := &otpverifier.Config{}
+	config := otpverifier.Config{
+		Crypto: otpverifier.DefaultConfig.Crypto,
+	}
 
 	maxDigits := []int{6, 8, 30}
 
@@ -136,9 +138,9 @@ func BenchmarkGenerateSecureRandomCounter(b *testing.B) {
 				// goarch: amd64
 				// pkg: github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier
 				// cpu: AMD Ryzen 9 3900X 12-Core Processor
-				// BenchmarkGenerateSecureRandomCounter/MaxDigits_6-24         	 8469748	       142.5 ns/op	       8 B/op	       1 allocs/op
-				// BenchmarkGenerateSecureRandomCounter/MaxDigits_8-24         	 8226728	       143.9 ns/op	       8 B/op	       1 allocs/op
-				// BenchmarkGenerateSecureRandomCounter/MaxDigits_30-24        	 6852162	       174.9 ns/op	       8 B/op	       1 allocs/op
+				// BenchmarkGenerateSecureRandomCounter/MaxDigits_6-24         	 8208141	       145.2 ns/op	       8 B/op	       1 allocs/op
+				// BenchmarkGenerateSecureRandomCounter/MaxDigits_8-24         	 8076456	       147.5 ns/op	       8 B/op	       1 allocs/op
+				// BenchmarkGenerateSecureRandomCounter/MaxDigits_30-24        	 6991927	       173.2 ns/op	       8 B/op	       1 allocs/op
 				//
 				// Note: 1 allocs/op it's cheap you poggers.
 				config.GenerateSecureRandomCounter(digits)
