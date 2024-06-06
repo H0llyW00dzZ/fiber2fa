@@ -409,6 +409,7 @@ func (v *Config) GenerateSecureRandomCounter(maxDigits int) uint64 {
 	var randomBytes [8]byte
 
 	// Generate random bytes using the Crypto.Rand function from the Config struct
+	// Note: This will continue generating random bytes and is safe. If it fails to generate random bytes, it will panic and crash.
 	_, err := v.Crypto.Rand(randomBytes[:])
 	if err != nil {
 		panic(err)
