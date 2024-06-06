@@ -661,8 +661,8 @@ func TestTOTPVerifier_BuildQRCodePanic(t *testing.T) {
 
 	verifier := otpverifier.NewTOTPVerifier(config)
 
-	issuer := "TestIssuer"
-	accountName := "TestAccount"
+	issuer := ""
+	accountName := ""
 
 	// Create a custom QR code configuration
 	qrCodeConfig := otpverifier.QRCodeConfig{
@@ -675,19 +675,56 @@ func TestTOTPVerifier_BuildQRCodePanic(t *testing.T) {
 	}
 
 	// Expect a panic when calling BuildQRCode with a maximum digits
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Expected Verify to panic with a maximum digits, but it didn't")
-		} else {
-			expectedPanicMessage := "BuildQRCode: maximum digits are 8 for TOTP"
-			if r != expectedPanicMessage {
-				t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+	t.Run("MaximumDigits", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("Expected BuildQRCode to panic with maximum digits, but it didn't")
+			} else {
+				expectedPanicMessage := "BuildQRCode: maximum digits are 8 for TOTP"
+				if r != expectedPanicMessage {
+					t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+				}
 			}
-		}
-	}()
+		}()
 
-	// Call BuildQRCode, which should panic
-	verifier.BuildQRCode(issuer, accountName, qrCodeConfig)
+		// Call BuildQRCode with maximum digits, which should panic
+		verifier.BuildQRCode("issuer", "accountName", qrCodeConfig)
+	})
+
+	// Expect a panic when calling BuildQRCode with empty issuer
+	t.Run("EmptyIssuer", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("Expected BuildQRCode to panic with an empty issuer, but it didn't")
+			} else {
+				expectedPanicMessage := "BuildQRCode: issuer cannot be empty"
+				if r != expectedPanicMessage {
+					t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+				}
+			}
+		}()
+
+		// Call BuildQRCode with an empty issuer, which should panic
+		verifier.BuildQRCode(issuer, "accountName", qrCodeConfig)
+	})
+
+	// Expect a panic when calling BuildQRCode with empty account name
+	t.Run("EmptyAccountName", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("Expected BuildQRCode to panic with an empty account name, but it didn't")
+			} else {
+				expectedPanicMessage := "BuildQRCode: account name cannot be empty"
+				if r != expectedPanicMessage {
+					t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+				}
+			}
+		}()
+
+		// Call BuildQRCode with an empty account name, which should panic
+		verifier.BuildQRCode("issuer", accountName, qrCodeConfig)
+	})
+
 }
 
 func TestHOTPVerifier_BuildQRCode(t *testing.T) {
@@ -805,8 +842,8 @@ func TestHOTPVerifier_BuildQRCodePanic(t *testing.T) {
 
 	verifier := otpverifier.NewHOTPVerifier(config)
 
-	issuer := "TestIssuer"
-	accountName := "TestAccount"
+	issuer := ""
+	accountName := ""
 
 	// Create a custom QR code configuration
 	qrCodeConfig := otpverifier.QRCodeConfig{
@@ -819,19 +856,56 @@ func TestHOTPVerifier_BuildQRCodePanic(t *testing.T) {
 	}
 
 	// Expect a panic when calling BuildQRCode with a maximum digits
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Expected Verify to panic with a maximum digits, but it didn't")
-		} else {
-			expectedPanicMessage := "BuildQRCode: maximum digits are 8 for HOTP"
-			if r != expectedPanicMessage {
-				t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+	t.Run("MaximumDigits", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("Expected BuildQRCode to panic with maximum digits, but it didn't")
+			} else {
+				expectedPanicMessage := "BuildQRCode: maximum digits are 8 for HOTP"
+				if r != expectedPanicMessage {
+					t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+				}
 			}
-		}
-	}()
+		}()
 
-	// Call BuildQRCode, which should panic
-	verifier.BuildQRCode(issuer, accountName, qrCodeConfig)
+		// Call BuildQRCode with maximum digits, which should panic
+		verifier.BuildQRCode("issuer", "accountName", qrCodeConfig)
+	})
+
+	// Expect a panic when calling BuildQRCode with empty issuer
+	t.Run("EmptyIssuer", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("Expected BuildQRCode to panic with an empty issuer, but it didn't")
+			} else {
+				expectedPanicMessage := "BuildQRCode: issuer cannot be empty"
+				if r != expectedPanicMessage {
+					t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+				}
+			}
+		}()
+
+		// Call BuildQRCode with an empty issuer, which should panic
+		verifier.BuildQRCode(issuer, "accountName", qrCodeConfig)
+	})
+
+	// Expect a panic when calling BuildQRCode with empty account name
+	t.Run("EmptyAccountName", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("Expected BuildQRCode to panic with an empty account name, but it didn't")
+			} else {
+				expectedPanicMessage := "BuildQRCode: account name cannot be empty"
+				if r != expectedPanicMessage {
+					t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+				}
+			}
+		}()
+
+		// Call BuildQRCode with an empty account name, which should panic
+		verifier.BuildQRCode("issuer", accountName, qrCodeConfig)
+	})
+
 }
 
 func TestHOTPVerifier_VerifySyncWindow(t *testing.T) {
