@@ -155,6 +155,10 @@
 //     requirements related to time to prevent timing attacks. As a result, even small discrepancies in time synchronization can
 //     lead to token verification failures.
 //
+//  4. MFA Not Supported: Multi-Factor Authentication (MFA) is not supported within this package due to the high risks associated with it.
+//     MFA often relies on hash functions like MD5, SHA-1, SHA-256, or SHA-512, which are basically the same. However, the use cases for MFA are not guaranteed
+//     since it is linked to many sensitive data points, such as user accounts, unlike 2FA (e.g., TOTP) which is typically used for a specific purpose.
+//
 // To ensure the best compatibility and support, consider the following recommendations:
 //
 //   - Use widely supported hashing algorithms, such as SHA-1, SHA-256, or SHA-512, when configuring the package.
@@ -163,6 +167,7 @@
 //     secure random counter value.
 //   - Set the correct time synchronization to ensure that the server and client (e.g., mobile devices or other devices)
 //     have the same time reference. This minimizes time-related issues with TOTP and ensures accurate token verification.
+//     It is important to use Unix time (POSIX time/Epoch time) for time synchronization to maintain compatibility and avoid issues related to time zones and daylight saving time.
 //   - If using less common hashing algorithms or advanced features, consider building custom 2FA mobile apps to ensure
 //     full compatibility with the package.
 //
