@@ -174,11 +174,21 @@ func (v *TOTPVerifier) verifyWithSignature(token, signature string) bool {
 
 // GenerateToken generates a token for the current time.
 func (v *TOTPVerifier) GenerateToken() string {
+	// TODO: Allow customizing the character set instead of using only numbers.
+	// Although the current TOTP implementation relies on time and is secure due to the use of the [crypto/subtle] package,
+	// even with the current implementation that uses numbers, it is secure, especially against brute-force attacks.
+	// However, we won't implement this now because most 2FA apps in the world, especially for mobile devices,
+	// still have poor ecosystems and are not modern enough to support custom character sets.
 	return v.totp.Now()
 }
 
 // GenerateTokenWithSignature generates a token and signature for the current time.
 func (v *TOTPVerifier) GenerateTokenWithSignature() (string, string) {
+	// TODO: Allow customizing the character set instead of using only numbers.
+	// Although the current TOTP implementation relies on time and is secure due to the use of the [crypto/subtle] package,
+	// even with the current implementation that uses numbers, it is secure, especially against brute-force attacks.
+	// However, we won't implement this now because most 2FA apps in the world, especially for mobile devices,
+	// still have poor ecosystems and are not modern enough to support custom character sets.
 	token := v.totp.Now()
 	signature := v.generateSignature(token)
 	return token, signature
