@@ -11,6 +11,15 @@ import (
 
 // BuildQRCode generates a QR code image for the OTP configuration.
 func (v *TOTPVerifier) BuildQRCode(issuer, accountName string, config QRCodeConfig) ([]byte, error) {
+	// Check if issuer or account name is empty
+	if issuer == "" {
+		panic("BuildQRCode: issuer cannot be empty")
+	}
+
+	if accountName == "" {
+		panic("BuildQRCode: account name cannot be empty")
+	}
+
 	if v.config.Digits > 8 {
 		panic("BuildQRCode: maximum digits are 8 for TOTP")
 	}
@@ -20,6 +29,7 @@ func (v *TOTPVerifier) BuildQRCode(issuer, accountName string, config QRCodeConf
 
 	otpURL := v.GenerateOTPURL(issuer, accountName)
 	qrCodeImage, err := config.GenerateQRCodeImage(otpURL)
+
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +73,15 @@ func (v *HOTPVerifier) SaveQRCodeImage(issuer, accountName, filename string, con
 
 // BuildQRCode generates a QR code image for the OTP configuration.
 func (v *HOTPVerifier) BuildQRCode(issuer, accountName string, config QRCodeConfig) ([]byte, error) {
+	// Check if issuer or account name is empty
+	if issuer == "" {
+		panic("BuildQRCode: issuer cannot be empty")
+	}
+
+	if accountName == "" {
+		panic("BuildQRCode: account name cannot be empty")
+	}
+
 	if v.config.Digits > 8 {
 		panic("BuildQRCode: maximum digits are 8 for HOTP")
 	}
@@ -72,6 +91,7 @@ func (v *HOTPVerifier) BuildQRCode(issuer, accountName string, config QRCodeConf
 
 	otpURL := v.GenerateOTPURL(issuer, accountName)
 	qrCodeImage, err := config.GenerateQRCodeImage(otpURL)
+
 	if err != nil {
 		return nil, err
 	}
