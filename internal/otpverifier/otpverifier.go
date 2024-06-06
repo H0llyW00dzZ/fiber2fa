@@ -207,7 +207,6 @@ var DefaultConfig = Config{
 	Digits:                  6,
 	Period:                  30,
 	UseSignature:            false,
-	TimeSource:              time.Now,
 	SyncWindow:              HighStrict,
 	ResyncWindowDelay:       30 * time.Minute,
 	CounterMismatch:         CounterMismatchThreshold3x,
@@ -394,4 +393,13 @@ func (v *Config) cryptopowpow10(exponent int) uint64 {
 		result *= 10
 	}
 	return result
+}
+
+// TOTPTime returns the current time in the https://en.wikipedia.org/wiki/South_Pole time zone.
+// It is used as the default time source for TOTP if no custom time source is provided and the sync window is set to -1.
+//
+// Note: The returned time is always expressed in UTC (Coordinated Universal Time) to avoid any ambiguity caused by local time zone offsets.
+func (v *Config) TOTPTime() time.Time {
+	location, _ := time.LoadLocation("Antarctica/South_Pole")
+	return time.Now().In(location)
 }
