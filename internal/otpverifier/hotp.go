@@ -49,6 +49,7 @@ func NewHOTPVerifier(config ...Config) *HOTPVerifier {
 	}
 	if c.Counter == 0 {
 		// Generate a secure random counter value if not provided
+		c.Crypto = DefaultConfig.Crypto
 		c.Counter = c.GenerateSecureRandomCounter(c.Digits)
 		c.CounterMismatch = DefaultConfig.CounterMismatch
 	}

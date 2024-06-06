@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"io"
+	"math/big"
 	"net/url"
 	"time"
 
@@ -186,6 +188,7 @@ type Config struct {
 	URITemplate             string
 	CustomURITemplateParams map[string]string
 	Hash                    string
+	Crypto                  Crypto
 }
 
 // QRCodeConfig represents the configuration for generating QR codes.
@@ -202,6 +205,21 @@ type QRCodeConfig struct {
 	BottomTextPosition image.Point
 }
 
+// Crypto is a struct that holds cryptographic configuration options.
+//
+// Note: This design allows for flexibility at the top level.
+// For example, it can be used anywhere in this codebase without calling [crypto/rand] again (DRY).
+// The Rand, Prime, and Int functions are provided as part of the Crypto struct to enable secure random number generation
+// and prime number generation. These functions are used in various cryptographic operations throughout the codebase.
+//
+// By including them in the Crypto struct, they can be easily accessed and reused without the need to import and call [crypto/rand] multiple times.
+// This promotes code reusability, maintainability, and adherence to the DRY (Don't Repeat Yourself) principle.
+type Crypto struct {
+	Rand  func([]byte) (int, error)
+	Prime func(rand io.Reader, bits int) (*big.Int, error)
+	Int   func(rand io.Reader, max *big.Int) (n *big.Int, err error)
+}
+
 // DefaultConfig represents the default configuration values.
 var DefaultConfig = Config{
 	Digits:                  6,
@@ -212,6 +230,11 @@ var DefaultConfig = Config{
 	CounterMismatch:         CounterMismatchThreshold3x,
 	URITemplate:             "otpauth://%s/%s:%s?secret=%s&issuer=%s&digits=%d&algorithm=%s",
 	CustomURITemplateParams: nil,
+	Crypto: Crypto{
+		Rand:  rand.Read,
+		Prime: rand.Prime,
+		Int:   rand.Int,
+	},
 }
 
 // Hashers is a map of supported hash functions.
@@ -385,8 +408,8 @@ func (v *Config) GenerateSecureRandomCounter(maxDigits int) uint64 {
 	// Create a fixed-size byte array to store the random bytes
 	var randomBytes [8]byte
 
-	// Generate random bytes using crypto/rand
-	_, err := rand.Read(randomBytes[:])
+	// Generate random bytes using the Crypto.Rand function from the Config struct
+	_, err := v.Crypto.Rand(randomBytes[:])
 	if err != nil {
 		panic(err)
 	}
