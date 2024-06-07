@@ -1268,14 +1268,14 @@ func TestHOTPVerifier_VerifySyncWindowWithResync(t *testing.T) {
 			Secret:            secret,
 			Counter:           initialCounter,
 			Hasher:            otpverifier.Hashers[hashFunc],
-			SyncWindow:        otpverifier.HighStrict,
-			ResyncWindowDelay: 50 * time.Millisecond,
+			SyncWindow:        otpverifier.MediumStrict,
+			ResyncWindowDelay: 1 * time.Second,
 		}
 
 		verifier := otpverifier.NewHOTPVerifier(config)
 
 		// Generate a token for the current counter value
-		verifier.Hotp.At(int(initialCounter))
+		verifier.Hotp.At(int(initialCounter + 5))
 
 		// Verify this token should fail
 		if verifier.Verify("invalid") {
@@ -1283,7 +1283,7 @@ func TestHOTPVerifier_VerifySyncWindowWithResync(t *testing.T) {
 		}
 
 		// Generate a token for a counter value within the sync window
-		withinWindowToken := verifier.Hotp.At(int(initialCounter) + otpverifier.HighStrict)
+		withinWindowToken := verifier.Hotp.At(int(initialCounter) + otpverifier.MediumStrict)
 
 		// Verify this token should also pass
 		if !verifier.Verify(withinWindowToken) {
@@ -1291,16 +1291,30 @@ func TestHOTPVerifier_VerifySyncWindowWithResync(t *testing.T) {
 		}
 
 		// Verify that the counter has been updated to the last verified counter + 1
-		if verifier.GetCounter() != initialCounter+uint64(otpverifier.HighStrict)+1 {
+		if verifier.GetCounter() != initialCounter+uint64(otpverifier.MediumStrict)+1 {
 			t.Errorf("Counter was not updated correctly after sync window verification (hash function: %s)", hashFunc)
 		}
 
 		// Generate a token for a counter value outside the sync window
-		outsideWindowToken := verifier.Hotp.At(int(initialCounter) + otpverifier.HighStrict + 3)
+		outsideWindowToken := verifier.Hotp.At(int(initialCounter) + otpverifier.MediumStrict + 6)
 
 		// Verify this token should fail
 		if verifier.Verify(outsideWindowToken) {
 			t.Errorf("Token outside sync window verified but should not have (hash function: %s)", hashFunc)
+		}
+
+		// Trigger the AdjustSyncWindow function
+		verifier.AdjustSyncWindow(config.CounterMismatch)
+
+		// Get the actual sync window size
+		actualSyncWindow := verifier.GetSyncWindow()
+
+		// Get the expected sync window range for MediumStrict
+		expectedRange := otpverifier.SyncWindowRanges[otpverifier.MediumStrict]
+
+		// Check if the actual sync window size falls within the expected range
+		if actualSyncWindow < expectedRange[0] || actualSyncWindow > expectedRange[1] {
+			t.Errorf("Expected sync window size to be within the range %v, but got %d", expectedRange, actualSyncWindow)
 		}
 	}
 }

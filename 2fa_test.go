@@ -2,8 +2,6 @@
 //
 // License: BSD 3-Clause License
 
-// Note: The tests here are outdated and won't work. It will crash because the focus is still on improving the internal implementation.
-
 package twofa_test
 
 import (
@@ -243,6 +241,8 @@ func TestMiddleware_Handle(t *testing.T) {
 	middleware := twofa.New(twofa.Config{
 		Secret:       secret,
 		Storage:      store,
+		TimeSource:   twofa.DefaultConfig.TimeSource,
+		Hash:         twofa.DefaultConfig.Hash,
 		ContextKey:   "user123",
 		RedirectURL:  "/2fa",
 		CookieMaxAge: 86400,
@@ -268,7 +268,9 @@ func TestMiddleware_Handle(t *testing.T) {
 
 	// Generate a valid 2FA token
 	totp := otp.NewTOTPVerifier(otp.Config{
-		Secret: info.Secret,
+		Secret:     info.Secret,
+		TimeSource: twofa.DefaultConfig.TimeSource,
+		Hash:       twofa.DefaultConfig.Hash,
 	})
 
 	validToken := totp.GenerateToken()
@@ -277,7 +279,9 @@ func TestMiddleware_Handle(t *testing.T) {
 	// Create a separate instance of the Middleware struct for testing
 	testMiddleware := &twofa.Middleware{
 		Config: &twofa.Config{
-			Secret: secret,
+			Secret:     secret,
+			TimeSource: twofa.DefaultConfig.TimeSource,
+			Hash:       twofa.DefaultConfig.Hash,
 		},
 	}
 
@@ -1253,6 +1257,8 @@ func TestMiddlewareUUIDContextKey_Handle(t *testing.T) {
 	middleware := twofa.New(twofa.Config{
 		Secret:       secret,
 		Storage:      store,
+		TimeSource:   twofa.DefaultConfig.TimeSource,
+		Hash:         twofa.DefaultConfig.Hash,
 		ContextKey:   contextKey,
 		RedirectURL:  "/2fa",
 		CookieMaxAge: 86400,
@@ -1278,7 +1284,9 @@ func TestMiddlewareUUIDContextKey_Handle(t *testing.T) {
 
 	// Generate a valid 2FA token
 	totp := otp.NewTOTPVerifier(otp.Config{
-		Secret: info.Secret,
+		Secret:     info.Secret,
+		TimeSource: twofa.DefaultConfig.TimeSource,
+		Hash:       twofa.DefaultConfig.Hash,
 	})
 
 	validToken := totp.GenerateToken()
@@ -1287,7 +1295,9 @@ func TestMiddlewareUUIDContextKey_Handle(t *testing.T) {
 	// Create a separate instance of the Middleware struct for testing
 	testMiddleware := &twofa.Middleware{
 		Config: &twofa.Config{
-			Secret: secret,
+			Secret:     secret,
+			TimeSource: twofa.DefaultConfig.TimeSource,
+			Hash:       twofa.DefaultConfig.Hash,
 		},
 	}
 
