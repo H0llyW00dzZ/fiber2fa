@@ -440,7 +440,7 @@ func (v *Config) cryptopowpow10(exponent int) uint64 {
 	return result
 }
 
-// TOTPTime returns the current time in the https://en.wikipedia.org/wiki/South_Pole time zone.
+// TOTPTime returns the current time in the South Pole (see https://en.wikipedia.org/wiki/Time_in_Antarctica) time zone.
 // It is used as the default time source for TOTP if no custom time source is provided (nil) and the sync window is set to -1.
 //
 // Note: The returned time is always expressed in UTC (Coordinated Universal Time) to avoid any ambiguity caused by local time zone offsets.
