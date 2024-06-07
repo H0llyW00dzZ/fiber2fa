@@ -78,6 +78,9 @@ func NewTOTPVerifier(config ...Config) *TOTPVerifier {
 	// TOTP authentication must implement a synchronization window similar to HOTP.
 	// Without implementing a synchronization window similar to HOTP, it can lead to high vulnerability
 	// where a used token is still considered valid when the user is entering the same token again (which was used previously).
+	//
+	// TODO: Dynamically spawn goroutines (e.g., 1000 goroutines depending on resources) for maintaining this. However, it is not really needed for now since
+	// 1 goroutine is still enough for maintaining 1 billion++++ used tokens, due to its lifespan/lifecycle and the maintenance performed on modern CPUs.
 	go verifier.startPeriodicCleanup()
 
 	return verifier
