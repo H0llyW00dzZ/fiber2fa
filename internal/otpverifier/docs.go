@@ -116,6 +116,10 @@
 //   - [BLAKE3256]
 //   - [BLAKE3384]
 //   - [BLAKE3512]
+//   - [CleanupIntervals]: The interval at which the cleanup process runs to remove expired tokens in the TOTP verifier. Available options are:
+//   - [FastCleanup]
+//   - [MediumCleanup]
+//   - [SlowCleanup]
 //
 // # QR Code Configuration
 //

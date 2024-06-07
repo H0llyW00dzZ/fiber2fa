@@ -186,7 +186,7 @@ const (
 //   - [SlowCleanup]: The cleanup process runs every 75% of the TOTP period.
 //
 // Note: Choosing an appropriate cleanup interval is important to balance the need for timely removal of expired tokens
-// and the overhead of running the cleanup process too frequently. The default cleanup interval is MediumCleanup.
+// and the overhead of running the cleanup process too frequently. The default cleanup interval is [MediumCleanup].
 var CleanupIntervals = map[int]float64{
 	FastCleanup:   0.25, // 25% of the TOTP period
 	MediumCleanup: 0.50, // 50% of the TOTP period
