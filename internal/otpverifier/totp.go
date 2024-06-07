@@ -17,9 +17,10 @@ import (
 
 // TOTPVerifier is a TOTP verifier that implements the OTPVerifier interface.
 type TOTPVerifier struct {
-	config     Config
-	totp       *gotp.TOTP
-	UsedTokens *sync.Map
+	config          Config
+	totp            *gotp.TOTP
+	UsedTokens      *sync.Map
+	CleanupInterval int
 }
 
 // NewTOTPVerifier creates a new TOTPVerifier with the given configuration.
@@ -68,7 +69,8 @@ func NewTOTPVerifier(config ...Config) *TOTPVerifier {
 		totp:   totp,
 		// Allocates 11 to 15 allocs/op without signature (depends on the hash function), which is relatively inexpensive for this TOTP synchronization window.
 		// Without implementing a synchronization window similar to HOTP, it can lead to high vulnerability.
-		UsedTokens: &sync.Map{},
+		UsedTokens:      &sync.Map{},
+		CleanupInterval: c.CleanupInterval,
 	}
 
 	// Start the periodic cleanup goroutine
@@ -209,7 +211,12 @@ func (v *TOTPVerifier) GenerateOTPURL(issuer, accountName string) string {
 
 // startPeriodicCleanup starts a goroutine that periodically cleans up expired tokens.
 func (v *TOTPVerifier) startPeriodicCleanup() {
-	cleanupPeriod := time.Duration(v.config.Period/2) * time.Second
+	cleanupPeriodPercentage, ok := CleanupIntervals[v.CleanupInterval]
+	if !ok {
+		cleanupPeriodPercentage = CleanupIntervals[MediumCleanup] // Default to medium if invalid value is provided
+	}
+
+	cleanupPeriod := time.Duration(float64(v.config.Period)*cleanupPeriodPercentage) * time.Second
 	cleanupTicker := time.NewTicker(cleanupPeriod)
 	defer cleanupTicker.Stop()
 

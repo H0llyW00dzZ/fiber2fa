@@ -181,11 +181,12 @@ func TestTOTPVerifier_PeriodicCleanup(t *testing.T) {
 	secret := gotp.RandomSecret(16)
 	period := 10 // Set the token validity period to 10 seconds
 	config := otpverifier.Config{
-		Secret:     secret,
-		Period:     period,
-		Digits:     6,
-		Hash:       otpverifier.SHA256,
-		TimeSource: time.Now,
+		Secret:          secret,
+		Period:          period,
+		Digits:          6,
+		Hash:            otpverifier.SHA256,
+		TimeSource:      otpverifier.DefaultConfig.TOTPTime,
+		CleanupInterval: otpverifier.FastCleanup,
 	}
 
 	verifier := otpverifier.NewTOTPVerifier(config)
@@ -195,7 +196,7 @@ func TestTOTPVerifier_PeriodicCleanup(t *testing.T) {
 	verifier.Verify(token1)
 
 	// Wait Assistant garbage collector for periodic cleanup to occur (less than the token validity period)
-	time.Sleep(time.Duration(period*3/4) * time.Second)
+	time.Sleep(time.Duration(period*4/4) * time.Second)
 
 	// Simulate used tokens
 	token2 := verifier.GenerateToken()

@@ -160,6 +160,39 @@ var SyncWindowRanges = map[int][]int{
 	LowStrict:    {5, 10},
 }
 
+const (
+	// FastCleanup represents the fastest cleanup interval for removing expired tokens in the TOTP verifier.
+	// It is assigned a value of iota + 1, which evaluates to 1.
+	// When FastCleanup is selected, the cleanup process runs every 25% of the TOTP period, providing the most frequent cleanup.
+	FastCleanup = iota + 1
+
+	// MediumCleanup represents a medium cleanup interval for removing expired tokens in the TOTP verifier.
+	// It is assigned the next sequential value of iota, which evaluates to 2.
+	// When MediumCleanup is selected, the cleanup process runs every 50% of the TOTP period, providing a balanced cleanup frequency.
+	MediumCleanup
+
+	// SlowCleanup represents the slowest cleanup interval for removing expired tokens in the TOTP verifier.
+	// It is assigned the next sequential value of iota, which evaluates to 3.
+	// When SlowCleanup is selected, the cleanup process runs every 75% of the TOTP period, providing the least frequent cleanup.
+	SlowCleanup
+)
+
+// CleanupIntervals is a map that associates cleanup interval constants with their corresponding percentage of the TOTP period.
+// The cleanup interval determines how frequently the cleanup process runs to remove expired tokens.
+//
+// The available cleanup intervals are:
+//   - [FastCleanup]: The cleanup process runs every 25% of the TOTP period.
+//   - [MediumCleanup]: The cleanup process runs every 50% of the TOTP period.
+//   - [SlowCleanup]: The cleanup process runs every 75% of the TOTP period.
+//
+// Note: Choosing an appropriate cleanup interval is important to balance the need for timely removal of expired tokens
+// and the overhead of running the cleanup process too frequently. The default cleanup interval is MediumCleanup.
+var CleanupIntervals = map[int]float64{
+	FastCleanup:   0.25, // 25% of the TOTP period
+	MediumCleanup: 0.50, // 50% of the TOTP period
+	SlowCleanup:   0.75, // 75% of the TOTP period
+}
+
 // TimeSource is a function type that returns the current time.
 type TimeSource func() time.Time
 
@@ -189,6 +222,7 @@ type Config struct {
 	CustomURITemplateParams map[string]string
 	Hash                    string
 	Crypto                  Crypto
+	CleanupInterval         int
 }
 
 // QRCodeConfig represents the configuration for generating QR codes.
