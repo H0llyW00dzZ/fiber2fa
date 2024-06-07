@@ -210,10 +210,12 @@ func (v *TOTPVerifier) GenerateOTPURL(issuer, accountName string) string {
 }
 
 // startPeriodicCleanup starts a goroutine that periodically cleans up expired tokens.
+//
+// Note: This is safe for long-running processes until billions of years pass since it uses a 64-bit integer.
 func (v *TOTPVerifier) startPeriodicCleanup() {
 	cleanupPeriodPercentage, ok := CleanupIntervals[v.CleanupInterval]
 	if !ok {
-		cleanupPeriodPercentage = CleanupIntervals[MediumCleanup] // Default to medium if invalid value is provided
+		cleanupPeriodPercentage = CleanupIntervals[MediumCleanup] // Default to medium if an invalid value is provided
 	}
 
 	cleanupPeriod := time.Duration(float64(v.config.Period)*cleanupPeriodPercentage) * time.Second
