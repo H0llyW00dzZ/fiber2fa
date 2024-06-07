@@ -446,5 +446,5 @@ func (v *Config) cryptopowpow10(exponent int) uint64 {
 // Note: The returned time is always expressed in UTC (Coordinated Universal Time) to avoid any ambiguity caused by local time zone offsets.
 func (v *Config) TOTPTime() time.Time {
 	location, _ := time.LoadLocation("Antarctica/South_Pole")
-	return time.Now().In(location)
+	return time.Now().In(location).UTC()
 }

@@ -221,7 +221,7 @@ var DefaultConfig = Config{
 	DigitsCount:          otp.DefaultConfig.Digits,
 	Period:               otp.DefaultConfig.Period,
 	Hash:                 otp.SHA512,
-	TimeSource:           otp.DefaultConfig.TOTPTime().UTC,
+	TimeSource:           otp.DefaultConfig.TOTPTime,
 	SyncWindow:           otp.DefaultConfig.SyncWindow,
 	SkipCookies:          nil,
 	CookieName:           "twofa_cookie",

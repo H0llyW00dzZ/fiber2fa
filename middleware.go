@@ -301,16 +301,15 @@ func (m *Middleware) extractToken(c *fiber.Ctx) string {
 // verifyToken verifies the provided token against the user's secret and returns the updated Info struct.
 func (m *Middleware) verifyToken(token string) bool {
 	totp := otp.NewTOTPVerifier(otp.Config{
-		Secret:       m.Info.GetSecret(),
-		Digits:       m.Config.DigitsCount,
-		Period:       m.Config.Period,
-		SyncWindow:   m.Config.SyncWindow,
-		UseSignature: otp.DefaultConfig.UseSignature,
-		Hash:         m.Config.Hash,
-		TimeSource:   m.Config.TimeSource,
+		Secret:     m.Info.GetSecret(),
+		Digits:     m.Config.DigitsCount,
+		Period:     m.Config.Period,
+		SyncWindow: m.Config.SyncWindow,
+		Hash:       m.Config.Hash,
+		TimeSource: m.Config.TimeSource,
 	})
 
-	if !totp.Verify(token, "") {
+	if !totp.Verify(token) {
 		return false
 	}
 
