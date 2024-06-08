@@ -156,7 +156,7 @@
 //  3. Time Synchronization Issues (for TOTP): TOTP relies on a synchronized time value between the server and the client.
 //     If the client's device has an incorrect time or if there are significant delays in communication, it can cause issues
 //     with token verification. This is because this package uses [crypto/subtle], which provides strict and strong synchronization
-//     requirements related to time to prevent timing attacks. As a result, even small discrepancies in time synchronization can
+//     requirements related to time to prevent brute-force and timing attacks. As a result, even small discrepancies in time synchronization can
 //     lead to token verification failures.
 //
 //  4. MFA Not Supported: Multi-Factor Authentication (MFA) is not supported within this package due to the high risks associated with it.

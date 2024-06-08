@@ -181,7 +181,7 @@ func (v *TOTPVerifier) verifyWithSignature(token, signature string) bool {
 func (v *TOTPVerifier) GenerateToken() string {
 	// TODO: Allow customizing the character set instead of using only numbers.
 	// Although the current TOTP implementation relies on time and is secure due to the use of the [crypto/subtle] package,
-	// even with the current implementation that uses numbers, it is secure, especially against brute-force attacks.
+	// even with the current implementation that uses numbers, it is secure, especially against brute-force and timing attacks.
 	// However, we won't implement this now because most 2FA apps in the world, especially for mobile devices,
 	// still have poor ecosystems and are not modern enough to support custom character sets.
 	return v.totp.Now()
@@ -191,7 +191,7 @@ func (v *TOTPVerifier) GenerateToken() string {
 func (v *TOTPVerifier) GenerateTokenWithSignature() (string, string) {
 	// TODO: Allow customizing the character set instead of using only numbers.
 	// Although the current TOTP implementation relies on time and is secure due to the use of the [crypto/subtle] package,
-	// even with the current implementation that uses numbers, it is secure, especially against brute-force attacks.
+	// even with the current implementation that uses numbers, it is secure, especially against brute-force and timing attacks.
 	// However, we won't implement this now because most 2FA apps in the world, especially for mobile devices,
 	// still have poor ecosystems and are not modern enough to support custom character sets.
 	token := v.totp.Now()
