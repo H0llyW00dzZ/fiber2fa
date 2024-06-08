@@ -25,6 +25,13 @@ type OCRAVerifier struct {
 }
 
 // NewOCRAVerifier creates a new OCRAVerifier with the given configuration.
+//
+// Note: This requires building own 2FA apps because it involves a question-answer process.
+// For example, a mobile app can be built to generate OCRA tokens based on the shared secret key and the challenge.
+// The app would prompt the user with the question from the challenge and expect the user to provide the correct answer.
+// The answer, along with other parameters like the counter value, would be used to generate the OCRA token.
+// The generated token can then be entered by the user on the server-side for verification.
+// Building own 2FA app allows customizing the user experience and integrating OCRA seamlessly into the authentication flow.
 func NewOCRAVerifier(config ...Config) *OCRAVerifier {
 	c := DefaultConfig
 	if len(config) > 0 {
