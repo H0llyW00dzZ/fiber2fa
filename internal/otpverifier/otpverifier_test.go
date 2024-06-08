@@ -1567,3 +1567,142 @@ func TestHOTPVerifier_VerifySignatureMismatch(t *testing.T) {
 		t.Errorf("Expected Verify to return false for signature mismatch, but it returned true")
 	}
 }
+
+func TestOCRAVerifier_GenerateToken(t *testing.T) {
+	// Create a new OCRAVerifier with default configuration
+	config := otpverifier.DefaultConfig
+	secret := gotp.RandomSecret(16)
+	config.Secret = secret
+	verifier := otpverifier.NewOCRAVerifier(config)
+
+	// Define test cases
+	testCases := []struct {
+		challenge string
+		expected  string
+	}{
+		{
+			challenge: "OCRA-1:HOTP-SHA1-6:QN08-0-00000000",
+			expected:  generateOCRA(secret, "OCRA-1:HOTP-SHA1-6:QN08-0-00000000"),
+		},
+		{
+			challenge: "OCRA-1:HOTP-SHA256-8:QN08-1-11111111",
+			expected:  generateOCRA(secret, "OCRA-1:HOTP-SHA256-8:QN08-1-11111111"),
+		},
+		{
+			challenge: "OCRA-1:HOTP-SHA512-8:QN08-2-22222222",
+			expected:  generateOCRA(secret, "OCRA-1:HOTP-SHA512-8:QN08-2-22222222"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run("Challenge="+tc.challenge, func(t *testing.T) {
+			result := verifier.GenerateToken(tc.challenge)
+
+			if result != tc.expected {
+				t.Errorf("Expected token to be %s, got %s instead", tc.expected, result)
+			}
+		})
+	}
+}
+
+func TestOCRAVerifier_Verify(t *testing.T) {
+	// Create a new OCRAVerifier with default configuration
+	config := otpverifier.DefaultConfig
+	secret := gotp.RandomSecret(16)
+	config.Secret = secret
+	verifier := otpverifier.NewOCRAVerifier(config)
+
+	// Define test cases
+	testCases := []struct {
+		challenge string
+		token     string
+		expected  bool
+	}{
+		{
+			challenge: "OCRA-1:HOTP-SHA1-6:QN08-0-00000000",
+			token:     generateOCRA(secret, "OCRA-1:HOTP-SHA1-6:QN08-0-00000000"),
+			expected:  true,
+		},
+		{
+			challenge: "OCRA-1:HOTP-SHA256-8:QN08-1-11111111",
+			token:     generateOCRA(secret, "OCRA-1:HOTP-SHA256-8:QN08-1-11111111"),
+			expected:  true,
+		},
+		{
+			challenge: "OCRA-1:HOTP-SHA512-8:QN08-2-22222222",
+			token:     generateOCRA(secret, "OCRA-1:HOTP-SHA512-8:QN08-2-22222222"),
+			expected:  true,
+		},
+		{
+			challenge: "OCRA-1:HOTP-SHA1-6:QN08-3-33333333",
+			token:     "123456",
+			expected:  false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run("Challenge="+tc.challenge, func(t *testing.T) {
+			result := verifier.Verify(tc.token, tc.challenge)
+
+			if result != tc.expected {
+				t.Errorf("Expected verification result to be %v, got %v instead", tc.expected, result)
+			}
+		})
+	}
+}
+
+// generateOCRA is a helper function to generate OCRA tokens for testing purposes.
+func generateOCRA(secret string, challenge string) string {
+	return otpverifier.NewOCRAVerifier(otpverifier.Config{Secret: secret}).GenerateToken(challenge)
+}
+
+func TestOCRAVerifier_GenerateToken_Panics(t *testing.T) {
+	// Create a new OCRAVerifier with default configuration
+	config := otpverifier.DefaultConfig
+	secret := gotp.RandomSecret(16)
+	config.Secret = secret
+	verifier := otpverifier.NewOCRAVerifier(config)
+
+	// Define test cases
+	testCases := []struct {
+		name      string
+		challenge string
+	}{
+		{
+			name:      "InvalidChallengeFormat_MissingParts",
+			challenge: "OCRA-1:HOTP-SHA1-6",
+		},
+		{
+			name:      "InvalidChallengeFormat_MissingCounterAndQuestion",
+			challenge: "OCRA-1:HOTP-SHA1-6:QN08",
+		},
+		{
+			name:      "InvalidCounterValue",
+			challenge: "OCRA-1:HOTP-SHA1-6:QN08-invalid-00000000",
+		},
+		{
+			name:      "UnsupportedOCRASuite_MissingVersion",
+			challenge: "HOTP-SHA1-6:QN08-0-00000000",
+		},
+		{
+			name:      "UnsupportedOCRASuite_InvalidVersion",
+			challenge: "OCRA-2:HOTP-SHA1-6:QN08-0-00000000",
+		},
+		{
+			name:      "UnsupportedHashAlgorithm",
+			challenge: "OCRA-1:HOTP-MD5-6:QN08-0-00000000",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			defer func() {
+				if r := recover(); r == nil {
+					t.Errorf("Expected panic, but no panic occurred")
+				}
+			}()
+
+			verifier.GenerateToken(tc.challenge)
+		})
+	}
+}
