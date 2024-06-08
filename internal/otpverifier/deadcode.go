@@ -17,3 +17,22 @@ func (v *TOTPVerifier) SetCounter(counter uint64) {
 func (v *TOTPVerifier) GetCounter() uint64 {
 	return 0
 }
+
+// SetCounter is not applicable for OCRA, so it does nothing.
+//
+// Deprecated: No-op for OCRA (deadcode)
+func (v *OCRAVerifier) SetCounter(counter uint64) {}
+
+// GetCounter is not applicable for OCRA, so it returns 0.
+//
+// Deprecated: No-op for OCRA (deadcode)
+func (v *OCRAVerifier) GetCounter() uint64 {
+	return 0
+}
+
+// GenerateTokenWithSignature is not applicable for OCRA, so it panics.
+//
+// Deprecated: No-op for OCRA (deadcode)
+func (v *OCRAVerifier) GenerateTokenWithSignature() (string, string) {
+	panic("GenerateTokenWithSignature is not applicable for OCRA")
+}
