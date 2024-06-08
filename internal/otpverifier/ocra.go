@@ -14,6 +14,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"hash"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -105,10 +106,12 @@ func (v *OCRAVerifier) generateOCRA(counter uint64, question string, hash func()
 	hmacHash.Write(data)
 	hashValue := hmacHash.Sum(nil)
 
-	// Truncate the hash to get the HOTP value
+	// Truncate the hash to obtain the HOTP value
+	//
+	// Note: This method is the same as the one used in the GOTP library by xlzd.
 	offset := hashValue[len(hashValue)-1] & 0xf
-	binary := binary.BigEndian.Uint32(hashValue[offset : offset+4])
-	hotp := binary % uint32(v.config.Digits)
+	truncatedHash := binary.BigEndian.Uint32(hashValue[offset : offset+4])
+	hotp := truncatedHash % uint32(math.Pow10(v.config.Digits))
 
 	// Format the HOTP value as a string with the specified number of digits
 	return fmt.Sprintf(fmt.Sprintf("%%0%dd", v.config.Digits), hotp)
