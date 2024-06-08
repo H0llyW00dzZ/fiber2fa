@@ -333,6 +333,10 @@ func (v *HOTPVerifier) deferResynchronization(matchedCounter uint64) {
 		v.SetCounter(matchedCounter + 1)
 
 		// Update the last resynchronization time
+		//
+		// TODO: Bound to the [TimeSource] field which can be customized (e.g., use Monotonic Clock or Wall Clock). However, it is not really needed right now
+		// because most use cases prefer TOTP since it is stable and cheaper compared to HOTP,
+		// which mostly involves expensive allocations.
 		v.lastResyncTime = time.Now()
 
 		// Adjust the sync window
