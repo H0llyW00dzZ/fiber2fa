@@ -116,6 +116,8 @@ func (v *TOTPVerifier) verifyWithoutSignature(token string) bool {
 	// Sometimes it can be negative (depending on the time zone) when customizing the SyncWindow (e.g., 1, 2, 3).
 	// This is safe because it uses the crypto/subtle package for constant-time comparisons.
 	for offset := -v.config.SyncWindow; offset <= v.config.SyncWindow; offset++ {
+		// TODO: Implement another configuration called "LockDown" to lock the time zone and only allow tokens from a specific region on Earth.
+		// It is possible to implement that LockDown by calculating this using math. However, it is not really needed right now.
 		expectedTimeStep := currentTimeStep + int64(offset)
 		expectedTimestamp := expectedTimeStep * int64(v.config.Period)
 
@@ -149,6 +151,8 @@ func (v *TOTPVerifier) verifyWithSignature(token, signature string) bool {
 	// Sometimes it can be negative (depending on the time zone) when customizing the SyncWindow (e.g., 1, 2, 3).
 	// This is safe because it uses the crypto/subtle package for constant-time comparisons.
 	for offset := -v.config.SyncWindow; offset <= v.config.SyncWindow; offset++ {
+		// TODO: Implement another configuration called "LockDown" to lock the time zone and only allow tokens from a specific region on Earth.
+		// It is possible to implement that LockDown by calculating this using math. However, it is not really needed right now.
 		expectedTimeStep := currentTimeStep + int64(offset)
 		expectedTimestamp := expectedTimeStep * int64(v.config.Period)
 
