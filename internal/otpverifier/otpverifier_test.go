@@ -120,6 +120,9 @@ func TestDefaultConfigTOTPVerifier_Verify(t *testing.T) {
 		otpverifier.BLAKE2b256,
 		otpverifier.BLAKE2b384,
 		otpverifier.BLAKE2b512,
+		otpverifier.BLAKE3256,
+		otpverifier.BLAKE3384,
+		otpverifier.BLAKE3512,
 	}
 
 	for _, hashFunc := range hashFunctions {
@@ -1122,10 +1125,18 @@ func TestHOTPVerifier_VerifySyncWindowMediumStrict(t *testing.T) {
 
 	hashFunctions := []string{
 		otpverifier.SHA1,
+		otpverifier.SHA224,
 		otpverifier.SHA256,
+		otpverifier.SHA384,
 		otpverifier.SHA512,
+		otpverifier.SHA512S224,
+		otpverifier.SHA512S256,
 		otpverifier.BLAKE2b256,
+		otpverifier.BLAKE2b384,
+		otpverifier.BLAKE2b512,
 		otpverifier.BLAKE3256,
+		otpverifier.BLAKE3384,
+		otpverifier.BLAKE3512,
 	}
 
 	for _, hashFunc := range hashFunctions {
@@ -1181,10 +1192,18 @@ func TestHOTPVerifier_VerifySyncWindowLowStrict(t *testing.T) {
 
 	hashFunctions := []string{
 		otpverifier.SHA1,
+		otpverifier.SHA224,
 		otpverifier.SHA256,
+		otpverifier.SHA384,
 		otpverifier.SHA512,
+		otpverifier.SHA512S224,
+		otpverifier.SHA512S256,
 		otpverifier.BLAKE2b256,
+		otpverifier.BLAKE2b384,
+		otpverifier.BLAKE2b512,
 		otpverifier.BLAKE3256,
+		otpverifier.BLAKE3384,
+		otpverifier.BLAKE3512,
 	}
 
 	for _, hashFunc := range hashFunctions {
