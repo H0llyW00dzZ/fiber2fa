@@ -1656,6 +1656,53 @@ func TestOCRAVerifier_Verify(t *testing.T) {
 	}
 }
 
+func TestOCRAVerifier_Verify_InvalidCounterAndQuestion(t *testing.T) {
+	// Create a new OCRAVerifier with default configuration
+	config := otpverifier.DefaultConfig
+	secret := gotp.RandomSecret(16)
+	config.Secret = secret
+	verifier := otpverifier.NewOCRAVerifier(config)
+
+	// Define test cases with invalid counter and question/answer
+	//
+	// Note: This is a better approach instead of incrementing a counter when generating a token,
+	// however it requires building own 2FA apps because it won't work if trying to use the same source
+	// that relies on the RFC Ancient Method.
+	testCases := []struct {
+		challenge string
+		token     string
+		expected  bool
+	}{
+		{
+			challenge: "OCRA-1:HOTP-SHA1-6:QN08-123-InvalidQuestion",
+			token:     "",
+			expected:  false,
+		},
+		{
+			challenge: "OCRA-1:HOTP-SHA1-6:QN08-1234-ValidQuestion",
+			token:     "",
+			expected:  false,
+		},
+	}
+
+	for _, tc := range testCases {
+		// Generate a valid challenge
+		validChallenge := generateRandomChallenge(config, "OCRA-1:HOTP-SHA1-6")
+		t.Run("Challenge="+tc.challenge, func(t *testing.T) {
+			if tc.token == "" {
+				// Generate a valid token
+				tc.token = generateOCRA(secret, validChallenge)
+			}
+			result := verifier.Verify(tc.token, tc.challenge)
+			t.Logf("Challenge: %s, Token: %s, Expected: %v, Result: %v", tc.challenge, tc.token, tc.expected, result)
+
+			if result != tc.expected {
+				t.Errorf("Expected verification result to be %v, got %v instead", tc.expected, result)
+			}
+		})
+	}
+}
+
 // generateOCRA is a helper function to generate OCRA tokens for testing purposes.
 func generateOCRA(secret string, challenge string) string {
 	return otpverifier.NewOCRAVerifier(otpverifier.Config{Secret: secret}).GenerateToken(challenge)
