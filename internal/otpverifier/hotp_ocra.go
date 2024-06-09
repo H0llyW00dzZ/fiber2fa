@@ -82,7 +82,7 @@ func (v *OCRAVerifier) GenerateToken(challenge string) string {
 	//
 	// TODO: use constant
 	//
-	// Note: This hash implementation does not rely on the RFC truncation method because it is written in Go, not in other languages like Java.
+	// Note: This hash implementation does not rely on the RFC truncation method (see https://datatracker.ietf.org/doc/html/rfc6287#section-5.2 which is bad it literally break cryptographic principles) because it is written in Go, not in other languages like Java.
 	// It is already 100% secure and guaranteed due to the use of the crypto/subtle package.
 	// Also note that we might implement our own method because it's relatively easy to create a custom OTP based on HMAC-Truncated.
 	var hash func() hash.Hash
