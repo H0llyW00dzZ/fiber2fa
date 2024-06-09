@@ -1614,35 +1614,40 @@ func TestOCRAVerifier_Verify(t *testing.T) {
 
 	// Define test cases
 	testCases := []struct {
-		challenge string
+		ocraSuite string
 		token     string
 		expected  bool
 	}{
 		{
-			challenge: "OCRA-1:HOTP-SHA1-6:QN08-0-00000000",
-			token:     generateOCRA(secret, "OCRA-1:HOTP-SHA1-6:QN08-0-00000000"),
+			ocraSuite: "OCRA-1:HOTP-SHA1-6",
+			token:     "", // Token will be generated based on the challenge
 			expected:  true,
 		},
 		{
-			challenge: "OCRA-1:HOTP-SHA256-8:QN08-1-11111111",
-			token:     generateOCRA(secret, "OCRA-1:HOTP-SHA256-8:QN08-1-11111111"),
+			ocraSuite: "OCRA-1:HOTP-SHA256-8",
+			token:     "", // Token will be generated based on the challenge
 			expected:  true,
 		},
 		{
-			challenge: "OCRA-1:HOTP-SHA512-8:QN08-2-22222222",
-			token:     generateOCRA(secret, "OCRA-1:HOTP-SHA512-8:QN08-2-22222222"),
+			ocraSuite: "OCRA-1:HOTP-SHA512-8",
+			token:     "", // Token will be generated based on the challenge
 			expected:  true,
 		},
 		{
-			challenge: "OCRA-1:HOTP-SHA1-6:QN08-3-33333333",
+			ocraSuite: "OCRA-1:HOTP-SHA1-6",
 			token:     "123456",
 			expected:  false,
 		},
 	}
 
 	for _, tc := range testCases {
-		t.Run("Challenge="+tc.challenge, func(t *testing.T) {
-			result := verifier.Verify(tc.token, tc.challenge)
+		challenge := generateRandomChallenge(config, tc.ocraSuite)
+		t.Run("Challenge="+challenge, func(t *testing.T) {
+			if tc.token == "" {
+				tc.token = generateOCRA(secret, challenge)
+			}
+			result := verifier.Verify(tc.token, challenge)
+			t.Logf("Challenge: %s, Token: %s, Expected: %v, Result: %v", challenge, tc.token, tc.expected, result)
 
 			if result != tc.expected {
 				t.Errorf("Expected verification result to be %v, got %v instead", tc.expected, result)
@@ -1654,6 +1659,16 @@ func TestOCRAVerifier_Verify(t *testing.T) {
 // generateOCRA is a helper function to generate OCRA tokens for testing purposes.
 func generateOCRA(secret string, challenge string) string {
 	return otpverifier.NewOCRAVerifier(otpverifier.Config{Secret: secret}).GenerateToken(challenge)
+}
+
+// generateRandomChallenge generates a random challenge string with the specified OCRA suite and a random question.
+//
+// Note: This is a better way to generate the challenge. The counter and question/answer can be randomly generated,
+// or the client must solve a math formula of the highest difficulty Solve to get the TOKEN.
+func generateRandomChallenge(config otpverifier.Config, ocraSuite string) string {
+	randNum1 := config.GenerateSecureRandomCounter(8)
+	randNum2 := config.GenerateSecureRandomCounter(8)
+	return fmt.Sprintf("%s:%s-%d-%d", ocraSuite, "QN08", randNum1, randNum2)
 }
 
 func TestOCRAVerifier_GenerateToken_Panics(t *testing.T) {
