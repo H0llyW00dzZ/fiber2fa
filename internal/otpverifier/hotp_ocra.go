@@ -120,6 +120,7 @@ func (v *OCRAVerifier) generateOCRA(counter uint64, question string, hash func()
 	// Truncate the hash to obtain the HOTP value
 	//
 	// Note: This method is the same as the one used in the GOTP library by xlzd.
+	// the only thing different, this not hard-coded raw and allow customized truncated across signature of HMAC
 	offset := hashValue[len(hashValue)-1] & 0xf
 	truncatedHash := binary.BigEndian.Uint32(hashValue[offset : offset+4])
 	hotp := truncatedHash % uint32(math.Pow10(v.config.Digits))
