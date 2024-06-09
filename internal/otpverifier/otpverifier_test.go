@@ -1705,7 +1705,10 @@ func TestOCRAVerifier_Verify_InvalidCounterAndQuestion(t *testing.T) {
 
 // generateOCRA is a helper function to generate OCRA tokens for testing purposes.
 func generateOCRA(secret string, challenge string) string {
-	return otpverifier.NewOCRAVerifier(otpverifier.Config{Secret: secret}).GenerateToken(challenge)
+	return otpverifier.NewOCRAVerifier(
+		otpverifier.Config{
+			Secret: secret,
+		}).GenerateToken(challenge)
 }
 
 // generateRandomChallenge generates a random challenge string with the specified OCRA suite and a random question.
