@@ -31,11 +31,11 @@ func NewTOTPVerifier(config ...Config) *TOTPVerifier {
 	}
 
 	// Use default values if not provided
-	if c.Digits == 0 {
+	if c.Digits <= 4 { // minimum is 5 and max is 8
 		c.Digits = DefaultConfig.Digits
 	}
 
-	if c.Period == 0 {
+	if c.Period <= 0 {
 		c.Period = DefaultConfig.Period
 	}
 
