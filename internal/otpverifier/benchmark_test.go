@@ -137,10 +137,10 @@ func BenchmarkGenerateSecureRandomCounter(b *testing.B) {
 				// goos: windows
 				// goarch: amd64
 				// pkg: github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier
-				// cpu: AMD Ryzen 9 3900X 12-Core Processor
-				// BenchmarkGenerateSecureRandomCounter/MaxDigits_6-24         	 8208141	       145.2 ns/op	       8 B/op	       1 allocs/op
-				// BenchmarkGenerateSecureRandomCounter/MaxDigits_8-24         	 8076456	       147.5 ns/op	       8 B/op	       1 allocs/op
-				// BenchmarkGenerateSecureRandomCounter/MaxDigits_30-24        	 6991927	       173.2 ns/op	       8 B/op	       1 allocs/op
+				// cpu: AMD Ryzen 9 3900X 12-Core Processor (Best CPU Cryptographic)
+				// BenchmarkGenerateSecureRandomCounter/MaxDigits_6-24         	 8044269	       139.5 ns/op	       8 B/op	       1 allocs/op
+				// BenchmarkGenerateSecureRandomCounter/MaxDigits_8-24         	 8346988	       139.8 ns/op	       8 B/op	       1 allocs/op
+				// BenchmarkGenerateSecureRandomCounter/MaxDigits_30-24        	 7064142	       168.6 ns/op	       8 B/op	       1 allocs/op
 				//
 				// Note: 1 allocs/op it's cheap you poggers.
 				config.GenerateSecureRandomCounter(digits)
@@ -196,11 +196,11 @@ func BenchmarkOCRAVerify(b *testing.B) {
 				// goos: windows
 				// goarch: amd64
 				// pkg: github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier
-				// cpu: AMD Ryzen 9 3900X 12-Core Processor
-				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA1-6-24         	  482844	      2347 ns/op	     792 B/op	      22 allocs/op
-				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA256-8-24       	  567697	      2110 ns/op	     832 B/op	      22 allocs/op
-				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA512-8-24       	  415496	      2914 ns/op	    1185 B/op	      22 allocs/op
-				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA1-6#01-24      	  515581	      2340 ns/op	     792 B/op	      22 allocs/op
+				// cpu: AMD Ryzen 9 3900X 12-Core Processor (Best CPU Cryptographic)
+				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA1-6-24         	  504555	      2243 ns/op	     792 B/op	      22 allocs/op
+				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA256-8-24       	  595725	      2027 ns/op	     832 B/op	      22 allocs/op
+				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA512-8-24       	  425383	      2819 ns/op	    1185 B/op	      22 allocs/op
+				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA1-6#01-24      	  529720	      2242 ns/op	     792 B/op	      22 allocs/op
 				//
 				// Note: 22 allocs/op it's because of Pseudorandom and Hash Function you poggers.
 				verifier.Verify(tc.token, challenge)
