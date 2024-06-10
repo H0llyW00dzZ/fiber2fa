@@ -8,7 +8,6 @@ import (
 	"container/ring"
 	"crypto/hmac"
 	"crypto/subtle"
-	"encoding/base32"
 	"fmt"
 	"sync"
 	"time"
@@ -245,8 +244,7 @@ func (v *HOTPVerifier) GenerateTokenWithSignature() (string, string) {
 
 // generateSignature generates an HMAC signature for the given token using the secret key.
 func (v *HOTPVerifier) generateSignature(token string) string {
-	key, _ := base32.StdEncoding.DecodeString(v.config.Secret)
-	h := hmac.New(v.config.Hasher.Digest, key)
+	h := hmac.New(v.config.Hasher.Digest, v.config.DecodeBase32WithPadding())
 	h.Write([]byte(token))
 	return fmt.Sprintf("%x", h.Sum(nil))
 }

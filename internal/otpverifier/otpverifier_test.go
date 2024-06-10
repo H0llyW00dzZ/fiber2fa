@@ -1022,8 +1022,7 @@ func TestHOTPVerifier_VerifySyncWindowWithSignature(t *testing.T) {
 		}
 
 		// Generate a token and signature for the current counter value
-		currentToken := verifier.Hotp.At(int(initialCounter))
-		currentSignature := generateSignature(currentToken)
+		currentToken, currentSignature := verifier.GenerateTokenWithSignature()
 
 		// Verify this token and signature should pass
 		if !verifier.Verify(currentToken, currentSignature) {
@@ -1031,8 +1030,7 @@ func TestHOTPVerifier_VerifySyncWindowWithSignature(t *testing.T) {
 		}
 
 		// Generate a token and signature for a counter value within the sync window
-		withinWindowToken := verifier.Hotp.At(int(initialCounter) + otpverifier.HighStrict)
-		withinWindowSignature := generateSignature(withinWindowToken)
+		withinWindowToken, withinWindowSignature := verifier.GenerateTokenWithSignature()
 
 		// Verify this token and signature should also pass
 		if !verifier.Verify(withinWindowToken, withinWindowSignature) {
@@ -1770,4 +1768,25 @@ func TestOCRAVerifier_GenerateToken_Panics(t *testing.T) {
 			verifier.GenerateToken(tc.challenge)
 		})
 	}
+}
+
+func TestDecodeBase32WithPadding_Crash(t *testing.T) {
+
+	HelperFunction := otpverifier.Config{
+		Secret: "ILLEGAL BASE32",
+		Hash:   otpverifier.SHA256,
+	}
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected DecodeBase32WithPadding to panic with ILLEGAL BASE32, but it didn't")
+		} else {
+			expectedPanicMessage := "DecodeBase32WithPadding: illegal base32 data"
+			if r != expectedPanicMessage {
+				t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+			}
+		}
+	}()
+
+	HelperFunction.DecodeBase32WithPadding()
 }
