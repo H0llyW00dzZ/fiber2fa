@@ -10,7 +10,6 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/subtle"
-	"encoding/base32"
 	"encoding/binary"
 	"fmt"
 	"hash"
@@ -112,8 +111,7 @@ func (v *OCRAVerifier) generateOCRA(counter uint64, question string, hash func()
 	data := append(counterBytes, questionBytes...)
 
 	// Generate the HMAC hash
-	secret, _ := base32.StdEncoding.DecodeString(v.config.Secret)
-	hmacHash := hmac.New(hash, secret)
+	hmacHash := hmac.New(hash, v.config.DecodeBase32WithPadding())
 	hmacHash.Write(data)
 	hashValue := hmacHash.Sum(nil)
 

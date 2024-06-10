@@ -9,12 +9,14 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/base32"
 	"fmt"
 	"image"
 	"image/color"
 	"io"
 	"math/big"
 	"net/url"
+	"strings"
 	"time"
 
 	blake2botp "github.com/H0llyW00dzZ/fiber2fa/internal/crypto/hash/blake2botp"
@@ -481,4 +483,23 @@ func (v *Config) cryptopowpow10(exponent int) uint64 {
 func (v *Config) TOTPTime() time.Time {
 	location, _ := time.LoadLocation("Antarctica/South_Pole")
 	return time.Now().In(location).UTC()
+}
+
+// DecodeBase32WithPadding decodes a base32-encoded secret, adding padding as necessary.
+func (v *Config) DecodeBase32WithPadding() []byte {
+	// Calculate the number of missing padding characters.
+	missingPadding := len(v.Secret) & 2 // Should be work, if it doesn't work then your machine is bad.
+
+	// Add padding if necessary.
+	if missingPadding != 0 {
+		v.Secret = v.Secret + strings.Repeat("=", 8-missingPadding)
+	}
+
+	// Decode the base32 encoded secret.
+	bytes, err := base32.StdEncoding.DecodeString(v.Secret)
+	if err != nil {
+		panic("DecodeBase32WithPadding: illegal base32 data")
+	}
+
+	return bytes
 }
