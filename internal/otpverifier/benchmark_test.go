@@ -148,3 +148,64 @@ func BenchmarkGenerateSecureRandomCounter(b *testing.B) {
 		})
 	}
 }
+
+func BenchmarkOCRAVerify(b *testing.B) {
+	// Create a new OCRAVerifier with default configuration
+	config := otpverifier.DefaultConfig
+	secret := gotp.RandomSecret(16)
+	config.Secret = secret
+	verifier := otpverifier.NewOCRAVerifier(config)
+
+	// Define test cases
+	testCases := []struct {
+		ocraSuite string
+		token     string
+		expected  bool
+	}{
+		{
+			ocraSuite: "OCRA-1:HOTP-SHA1-6",
+			token:     "", // Token will be generated based on the challenge
+			expected:  true,
+		},
+		{
+			ocraSuite: "OCRA-1:HOTP-SHA256-8",
+			token:     "", // Token will be generated based on the challenge
+			expected:  true,
+		},
+		{
+			ocraSuite: "OCRA-1:HOTP-SHA512-8",
+			token:     "", // Token will be generated based on the challenge
+			expected:  true,
+		},
+		{
+			ocraSuite: "OCRA-1:HOTP-SHA1-6",
+			token:     "123456",
+			expected:  false,
+		},
+	}
+
+	for _, tc := range testCases {
+		b.Run("Hash="+tc.ocraSuite, func(b *testing.B) {
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				challenge := generateRandomChallenge(config, tc.ocraSuite)
+				if tc.token == "" {
+					tc.token = generateOCRA(secret, challenge)
+				}
+
+				// goos: windows
+				// goarch: amd64
+				// pkg: github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier
+				// cpu: AMD Ryzen 9 3900X 12-Core Processor
+				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA1-6-24         	  482844	      2347 ns/op	     792 B/op	      22 allocs/op
+				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA256-8-24       	  567697	      2110 ns/op	     832 B/op	      22 allocs/op
+				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA512-8-24       	  415496	      2914 ns/op	    1185 B/op	      22 allocs/op
+				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA1-6#01-24      	  515581	      2340 ns/op	     792 B/op	      22 allocs/op
+				//
+				// Note: 22 allocs/op it's because of Pseudorandom and Hash Function you poggers.
+				verifier.Verify(tc.token, challenge)
+			}
+		})
+
+	}
+}
