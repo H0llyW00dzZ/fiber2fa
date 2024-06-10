@@ -10,7 +10,6 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/sha512"
-	"encoding/base32"
 	"fmt"
 	"hash"
 	"image/color"
@@ -1015,7 +1014,7 @@ func TestHOTPVerifier_VerifySyncWindowWithSignature(t *testing.T) {
 
 		// Helper function to generate a signature for a token
 		generateSignature := func(token string) string {
-			key, _ := base32.StdEncoding.DecodeString(secret)
+			key := config.DecodeBase32WithPadding()
 			h := hmac.New(otpverifier.Hashers[hashFunc].Digest, key)
 			h.Write([]byte(token))
 			return fmt.Sprintf("%x", h.Sum(nil))
