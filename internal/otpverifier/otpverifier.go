@@ -147,9 +147,9 @@ const (
 // SyncWindowRanges is a map that associates strictness levels with their corresponding ranges of synchronization window sizes.
 // The ranges are used to dynamically calculate the actual synchronization window size based on the counter value:
 //
-//   - For MediumStrict, the synchronization window size can be between 2 and 5.
-//   - For LowStrict, the synchronization window size can be between 5 and 10.
-//   - The HighStrict level does not have a range defined in SyncWindowRanges because it has a fixed synchronization window size of 1.
+//   - For [MediumStrict], the synchronization window size can be between 2 and 5.
+//   - For [LowStrict], the synchronization window size can be between 5 and 10.
+//   - The [HighStrict] level does not have a range defined in [SyncWindowRanges] because it has a fixed synchronization window size of 1.
 //
 // Also note that there are some considerations to keep in the mind:
 //
