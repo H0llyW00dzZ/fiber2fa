@@ -507,7 +507,7 @@ func (v *Config) DecodeBase32WithPadding() []byte {
 // cryptoPow10n calculates the value of 10 raised to the power of n.
 //
 // The function uses recursive multiplication to compute the result.
-// It starts with the base case of n == 0, where the result is 1 (10^0 = 1).
+// It starts with the base case of n <= 0, where the result is 1 (10^0 = 1).
 // For n > 0, the function recursively multiplies 10 with the result of cryptoPow10n(n-1).
 //
 // Example:
@@ -526,7 +526,7 @@ func (v *Config) DecodeBase32WithPadding() []byte {
 // the desired number of digits for the HOTP Advanced. It is used in the truncation step of the
 // HOTP algorithm to ensure that the resulting HOTP Advanced value has the specified number of digits.
 func (v *Config) cryptoPow10n(n int) uint32 {
-	if n == 0 {
+	if n <= 0 { // should be fine now, since this written in Go which it suitable for cryptographic.
 		return 1
 	}
 	return 10 * v.cryptoPow10n(n-1)
