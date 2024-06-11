@@ -13,7 +13,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"hash"
-	"math"
 	"strconv"
 	"strings"
 )
@@ -40,6 +39,7 @@ func NewOCRAVerifier(config ...Config) *OCRAVerifier {
 	// Use default values if not provided
 	if c.Digits <= 4 { // minimum is 5 and max is 8
 		c.Digits = DefaultConfig.Digits
+		c.Crypto = DefaultConfig.Crypto
 	}
 	if c.URITemplate == "" {
 		c.URITemplate = DefaultConfig.URITemplate
@@ -121,7 +121,11 @@ func (v *OCRAVerifier) generateOCRA(counter uint64, question string, hash func()
 	// the only thing different, this not hard-coded raw and allow customized truncated across signature of HMAC
 	offset := hashValue[len(hashValue)-1] & 0xf
 	truncatedHash := binary.BigEndian.Uint32(hashValue[offset : offset+4])
-	hotp := truncatedHash % uint32(math.Pow10(v.config.Digits))
+
+	// Calculate the HOTP Ocra value using modulo operation instead of [math.Pow10].
+	// This achieves the same result as using [math.Pow10] however this is more efficient due use magic calculator. ¯\_(ツ)_/¯
+	p10n := v.config.cryptoPow10n(v.config.Digits)
+	hotp := truncatedHash % uint32(p10n)
 
 	// Format the HOTP value as a string with the specified number of digits
 	return fmt.Sprintf(fmt.Sprintf("%%0%dd", v.config.Digits), hotp)
