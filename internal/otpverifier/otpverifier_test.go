@@ -1770,22 +1770,51 @@ func TestOCRAVerifier_GenerateToken_Panics(t *testing.T) {
 }
 
 func TestDecodeBase32WithPadding_Crash(t *testing.T) {
+	// Note: The base32 encoding of this secret is bounds into a
+	// cryptographically secure pseudorandom number generator (see
+	// https://en.wikipedia.org/wiki/Cryptographically_secure_pseudorandom_number_generator).
+	// Incorrect padding (e.g., extra "=", out-of-place "=") can lead to illegal base32 data.
+	secret := gotp.RandomSecret(16) + "==="
 
-	HelperFunction := otpverifier.Config{
-		Secret: "ILLEGAL BASE32",
-		Hash:   otpverifier.SHA256,
-	}
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Expected DecodeBase32WithPadding to panic with ILLEGAL BASE32, but it didn't")
-		} else {
-			expectedPanicMessage := "DecodeBase32WithPadding: illegal base32 data"
-			if r != expectedPanicMessage {
-				t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
-			}
+	// Test case for invalid base32 input
+	t.Run("Illegal_Base32_AnyText", func(t *testing.T) {
+		helperFunction := otpverifier.Config{
+			Secret: "ILLEGAL BASE32",
+			Hash:   otpverifier.SHA256,
 		}
-	}()
 
-	HelperFunction.DecodeBase32WithPadding()
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("Expected DecodeBase32WithPadding to panic with ILLEGAL BASE32, but it didn't")
+			} else {
+				expectedPanicMessage := "DecodeBase32WithPadding: illegal base32 data"
+				if r != expectedPanicMessage {
+					t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+				}
+			}
+		}()
+
+		helperFunction.DecodeBase32WithPadding()
+	})
+
+	// Test case for incorrect padding
+	t.Run("Illegal_Base32_OutOfPadding", func(t *testing.T) {
+		testOutPadding := otpverifier.Config{
+			Secret: secret,
+			Hash:   otpverifier.SHA512,
+		}
+
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("Expected DecodeBase32WithPadding to panic with ILLEGAL BASE32, but it didn't")
+			} else {
+				expectedPanicMessage := "DecodeBase32WithPadding: illegal base32 data"
+				if r != expectedPanicMessage {
+					t.Errorf("Expected panic message: %s, but got: %s", expectedPanicMessage, r)
+				}
+			}
+		}()
+
+		testOutPadding.DecodeBase32WithPadding()
+	})
 }
