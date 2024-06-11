@@ -503,3 +503,31 @@ func (v *Config) DecodeBase32WithPadding() []byte {
 
 	return bytes
 }
+
+// cryptoPow10n calculates the value of 10 raised to the power of n.
+//
+// The function uses recursive multiplication to compute the result.
+// It starts with the base case of n == 0, where the result is 1 (10^0 = 1).
+// For n > 0, the function recursively multiplies 10 with the result of cryptoPow10n(n-1).
+//
+// Example:
+//
+//	v.cryptoPow10n(0) = 1
+//	v.cryptoPow10n(1) = 10
+//	v.cryptoPow10n(2) = 10 * v.cryptoPow10n(1) = 10 * 10 = 100
+//	v.cryptoPow10n(3) = 10 * v.cryptoPow10n(2) = 10 * 100 = 1000
+//
+// The function returns the calculated value as an unsigned 32-bit integer [uint32].
+//
+// Note: The function assumes that n is non-negative. If n is negative, it will result
+// in infinite recursion and may cause a stack overflow.
+//
+// The purpose of this function is to calculate the appropriate modulo value based on
+// the desired number of digits for the HOTP Advanced. It is used in the truncation step of the
+// HOTP algorithm to ensure that the resulting HOTP Advanced value has the specified number of digits.
+func (v *Config) cryptoPow10n(n int) uint32 {
+	if n == 0 {
+		return 1
+	}
+	return 10 * v.cryptoPow10n(n-1)
+}
