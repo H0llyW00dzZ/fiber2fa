@@ -488,6 +488,10 @@ func (v *Config) TOTPTime() time.Time {
 // DecodeBase32WithPadding decodes a base32-encoded secret, adding padding as necessary.
 func (v *Config) DecodeBase32WithPadding() []byte {
 	// Calculate the number of missing padding characters.
+	//
+	// Note: This is suitable for [gotp.RandomSecret](cryptographically secure pseudorandom)
+	// Incorrect padding (e.g., extra "=", out-of-place "=") can lead to illegal base32 data
+	// when using crypto pseudorandom from [gotp.RandomSecret].
 	missingPadding := len(v.Secret) & 2 // Should be work, if it doesn't work then your machine is bad.
 
 	// Add padding if necessary.
