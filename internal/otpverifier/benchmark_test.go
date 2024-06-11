@@ -52,7 +52,6 @@ func BenchmarkTOTPVerify(b *testing.B) {
 		b.Run(hashFunc+"_WithSignature", func(b *testing.B) {
 			config := otpverifier.Config{
 				Secret:       secret,
-				SyncWindow:   1,
 				Hash:         hashFunc,
 				TimeSource:   time.Now,
 				UseSignature: true,
@@ -63,6 +62,38 @@ func BenchmarkTOTPVerify(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				// Note: This now each token are different
 				token, signature := verifier.GenerateTokenWithSignature()
+				// goos: windows
+				// goarch: amd64
+				// pkg: github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier
+				// cpu: AMD Ryzen 9 3900X 12-Core Processor (Best CPU Cryptographic)
+				// BenchmarkTOTPVerify/SHA1-24         	  829972	      1316 ns/op	     536 B/op	      11 allocs/op
+				// BenchmarkTOTPVerify/SHA1_WithSignature-24         	  459922	      2480 ns/op	    1121 B/op	      21 allocs/op
+				// BenchmarkTOTPVerify/SHA224-24                     	 1000000	      1096 ns/op	     576 B/op	      11 allocs/op
+				// BenchmarkTOTPVerify/SHA224_WithSignature-24       	  569559	      2074 ns/op	    1217 B/op	      21 allocs/op
+				// BenchmarkTOTPVerify/SHA256-24                     	 1000000	      1105 ns/op	     576 B/op	      11 allocs/op
+				// BenchmarkTOTPVerify/SHA256_WithSignature-24       	  563766	      2125 ns/op	    1217 B/op	      21 allocs/op
+				// BenchmarkTOTPVerify/SHA384-24                     	  645525	      1937 ns/op	     912 B/op	      11 allocs/op
+				// BenchmarkTOTPVerify/SHA384_WithSignature-24       	  308341	      3871 ns/op	    1922 B/op	      21 allocs/op
+				// BenchmarkTOTPVerify/SHA512-24                     	  598796	      1953 ns/op	     928 B/op	      11 allocs/op
+				// BenchmarkTOTPVerify/SHA512_WithSignature-24       	  309421	      3869 ns/op	    1986 B/op	      21 allocs/op
+				// BenchmarkTOTPVerify/SHA512/224-24                 	  629589	      1929 ns/op	     896 B/op	      11 allocs/op
+				// BenchmarkTOTPVerify/SHA512/224_WithSignature-24   	  331980	      3764 ns/op	    1858 B/op	      21 allocs/op
+				// BenchmarkTOTPVerify/SHA512/256-24                 	  663730	      1945 ns/op	     896 B/op	      11 allocs/op
+				// BenchmarkTOTPVerify/SHA512/256_WithSignature-24   	  319014	      3818 ns/op	    1858 B/op	      21 allocs/op
+				// BenchmarkTOTPVerify/BLAKE2b256-24                 	  665155	      1831 ns/op	    1249 B/op	      13 allocs/op
+				// BenchmarkTOTPVerify/BLAKE2b256_WithSignature-24   	  346964	      3662 ns/op	    2562 B/op	      25 allocs/op
+				// BenchmarkTOTPVerify/BLAKE2b384-24                 	  645024	      1881 ns/op	    1265 B/op	      13 allocs/op
+				// BenchmarkTOTPVerify/BLAKE2b384_WithSignature-24   	  335458	      3830 ns/op	    2627 B/op	      25 allocs/op
+				// BenchmarkTOTPVerify/BLAKE2b512-24                 	  617192	      1912 ns/op	    1281 B/op	      13 allocs/op
+				// BenchmarkTOTPVerify/BLAKE2b512_WithSignature-24   	  311072	      3865 ns/op	    2691 B/op	      25 allocs/op
+				// BenchmarkTOTPVerify/BLAKE3256-24                  	  198057	      6827 ns/op	   22172 B/op	      14 allocs/op
+				// BenchmarkTOTPVerify/BLAKE3256_WithSignature-24    	   84226	     15178 ns/op	   44411 B/op	      27 allocs/op
+				// BenchmarkTOTPVerify/BLAKE3384-24                  	  166514	      7111 ns/op	   22252 B/op	      15 allocs/op
+				// BenchmarkTOTPVerify/BLAKE3384_WithSignature-24    	   83710	     13974 ns/op	   44603 B/op	      29 allocs/op
+				// BenchmarkTOTPVerify/BLAKE3512-24                  	  138141	      8103 ns/op	   22298 B/op	      15 allocs/op
+				// BenchmarkTOTPVerify/BLAKE3512_WithSignature-24    	   83928	     15526 ns/op	   44729 B/op	      29 allocs/op
+				//
+				// Note: Using a synchronization window or Incorrect TimeSource Usage might increase the number of allocations.
 				verifier.Verify(token, signature)
 			}
 		})
