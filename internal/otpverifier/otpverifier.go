@@ -508,27 +508,34 @@ func (v *Config) DecodeBase32WithPadding() []byte {
 	return bytes
 }
 
-// cryptoPow10n calculates the value of 10 raised to the power of n.
+// cryptoPow10n calculates the value of 10 raised to the power of n (10ⁿ).
 //
 // The function uses recursive multiplication to compute the result.
-// It starts with the base case of n <= 0, where the result is 1 (10^0 = 1).
+// It starts with the base case of n ≤ 0, where the result is 1 (10⁰ = 1).
 // For n > 0, the function recursively multiplies 10 with the result of cryptoPow10n(n-1).
 //
 // Example:
 //
 //	v.cryptoPow10n(0) = 1
 //	v.cryptoPow10n(1) = 10
-//	v.cryptoPow10n(2) = 10 * v.cryptoPow10n(1) = 10 * 10 = 100
-//	v.cryptoPow10n(3) = 10 * v.cryptoPow10n(2) = 10 * 100 = 1000
+//	v.cryptoPow10n(2) = 10 × v.cryptoPow10n(1) = 10 × 10 = 10²
+//	v.cryptoPow10n(3) = 10 × v.cryptoPow10n(2) = 10 × 10² = 10³
 //
 // The function returns the calculated value as an unsigned 32-bit integer [uint32].
 //
-// Note: The function assumes that n is non-negative. If n is negative, it will result
-// in infinite recursion and may cause a stack overflow.
+// Note: The function assumes that n is non-negative. If n is negative, it will return 1 (10⁰ = 1).
 //
 // The purpose of this function is to calculate the appropriate modulo value based on
-// the desired number of digits for the HOTP Advanced. It is used in the truncation step of the
-// HOTP algorithm to ensure that the resulting HOTP Advanced value has the specified number of digits.
+// the desired number of digits for both the HOTP (HMAC-based One-Time Password) and
+// TOTP (Time-based One-Time Password) values. It is used in the truncation step of the
+// HOTP and TOTP algorithms to ensure that the resulting values have the specified number of digits.
+//
+// Magic Calculator, the function computes:
+//
+//	10ⁿ = 10 × 10ⁿ⁻¹, for n > 0
+//	10ⁿ = 1, for n ≤ 0
+//
+// where ⁿ denotes the exponentiation operation.
 func (v *Config) cryptoPow10n(n int) uint32 {
 	if n <= 0 { // should be fine now, since this written in Go which it suitable for cryptographic.
 		return 1
