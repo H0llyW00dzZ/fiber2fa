@@ -4,6 +4,8 @@
 
 package otpverifier
 
+import "image"
+
 // SetCounter is a no-op for TOTPVerifier since TOTP doesn't use a counter.
 //
 // Deprecated: No-op for TOTP (deadcode)
@@ -35,4 +37,26 @@ func (v *OCRAVerifier) GetCounter() uint64 {
 // Deprecated: No-op for OCRA (deadcode)
 func (v *OCRAVerifier) GenerateTokenWithSignature() (string, string) {
 	panic("GenerateTokenWithSignature is not applicable for OCRA")
+}
+
+// ensureDefaultConfig checks the provided config and fills in any zero values with defaults.
+//
+// Deprecated: Replaced by [QRCodeBuilder]
+func ensureDefaultConfig(config QRCodeConfig) QRCodeConfig {
+	if config.Font == nil {
+		config.Font = DefaultQRCodeConfig.Font
+	}
+	if config.ForegroundColor == nil {
+		config.ForegroundColor = DefaultQRCodeConfig.ForegroundColor
+	}
+	if config.BackgroundColor == nil {
+		config.BackgroundColor = DefaultQRCodeConfig.BackgroundColor
+	}
+	if config.TopTextPosition == (image.Point{}) {
+		config.TopTextPosition = DefaultQRCodeConfig.TopTextPosition
+	}
+	if config.BottomTextPosition == (image.Point{}) {
+		config.BottomTextPosition = DefaultQRCodeConfig.BottomTextPosition
+	}
+	return config
 }
