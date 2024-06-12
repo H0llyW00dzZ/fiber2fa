@@ -15,6 +15,7 @@ import (
 	"image/color"
 	"image/png"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -602,16 +603,39 @@ func TestTOTPVerifier_SaveQRCodeImage(t *testing.T) {
 	accountName := "TestAccount"
 	filename := "test_qrcode.png"
 
+	// Test case 1: File path not provided (default)
 	err := verifier.SaveQRCodeImage(issuer, accountName, filename, otpverifier.DefaultQRCodeConfig)
 	if err != nil {
 		t.Errorf("Failed to save QR code image: %v", err)
 	}
 	defer os.Remove(filename)
 
-	// Check if the file was created
+	// Check if the file was created in the current directory
 	_, err = os.Stat(filename)
 	if os.IsNotExist(err) {
-		t.Errorf("QR code image file was not created")
+		t.Errorf("QR code image file was not created in the current directory")
+	}
+
+	// Test case 2: File path provided
+	tempDir, err := os.MkdirTemp("", "qrcode-test")
+	if err != nil {
+		t.Fatalf("Failed to create temporary directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	qrCodeConfig := otpverifier.DefaultQRCodeConfig
+	qrCodeConfig.FilePath = tempDir
+
+	err = verifier.SaveQRCodeImage(issuer, accountName, filename, qrCodeConfig)
+	if err != nil {
+		t.Errorf("Failed to save QR code image: %v", err)
+	}
+
+	// Check if the file was created in the temporary directory
+	expectedPath := filepath.Join(tempDir, filename)
+	_, err = os.Stat(expectedPath)
+	if os.IsNotExist(err) {
+		t.Errorf("QR code image file was not created at the expected path: %s", expectedPath)
 	}
 }
 
@@ -783,16 +807,39 @@ func TestHOTPVerifier_SaveQRCodeImage(t *testing.T) {
 	accountName := "TestAccount"
 	filename := "test_hotp_qrcode.png"
 
+	// Test case 1: File path not provided (default)
 	err := verifier.SaveQRCodeImage(issuer, accountName, filename, otpverifier.DefaultQRCodeConfig)
 	if err != nil {
 		t.Errorf("Failed to save QR code image: %v", err)
 	}
 	defer os.Remove(filename)
 
-	// Check if the file was created
+	// Check if the file was created in the current directory
 	_, err = os.Stat(filename)
 	if os.IsNotExist(err) {
-		t.Errorf("QR code image file was not created")
+		t.Errorf("QR code image file was not created in the current directory")
+	}
+
+	// Test case 2: File path provided
+	tempDir, err := os.MkdirTemp("", "qrcode-test")
+	if err != nil {
+		t.Fatalf("Failed to create temporary directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	qrCodeConfig := otpverifier.DefaultQRCodeConfig
+	qrCodeConfig.FilePath = tempDir
+
+	err = verifier.SaveQRCodeImage(issuer, accountName, filename, qrCodeConfig)
+	if err != nil {
+		t.Errorf("Failed to save QR code image: %v", err)
+	}
+
+	// Check if the file was created in the temporary directory
+	expectedPath := filepath.Join(tempDir, filename)
+	_, err = os.Stat(expectedPath)
+	if os.IsNotExist(err) {
+		t.Errorf("QR code image file was not created at the expected path: %s", expectedPath)
 	}
 }
 
