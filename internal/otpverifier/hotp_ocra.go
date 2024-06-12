@@ -132,6 +132,10 @@ func (v *OCRAVerifier) generateOCRA(counter uint64, question string, hash func()
 }
 
 // GenerateOTPURL creates the URL for the QR code based on the provided URI template.
+//
+// TODO: Build a custom URI for the OCRA token.
+// Currently, this function is unused because most mobile apps have poor ecosystems and may not be capable of handling
+// cryptographic operations hahaha.
 func (v *OCRAVerifier) GenerateOTPURL(issuer, accountName string) string {
 	return v.config.generateOTPURL(issuer, accountName)
 }
