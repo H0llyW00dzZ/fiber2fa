@@ -566,7 +566,7 @@ func TestTOTPVerifier_BuildQRCode(t *testing.T) {
 	accountName := "TestAccount"
 
 	// Create a custom QR code configuration
-	qrCodeConfig := otpverifier.QRCodeConfig{
+	verifier.QRCodeBuilder = otpverifier.QRCodeConfig{
 		Level:         qrcode.Medium,
 		Size:          256,
 		DisableBorder: true,
@@ -574,7 +574,7 @@ func TestTOTPVerifier_BuildQRCode(t *testing.T) {
 		BottomText:    "OTP QR Code",
 	}
 
-	qrCodeBytes, err := verifier.BuildQRCode(issuer, accountName, qrCodeConfig)
+	qrCodeBytes, err := verifier.BuildQRCode(issuer, accountName)
 	if err != nil {
 		t.Errorf("Failed to build QR code: %v", err)
 	}
@@ -604,7 +604,7 @@ func TestTOTPVerifier_SaveQRCodeImage(t *testing.T) {
 	filename := "test_qrcode.png"
 
 	// Test case 1: File path not provided (default)
-	err := verifier.SaveQRCodeImage(issuer, accountName, filename, otpverifier.DefaultQRCodeConfig)
+	err := verifier.SaveQRCodeImage(issuer, accountName, filename)
 	if err != nil {
 		t.Errorf("Failed to save QR code image: %v", err)
 	}
@@ -626,7 +626,7 @@ func TestTOTPVerifier_SaveQRCodeImage(t *testing.T) {
 	qrCodeConfig := otpverifier.DefaultQRCodeConfig
 	qrCodeConfig.FilePath = tempDir
 
-	err = verifier.SaveQRCodeImage(issuer, accountName, filename, qrCodeConfig)
+	err = verifier.SaveQRCodeImage(issuer, accountName, filename)
 	if err != nil {
 		t.Errorf("Failed to save QR code image: %v", err)
 	}
@@ -655,7 +655,7 @@ func TestTOTPVerifier_BuildQRCodeWithCustomParams(t *testing.T) {
 	accountName := "TestAccount"
 
 	// Create a custom QR code configuration
-	qrCodeConfig := otpverifier.QRCodeConfig{
+	verifier.QRCodeBuilder = otpverifier.QRCodeConfig{
 		Level:         qrcode.Medium,
 		Size:          256,
 		DisableBorder: true,
@@ -663,7 +663,7 @@ func TestTOTPVerifier_BuildQRCodeWithCustomParams(t *testing.T) {
 		BottomText:    "OTP QR Code",
 	}
 
-	qrCodeBytes, err := verifier.BuildQRCode(issuer, accountName, qrCodeConfig)
+	qrCodeBytes, err := verifier.BuildQRCode(issuer, accountName)
 	if err != nil {
 		t.Errorf("Failed to build QR code: %v", err)
 	}
@@ -694,7 +694,7 @@ func TestTOTPVerifier_BuildQRCodePanic(t *testing.T) {
 	accountName := ""
 
 	// Create a custom QR code configuration
-	qrCodeConfig := otpverifier.QRCodeConfig{
+	verifier.QRCodeBuilder = otpverifier.QRCodeConfig{
 		Level:           qrcode.Medium,
 		Size:            256,
 		DisableBorder:   true,
@@ -717,7 +717,7 @@ func TestTOTPVerifier_BuildQRCodePanic(t *testing.T) {
 		}()
 
 		// Call BuildQRCode with maximum digits, which should panic
-		verifier.BuildQRCode("issuer", "accountName", qrCodeConfig)
+		verifier.BuildQRCode("issuer", "accountName")
 	})
 
 	// Expect a panic when calling BuildQRCode with empty issuer
@@ -734,7 +734,7 @@ func TestTOTPVerifier_BuildQRCodePanic(t *testing.T) {
 		}()
 
 		// Call BuildQRCode with an empty issuer, which should panic
-		verifier.BuildQRCode(issuer, "accountName", qrCodeConfig)
+		verifier.BuildQRCode(issuer, "accountName")
 	})
 
 	// Expect a panic when calling BuildQRCode with empty account name
@@ -751,7 +751,7 @@ func TestTOTPVerifier_BuildQRCodePanic(t *testing.T) {
 		}()
 
 		// Call BuildQRCode with an empty account name, which should panic
-		verifier.BuildQRCode("issuer", accountName, qrCodeConfig)
+		verifier.BuildQRCode("issuer", accountName)
 	})
 
 }
@@ -769,7 +769,7 @@ func TestHOTPVerifier_BuildQRCode(t *testing.T) {
 	accountName := "TestAccount"
 
 	// Create a custom QR code configuration
-	qrCodeConfig := otpverifier.QRCodeConfig{
+	verifier.QRCodeBuilder = otpverifier.QRCodeConfig{
 		Level:           qrcode.Medium,
 		Size:            256,
 		DisableBorder:   true,
@@ -778,7 +778,7 @@ func TestHOTPVerifier_BuildQRCode(t *testing.T) {
 		ForegroundColor: color.Black,
 	}
 
-	qrCodeBytes, err := verifier.BuildQRCode(issuer, accountName, qrCodeConfig)
+	qrCodeBytes, err := verifier.BuildQRCode(issuer, accountName)
 	if err != nil {
 		t.Errorf("Failed to build QR code: %v", err)
 	}
@@ -808,7 +808,7 @@ func TestHOTPVerifier_SaveQRCodeImage(t *testing.T) {
 	filename := "test_hotp_qrcode.png"
 
 	// Test case 1: File path not provided (default)
-	err := verifier.SaveQRCodeImage(issuer, accountName, filename, otpverifier.DefaultQRCodeConfig)
+	err := verifier.SaveQRCodeImage(issuer, accountName, filename)
 	if err != nil {
 		t.Errorf("Failed to save QR code image: %v", err)
 	}
@@ -827,10 +827,9 @@ func TestHOTPVerifier_SaveQRCodeImage(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	qrCodeConfig := otpverifier.DefaultQRCodeConfig
-	qrCodeConfig.FilePath = tempDir
+	verifier.QRCodeBuilder.FilePath = tempDir
 
-	err = verifier.SaveQRCodeImage(issuer, accountName, filename, qrCodeConfig)
+	err = verifier.SaveQRCodeImage(issuer, accountName, filename)
 	if err != nil {
 		t.Errorf("Failed to save QR code image: %v", err)
 	}
@@ -859,7 +858,7 @@ func TestHOTPVerifier_BuildQRCodeWithCustomParams(t *testing.T) {
 	accountName := "TestAccount"
 
 	// Create a custom QR code configuration
-	qrCodeConfig := otpverifier.QRCodeConfig{
+	verifier.QRCodeBuilder = otpverifier.QRCodeConfig{
 		Level:           qrcode.Medium,
 		Size:            256,
 		DisableBorder:   true,
@@ -868,7 +867,7 @@ func TestHOTPVerifier_BuildQRCodeWithCustomParams(t *testing.T) {
 		ForegroundColor: color.Black,
 	}
 
-	qrCodeBytes, err := verifier.BuildQRCode(issuer, accountName, qrCodeConfig)
+	qrCodeBytes, err := verifier.BuildQRCode(issuer, accountName)
 	if err != nil {
 		t.Errorf("Failed to build QR code: %v", err)
 	}
@@ -898,7 +897,7 @@ func TestHOTPVerifier_BuildQRCodePanic(t *testing.T) {
 	accountName := ""
 
 	// Create a custom QR code configuration
-	qrCodeConfig := otpverifier.QRCodeConfig{
+	verifier.QRCodeBuilder = otpverifier.QRCodeConfig{
 		Level:           qrcode.Medium,
 		Size:            256,
 		DisableBorder:   true,
@@ -921,7 +920,7 @@ func TestHOTPVerifier_BuildQRCodePanic(t *testing.T) {
 		}()
 
 		// Call BuildQRCode with maximum digits, which should panic
-		verifier.BuildQRCode("issuer", "accountName", qrCodeConfig)
+		verifier.BuildQRCode("issuer", "accountName")
 	})
 
 	// Expect a panic when calling BuildQRCode with empty issuer
@@ -938,7 +937,7 @@ func TestHOTPVerifier_BuildQRCodePanic(t *testing.T) {
 		}()
 
 		// Call BuildQRCode with an empty issuer, which should panic
-		verifier.BuildQRCode(issuer, "accountName", qrCodeConfig)
+		verifier.BuildQRCode(issuer, "accountName")
 	})
 
 	// Expect a panic when calling BuildQRCode with empty account name
@@ -955,7 +954,7 @@ func TestHOTPVerifier_BuildQRCodePanic(t *testing.T) {
 		}()
 
 		// Call BuildQRCode with an empty account name, which should panic
-		verifier.BuildQRCode("issuer", accountName, qrCodeConfig)
+		verifier.BuildQRCode("issuer", accountName)
 	})
 
 }

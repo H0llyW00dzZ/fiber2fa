@@ -50,7 +50,7 @@ func main() {
 	uuid := uuid.Must(uuid.NewRandom())
 
 	// Create a custom QR code configuration
-	qrCodeConfig := otpverifier.QRCodeConfig{
+	verifier.QRCodeBuilder = otpverifier.QRCodeConfig{
 		Level:              qrcode.Medium,
 		Size:               size,
 		DisableBorder:      true,
@@ -62,7 +62,7 @@ func main() {
 		BottomTextPosition: image.Point{X: size / 2, Y: size + textHeight/3}, // Dynamically calculated
 	}
 
-	err := verifier.SaveQRCodeImage(issuer, accountName, filename, qrCodeConfig)
+	err := verifier.SaveQRCodeImage(issuer, accountName, filename)
 	if err != nil {
 		fmt.Println("Error saving QR code image:", err)
 		return

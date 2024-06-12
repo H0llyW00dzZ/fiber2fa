@@ -20,6 +20,7 @@ type TOTPVerifier struct {
 	totp            *gotp.TOTP
 	UsedTokens      *sync.Map
 	CleanupInterval int
+	QRCodeBuilder   QRCodeConfig
 }
 
 // NewTOTPVerifier creates a new TOTPVerifier with the given configuration.
@@ -70,6 +71,7 @@ func NewTOTPVerifier(config ...Config) *TOTPVerifier {
 		// Without implementing a synchronization window similar to HOTP, it can lead to high vulnerability.
 		UsedTokens:      &sync.Map{},
 		CleanupInterval: c.CleanupInterval,
+		QRCodeBuilder:   DefaultQRCodeConfig,
 	}
 
 	// Start the periodic cleanup goroutine
