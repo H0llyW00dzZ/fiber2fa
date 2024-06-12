@@ -135,6 +135,7 @@
 //   - Font: The font to use for the top and bottom text. Default is [basicfont.Face7x13].
 //   - TopTextPosition: The position of the top text. Default is calculated dynamically.
 //   - BottomTextPosition: The position of the bottom text. Default is calculated dynamically.
+//   - FilePath: The file path where the QR code image will be saved. Default is an empty string.
 //
 // The default QR code configuration can be accessed using [DefaultQRCodeConfig].
 //
