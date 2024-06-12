@@ -147,9 +147,5 @@ func (v *OCRAVerifier) Verify(token string, challenge string) bool {
 	// Note: Signature verification is not applicable here because the OCRA algorithm itself provides sufficient security.
 	// It follows the specifications defined in RFC 6287 (https://datatracker.ietf.org/doc/html/rfc6287#section-7.1)
 	// and uses this [crypto/subtle] package, which is a crucial component in cryptographic operations.
-	if subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) == 1 {
-		return true
-	}
-
-	return false
+	return subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) == 1
 }
