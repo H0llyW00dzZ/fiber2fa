@@ -137,11 +137,14 @@ func (v *OCRAVerifier) GenerateOTPURL(issuer, accountName string) string {
 }
 
 // Verify checks if the provided token and signature are valid for the specified challenge.
-func (v *OCRAVerifier) Verify(token string, challenge string, signature ...string) bool {
+func (v *OCRAVerifier) Verify(token string, challenge string) bool {
 	// Generate the expected OCRA token based on the challenge
 	expectedToken := v.GenerateToken(challenge)
 
 	// Compare the provided token with the expected token
+	// Note: Signature verification is not applicable here because the OCRA algorithm itself provides sufficient security.
+	// It follows the specifications defined in RFC 6287 (https://datatracker.ietf.org/doc/html/rfc6287#section-7.1)
+	// and uses this [crypto/subtle] package, which is a crucial component in cryptographic operations.
 	if subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) == 1 {
 		return true
 	}
