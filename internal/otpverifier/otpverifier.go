@@ -536,6 +536,11 @@ func (v *Config) DecodeBase32WithPadding() []byte {
 //	10ⁿ = 1, for n ≤ 0
 //
 // where ⁿ denotes the exponentiation operation.
+//
+// Also note that most package helper functions here are related to cryptographic.
+// They mostly do not rely on other packages, for example, using the standard package only for math,
+// because sometimes it may not be suitable for Go (e.g., too many if statements, which is not idiomatic in Go).
+// Therefore, the helper functions here are built in an advanced manner based on knowledge and expertise.
 func (v *Config) cryptoPow10n(n int) uint32 {
 	if n <= 0 { // should be fine now, since this written in Go which it suitable for cryptographic.
 		return 1
