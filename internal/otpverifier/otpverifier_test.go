@@ -1865,3 +1865,24 @@ func TestDecodeBase32WithPadding_Crash(t *testing.T) {
 		testOutPadding.DecodeBase32WithPadding()
 	})
 }
+
+func TestQRCodeConfig_GenerateQRCodeImage(t *testing.T) {
+	// Last Test, and won't making test for handling error, it literally looks stupid testing for handling error.
+	QRCodeBuilder := otpverifier.DefaultQRCodeConfig
+	QRCodeBuilder.TopText = "Hello"
+	QRCodeBuilder.BottomText = "World"
+	QRCodeBuilder.Level = qrcode.Medium
+	QRCodeBuilder.ForegroundColor = color.Black
+	QRCodeBuilder.BackgroundColor = color.White
+
+	otpURL := "otpauth://totp/Example:gopher@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Example"
+
+	qrCodeImage, err := QRCodeBuilder.GenerateQRCodeImage(otpURL)
+	if err != nil {
+		t.Errorf("Failed to generate QR code image: %v", err)
+	}
+
+	if qrCodeImage == nil {
+		t.Error("Generated QR code image is nil")
+	}
+}
