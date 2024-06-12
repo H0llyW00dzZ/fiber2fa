@@ -7,6 +7,7 @@ package otpverifier
 import (
 	"image"
 	"os"
+	"path/filepath"
 )
 
 // BuildQRCode generates a QR code image for the OTP configuration.
@@ -44,7 +45,20 @@ func (v *TOTPVerifier) SaveQRCodeImage(issuer, accountName, filename string, con
 		return err
 	}
 
-	file, err := os.Create(filename)
+	// Use the file path from the QRCodeConfig if provided, otherwise use the current directory
+	//
+	// Note: There is no explicit (e.g., strict permission) requirement for the file path,
+	// so it basically depends on the use case and any specific permission requirements.
+	// Also, keep in mind that if running on Windows, long file paths are not allowed by default.
+	filePath := config.FilePath
+	if filePath == "" {
+		filePath = "."
+	}
+
+	// Create the full file path by joining the file path and filename
+	fullPath := filepath.Join(filePath, filename)
+
+	file, err := os.Create(fullPath)
 	if err != nil {
 		return err
 	}
@@ -61,7 +75,20 @@ func (v *HOTPVerifier) SaveQRCodeImage(issuer, accountName, filename string, con
 		return err
 	}
 
-	file, err := os.Create(filename)
+	// Use the file path from the QRCodeConfig if provided, otherwise use the current directory
+	//
+	// Note: There is no explicit (e.g., strict permission) requirement for the file path,
+	// so it basically depends on the use case and any specific permission requirements.
+	// Also, keep in mind that if running on Windows, long file paths are not allowed by default.
+	filePath := config.FilePath
+	if filePath == "" {
+		filePath = "."
+	}
+
+	// Create the full file path by joining the file path and filename
+	fullPath := filepath.Join(filePath, filename)
+
+	file, err := os.Create(fullPath)
 	if err != nil {
 		return err
 	}

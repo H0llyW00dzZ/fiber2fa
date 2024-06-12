@@ -239,6 +239,7 @@ type QRCodeConfig struct {
 	Font               font.Face
 	TopTextPosition    image.Point
 	BottomTextPosition image.Point
+	FilePath           string
 }
 
 // Crypto is a struct that holds cryptographic configuration options.
