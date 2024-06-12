@@ -228,12 +228,12 @@ func BenchmarkOCRAVerify(b *testing.B) {
 				// goarch: amd64
 				// pkg: github.com/H0llyW00dzZ/fiber2fa/internal/otpverifier
 				// cpu: AMD Ryzen 9 3900X 12-Core Processor (Best CPU Cryptographic)
-				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA1-6-24         	  504555	      2243 ns/op	     792 B/op	      22 allocs/op
-				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA256-8-24       	  595725	      2027 ns/op	     832 B/op	      22 allocs/op
-				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA512-8-24       	  425383	      2819 ns/op	    1185 B/op	      22 allocs/op
-				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA1-6#01-24      	  529720	      2242 ns/op	     792 B/op	      22 allocs/op
+				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA1-6-24         	  520404	      2181 ns/op	     784 B/op	      20 allocs/op
+				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA256-8-24       	  643852	      1950 ns/op	     824 B/op	      20 allocs/op
+				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA512-8-24       	  429360	      2791 ns/op	    1177 B/op	      20 allocs/op
+				// BenchmarkOCRAVerify/Hash=OCRA-1:HOTP-SHA1-6#01-24      	  533643	      2212 ns/op	     784 B/op	      20 allocs/op
 				//
-				// Note: 22 allocs/op it's because of Pseudorandom and Hash Function you poggers.
+				// Note: 20 allocs/op it's because of Pseudorandom and Hash Function you poggers.
 				verifier.Verify(tc.token, challenge)
 			}
 		})

@@ -105,12 +105,10 @@ func (v *OCRAVerifier) generateOCRA(counter uint64, question string, hash func()
 	// Prepare the input data
 	// Note: The counterBytes and counter are not just any values. They can be bound to a cryptographically secure pseudorandom number,
 	// along with questionBytes, similar to how [DecodeBase32WithPadding] is used to manipulate the result in the frontend hahaha.
-	counterBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(counterBytes, counter)
-	questionBytes := []byte(question)
-
-	// Concatenate the input data
-	data := append(counterBytes, questionBytes...)
+	var data []byte
+	data = make([]byte, 8+len(question))
+	binary.BigEndian.PutUint64(data[:8], counter)
+	copy(data[8:], question)
 
 	// Generate the HMAC hash
 	hmacHash := hmac.New(hash, v.config.DecodeBase32WithPadding())
@@ -130,7 +128,7 @@ func (v *OCRAVerifier) generateOCRA(counter uint64, question string, hash func()
 	hotp := truncatedHash % uint32(p10n)
 
 	// Format the HOTP value as a string with the specified number of digits
-	return fmt.Sprintf(fmt.Sprintf("%%0%dd", v.config.Digits), hotp)
+	return fmt.Sprintf("%0*d", v.config.Digits, hotp) // Result will padding it with leading zeros if necessary.
 }
 
 // GenerateOTPURL creates the URL for the QR code based on the provided URI template.
@@ -147,9 +145,5 @@ func (v *OCRAVerifier) Verify(token string, challenge string) bool {
 	// Note: Signature verification is not applicable here because the OCRA algorithm itself provides sufficient security.
 	// It follows the specifications defined in RFC 6287 (https://datatracker.ietf.org/doc/html/rfc6287#section-7.1)
 	// and uses this [crypto/subtle] package, which is a crucial component in cryptographic operations.
-	if subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) == 1 {
-		return true
-	}
-
-	return false
+	return subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) == 1
 }
