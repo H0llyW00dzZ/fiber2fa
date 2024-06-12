@@ -598,6 +598,7 @@ func TestTOTPVerifier_SaveQRCodeImage(t *testing.T) {
 		TimeSource: time.Now,
 	}
 	verifier := otpverifier.NewTOTPVerifier(config)
+	verifier.QRCodeBuilder = otpverifier.DefaultQRCodeConfig // Forgot to add in test
 
 	issuer := "TestIssuer"
 	accountName := "TestAccount"
@@ -623,8 +624,7 @@ func TestTOTPVerifier_SaveQRCodeImage(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir)
 
-	qrCodeConfig := otpverifier.DefaultQRCodeConfig
-	qrCodeConfig.FilePath = tempDir
+	verifier.QRCodeBuilder.FilePath = tempDir // Forgot to add in test
 
 	err = verifier.SaveQRCodeImage(issuer, accountName, filename)
 	if err != nil {
@@ -806,6 +806,7 @@ func TestHOTPVerifier_SaveQRCodeImage(t *testing.T) {
 	issuer := "TestIssuer"
 	accountName := "TestAccount"
 	filename := "test_hotp_qrcode.png"
+	verifier.QRCodeBuilder = otpverifier.DefaultQRCodeConfig
 
 	// Test case 1: File path not provided (default)
 	err := verifier.SaveQRCodeImage(issuer, accountName, filename)
