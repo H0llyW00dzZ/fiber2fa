@@ -316,26 +316,6 @@ func InitializeDefaultQRCodeConfig() QRCodeConfig {
 	}
 }
 
-// ensureDefaultConfig checks the provided config and fills in any zero values with defaults.
-func ensureDefaultConfig(config QRCodeConfig) QRCodeConfig {
-	if config.Font == nil {
-		config.Font = DefaultQRCodeConfig.Font
-	}
-	if config.ForegroundColor == nil {
-		config.ForegroundColor = DefaultQRCodeConfig.ForegroundColor
-	}
-	if config.BackgroundColor == nil {
-		config.BackgroundColor = DefaultQRCodeConfig.BackgroundColor
-	}
-	if config.TopTextPosition == (image.Point{}) {
-		config.TopTextPosition = DefaultQRCodeConfig.TopTextPosition
-	}
-	if config.BottomTextPosition == (image.Point{}) {
-		config.BottomTextPosition = DefaultQRCodeConfig.BottomTextPosition
-	}
-	return config
-}
-
 // generateOTPURL creates the URL for the QR code based on the provided URI template.
 func (v *Config) generateOTPURL(issuer, accountName string) string {
 	// Determine the OTP type based on whether a counter is used.
