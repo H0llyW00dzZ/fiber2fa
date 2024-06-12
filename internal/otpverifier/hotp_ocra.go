@@ -103,8 +103,8 @@ func (v *OCRAVerifier) GenerateToken(challenge string) string {
 // generateOCRA generates an OCRA token using the specified hash algorithm.
 func (v *OCRAVerifier) generateOCRA(counter uint64, question string, hash func() hash.Hash) string {
 	// Prepare the input data
-	// Note: The counterBytes and counter are not just any values. They can be bound to a cryptographically secure pseudorandom number,
-	// along with questionBytes, similar to how [DecodeBase32WithPadding] is used to manipulate the result in the frontend hahaha.
+	// Note: The counter and counter are not just any values. They can be bound to a cryptographically secure pseudorandom number,
+	// along with question, similar to how [DecodeBase32WithPadding] is used to manipulate the result in the frontend hahaha.
 	var data []byte
 	data = make([]byte, 8+len(question))
 	binary.BigEndian.PutUint64(data[:8], counter)
