@@ -24,6 +24,7 @@ type HOTPVerifier struct {
 	counterMismatches int
 	lastResyncTime    time.Time
 	resyncInterval    time.Duration
+	QRCodeBuilder     QRCodeConfig
 }
 
 // NewHOTPVerifier creates a new HOTPVerifier with the given configuration.
@@ -92,6 +93,7 @@ func NewHOTPVerifier(config ...Config) *HOTPVerifier {
 		Hotp:           hotp,
 		recentCounters: recentCounters, // Assign the ring, which may be nil or an actual ring
 		resyncInterval: c.ResyncWindowDelay,
+		QRCodeBuilder:  DefaultQRCodeConfig,
 	}
 }
 
