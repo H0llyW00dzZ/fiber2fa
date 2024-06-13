@@ -18,6 +18,39 @@ import (
 )
 
 // OCRAVerifier is an OCRA verifier (RFC 6287) that implements the OTPVerifier interface.
+//
+// Definition of OCRA:
+//
+//	OCRA(K, C, Q, P, S) = HOTP(K, C || Q || P || S)
+//
+// Where:
+//
+//   - K is the shared secret key between the client and the server.
+//   - C is the counter value, which is a 64-bit unsigned integer.
+//   - Q is the challenge question, which is a string containing the question or prompt.
+//   - P is the hash algorithm used in the HMAC calculation (e.g., SHA-1, SHA-256).
+//   - S is the session information, which can include additional parameters such as the session identifier, timestamp, or nonce.
+//   - || denotes concatenation of the input values.
+//
+// The HOTP function used in the OCRA algorithm is defined as follows:
+//
+//	HOTP(K, C) = Truncate(HMAC-SHA-1(K, C))
+//
+// Where:
+//
+//   - Truncate is a function that selects a subset of bits from the HMAC result to generate the final HOTP value.
+//   - HMAC-SHA-1 is the HMAC function using the SHA-1 hash algorithm. Other hash algorithms like SHA-256 or SHA-512 can also be used.
+//
+// The Truncate function is defined as follows:
+//
+//	Truncate(HMAC(K, C)) = HOTP
+//
+// Where:
+//
+//   - HMAC(K, C) is the HMAC result using the shared secret key K and the concatenated input C.
+//   - HOTP is the resulting HOTP value, which is typically a 6-digit or 8-digit decimal number.
+//
+// Note: These docs provide a simplified explanation of the cryptographic concepts to improve readability and understanding.
 type OCRAVerifier struct {
 	config Config
 }
