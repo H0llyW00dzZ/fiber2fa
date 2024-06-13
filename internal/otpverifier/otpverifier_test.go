@@ -1872,8 +1872,8 @@ func TestQRCodeConfig_GenerateQRCodeImage(t *testing.T) {
 	QRCodeBuilder.TopText = "Hello"
 	QRCodeBuilder.BottomText = "World"
 	QRCodeBuilder.Level = qrcode.Medium
-	QRCodeBuilder.ForegroundColor = color.Black
-	QRCodeBuilder.BackgroundColor = color.White
+	QRCodeBuilder.ForegroundColor = nil
+	QRCodeBuilder.BackgroundColor = nil
 
 	otpURL := "otpauth://totp/Example:gopher@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Example"
 
