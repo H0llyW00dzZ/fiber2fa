@@ -151,6 +151,7 @@ func (v *OCRAVerifier) Verify(token string, challenge string) bool {
 	// It follows the specifications defined in RFC 6287 (https://datatracker.ietf.org/doc/html/rfc6287#section-7.1)
 	// and uses this [crypto/subtle] package, which is a crucial component in cryptographic operations.
 	// Even if signature verification is applicable (e.g., possible to apply as per RFC 6287 section 7.3),
-	// it should be handled outside this package and bound to the SSL/TLS protocol for enhanced security.
+	// it should be handled outside this package and bound to the Crypto/TLS (SSL) or other cryptographic protocols (Advanced cryptographic uses cases),
+	// which can then be integrated with this package for enhanced security.
 	return subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) == 1
 }
