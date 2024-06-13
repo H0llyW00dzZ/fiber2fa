@@ -84,6 +84,12 @@ The notes effectively communicate that the HOTP and TOTP implementations follow 
 
 More features and validation capabilities will be added in the future to enhance the middleware's functionality and cater to a wider range of validation scenarios.
 
+## TODO:
+- [ ] Support Cloud Messaging Gateway (SMS2FA) for local countries (e.g., INDONESIA), which is more capable than 2FA apps
+
+> [!NOTE]
+> These TODO items will be implemented when the internal components are done, as currently, the project is being rewritten from scratch due to poor ecosystems.
+
 ## Benchmark
 
 - #### v0.3.0
