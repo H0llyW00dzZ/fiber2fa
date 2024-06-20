@@ -3,7 +3,7 @@ module github.com/H0llyW00dzZ/fiber2fa
 go 1.22.3
 
 require (
-	github.com/bytedance/sonic v1.11.8
+	github.com/bytedance/sonic v1.11.9
 	github.com/gofiber/fiber/v2 v2.52.4
 	github.com/gofiber/storage/memory/v2 v2.0.1
 	github.com/google/uuid v1.6.0
