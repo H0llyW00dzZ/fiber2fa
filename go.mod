@@ -3,7 +3,7 @@ module github.com/H0llyW00dzZ/fiber2fa
 go 1.22.3
 
 require (
-	github.com/bytedance/sonic v1.11.9
+	github.com/bytedance/sonic v1.12.2
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/gofiber/storage/memory/v2 v2.0.1
 	github.com/google/uuid v1.6.0
@@ -14,7 +14,7 @@ require (
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
-	github.com/bytedance/sonic/loader v0.1.1 // indirect
+	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
