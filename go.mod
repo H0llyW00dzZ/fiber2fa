@@ -29,6 +29,6 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/zeebo/blake3 v0.2.4
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/image v0.19.0
+	golang.org/x/image v0.20.0
 	golang.org/x/sys v0.23.0 // indirect
 )
