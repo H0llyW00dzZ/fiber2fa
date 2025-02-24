@@ -1,6 +1,7 @@
 module github.com/H0llyW00dzZ/fiber2fa
 
 go 1.22.3
+toolchain go1.23.6
 
 require (
 	github.com/bytedance/sonic v1.12.8
@@ -9,7 +10,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/xlzd/gotp v0.1.0
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.35.0
 )
 
 require (
