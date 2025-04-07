@@ -1,7 +1,7 @@
 module github.com/H0llyW00dzZ/fiber2fa
 
 go 1.22.3
-toolchain go1.23.6
+toolchain go1.24.1
 
 require (
 	github.com/bytedance/sonic v1.13.1
@@ -29,6 +29,6 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/zeebo/blake3 v0.2.4
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/image v0.25.0
+	golang.org/x/image v0.26.0
 	golang.org/x/sys v0.31.0 // indirect
 )
