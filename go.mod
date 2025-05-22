@@ -1,11 +1,12 @@
 module github.com/H0llyW00dzZ/fiber2fa
 
-go 1.22.3
+go 1.23.0
+
 toolchain go1.24.1
 
 require (
 	github.com/bytedance/sonic v1.13.2
-	github.com/gofiber/fiber/v2 v2.52.6
+	github.com/gofiber/fiber/v2 v2.52.7
 	github.com/gofiber/storage/memory/v2 v2.0.1
 	github.com/google/uuid v1.6.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
